@@ -1,0 +1,44 @@
+{
+  "id": "2026-03",
+  "label": "March 2026",
+  "year": 2026,
+  "month": 3,
+  "donations": [],
+  "otherIncome": [],
+  "useOfFunds": [],
+  "cashAccounts": [
+    {
+      "id": "ca1",
+      "platform": "Palm Pay",
+      "name": "Palm Pay Savings",
+      "openingBalance": 33742.06999999999,
+      "transactions": []
+    },
+    {
+      "id": "ca-mpyn7oxa-20k6",
+      "platform": "Opay",
+      "name": "Opay Account",
+      "openingBalance": 12000,
+      "transactions": []
+    }
+  ],
+  "moneyMarketAccounts": [
+    {
+      "id": "mm1",
+      "platform": "Cowrywise",
+      "name": "Cowrywise Money Market Fund",
+      "openingBalance": 159677.40000000002,
+      "transactions": []
+    }
+  ],
+  "placements": [],
+  "otherExpenses": [],
+  "narrative": {
+    "incomeStatement": "",
+    "balanceSheet": "",
+    "cashFlows": "",
+    "nextSteps": ""
+  },
+  "nextSteps": [],
+  "publishedAt": "2026-06-03T23:39:10.015Z"
+}

@@ -103,7 +103,7 @@
   "placements": [],
   "otherExpenses": [],
   "narrative": {
-    "incomeStatement": "Two foundational donations were received during the month from Wale Methonmasa and Seyon Hunga, establishing the Fund's initial corpus. The Fund made its first deployments, settling JAMB registration for two candidates: Mauyon Hunga and Abigael Yenukunme Hunvio.",
+    "incomeStatement": "Two foundational donations were received during the month from Wale Methonmasa and Seyon Hunga, establishing the Fund's initial funding. \nThe Fund made its first deployments, settling JAMB registration for two candidates: Mauyon Hunga and Abigael Yenukunme Hunvio.",
     "balanceSheet": "Asset allocation will continue to tilt towards money market instruments, in line with the Fund's conservative mandate of capital preservation and income generation.",
     "cashFlows": "The Fund's initial operating inflows were deployed into the Cowrywise Money Market Fund. Bank charges of ₦300 were incurred on transfers.",
     "nextSteps": "Priority for February: complete CAC registration, finalise governance documentation, and broaden the donor base."
@@ -126,5 +126,5 @@
       "detail": "Register WAEC and JAMB candidates for tutorial classes and pay for lesson teachers."
     }
   ],
-  "publishedAt": "2026-06-03T22:17:22.189Z"
+  "publishedAt": "2026-06-03T22:21:24.821Z"
 }

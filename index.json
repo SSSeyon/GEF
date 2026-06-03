@@ -1,0 +1,17 @@
+{
+  "fundName": "Gbago Endowment Fund",
+  "shortName": "GEF",
+  "currency": "NGN",
+  "currencySymbol": "\u20A6",
+  "tagline": "Capital preservation. Income generation. Community uplift.",
+  "publishedPeriods": [
+    {
+      "id": "2026-01",
+      "label": "January 2026",
+      "year": 2026,
+      "month": 1,
+      "publishedAt": "2026-02-01T00:00:00Z"
+    }
+  ],
+  "lastUpdated": "2026-02-01T00:00:00Z"
+}

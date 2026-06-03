@@ -1,0 +1,255 @@
+{
+  "id": "2026-02",
+  "label": "February 2026",
+  "year": 2026,
+  "month": 2,
+  "donations": [
+    {
+      "date": "2026-02-02",
+      "donor": "JFM",
+      "amount": 100000,
+      "note": "",
+      "id": "donations-mpymw7s6-otb2"
+    },
+    {
+      "date": "2026-02-02",
+      "donor": "Kola Hunga",
+      "amount": 5000,
+      "note": "",
+      "id": "donations-mpymwwpn-d8he"
+    },
+    {
+      "date": "2026-02-10",
+      "donor": "Senapon Hunpe",
+      "amount": 5000,
+      "note": "",
+      "id": "donations-mpymxcw7-tazx"
+    }
+  ],
+  "otherIncome": [],
+  "useOfFunds": [
+    {
+      "id": "uof-mpymyu3y-ejs0",
+      "date": "2026-06-02",
+      "category": "jambForm",
+      "beneficiary": "Mercy",
+      "description": "",
+      "amount": 7200
+    },
+    {
+      "id": "uof-mpyn0683-lrgp",
+      "date": "2026-02-02",
+      "category": "jambForm",
+      "beneficiary": "Jijoho",
+      "description": "",
+      "amount": 7200
+    },
+    {
+      "id": "uof-mpyn0mvq-fiwu",
+      "date": "2026-02-02",
+      "category": "jambForm",
+      "beneficiary": "Mary",
+      "description": "",
+      "amount": 7200
+    }
+  ],
+  "cashAccounts": [
+    {
+      "id": "ca1",
+      "platform": "Palm Pay",
+      "name": "Palm Pay Savings",
+      "openingBalance": 19987.45,
+      "transactions": [
+        {
+          "id": "txn-mpynauuz-9rv7",
+          "date": "2026-02-10",
+          "type": "deposit",
+          "amount": 5000,
+          "note": "Senapon Hunpe"
+        },
+        {
+          "id": "txn-mpynur6b-lt1s",
+          "date": "2026-02-28",
+          "type": "income",
+          "amount": 336.23,
+          "note": ""
+        },
+        {
+          "id": "txn-mpynvjn2-jd1k",
+          "date": "2026-02-02",
+          "type": "deposit",
+          "amount": 100000,
+          "note": "JFM"
+        },
+        {
+          "id": "txn-mpynykm2-elim",
+          "date": "2026-02-02",
+          "type": "withdrawal",
+          "amount": 21600,
+          "note": "Jamb Forms"
+        },
+        {
+          "id": "txn-mpyo1zr2-0ztf",
+          "date": "2026-02-02",
+          "type": "withdrawal",
+          "amount": 100000,
+          "note": "MMF"
+        },
+        {
+          "id": "txn-mpyo2rb2-gcos",
+          "date": "2026-02-02",
+          "type": "deposit",
+          "amount": 28925,
+          "note": "Withdrawal from MMF"
+        },
+        {
+          "id": "txn-mpyo4qsj-cjtm",
+          "date": "2026-02-02",
+          "type": "fee",
+          "amount": 100,
+          "note": ""
+        },
+        {
+          "id": "txn-mpyo779g-wk42",
+          "date": "2026-03-31",
+          "type": "income",
+          "amount": 397.64,
+          "note": ""
+        },
+        {
+          "id": "txn-mpyoaibc-fspu",
+          "date": "2026-04-30",
+          "type": "income",
+          "amount": 389.12,
+          "note": ""
+        },
+        {
+          "id": "txn-mpyob3kv-74ls",
+          "date": "2026-05-31",
+          "type": "income",
+          "amount": 406.63,
+          "note": ""
+        },
+        {
+          "id": "txn-mpyobo2s-5w8k",
+          "date": "",
+          "type": "deposit",
+          "amount": 0,
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "ca-mpyn7oxa-20k6",
+      "platform": "Opay",
+      "name": "Opay Account",
+      "openingBalance": 0,
+      "transactions": [
+        {
+          "id": "txn-mpyoen7m-vfvw",
+          "date": "2026-02-02",
+          "type": "deposit",
+          "amount": 5000,
+          "note": "Kola Hunga"
+        },
+        {
+          "id": "txn-mpyof5ea-oo0m",
+          "date": "2026-04-04",
+          "type": "deposit",
+          "amount": 5000,
+          "note": "Senapon Hunpe"
+        },
+        {
+          "id": "txn-mpyogbsp-pzx8",
+          "date": "2026-04-06",
+          "type": "deposit",
+          "amount": 2000,
+          "note": "Monday Hunga"
+        },
+        {
+          "id": "txn-mpyohaed-entr",
+          "date": "",
+          "type": "deposit",
+          "amount": 0,
+          "note": ""
+        }
+      ]
+    }
+  ],
+  "moneyMarketAccounts": [
+    {
+      "id": "mm1",
+      "platform": "Cowrywise",
+      "name": "Cowrywise Money Market Fund",
+      "openingBalance": 79750,
+      "transactions": [
+        {
+          "id": "txn-mpyn3btf-rahs",
+          "date": "2026-02-02",
+          "type": "income",
+          "amount": 100000,
+          "note": ""
+        },
+        {
+          "id": "txn-mpyn42cw-mu5r",
+          "date": "2026-02-02",
+          "type": "withdrawal",
+          "amount": 28925,
+          "note": ""
+        },
+        {
+          "id": "txn-mpyn53v9-j43e",
+          "date": "2026-02-02",
+          "type": "fee",
+          "amount": 325,
+          "note": ""
+        },
+        {
+          "id": "txn-mpyn5nq7-9u7b",
+          "date": "2026-02-28",
+          "type": "income",
+          "amount": 2067.92,
+          "note": ""
+        },
+        {
+          "id": "txn-mpyn6sbi-il2d",
+          "date": "2026-03-31",
+          "type": "income",
+          "amount": 2404.76,
+          "note": ""
+        },
+        {
+          "id": "txn-mpyonekn-dq1f",
+          "date": "2026-04-30",
+          "type": "income",
+          "amount": 2310.88,
+          "note": ""
+        },
+        {
+          "id": "txn-mpyonwzu-ext6",
+          "date": "2026-05-31",
+          "type": "income",
+          "amount": 2393.84,
+          "note": ""
+        },
+        {
+          "id": "txn-mpyoogg0-qfbx",
+          "date": "",
+          "type": "topup",
+          "amount": 0,
+          "note": ""
+        }
+      ]
+    }
+  ],
+  "placements": [],
+  "otherExpenses": [],
+  "narrative": {
+    "incomeStatement": "",
+    "balanceSheet": "",
+    "cashFlows": "",
+    "nextSteps": ""
+  },
+  "nextSteps": [],
+  "publishedAt": "2026-06-03T23:26:23.049Z"
+}

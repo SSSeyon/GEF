@@ -1,0 +1,130 @@
+{
+  "id": "2026-01",
+  "label": "January 2026",
+  "year": 2026,
+  "month": 1,
+  "donations": [
+    {
+      "id": "d1",
+      "date": "2026-01-31",
+      "donor": "Wale Methonmasa",
+      "amount": 14400,
+      "note": ""
+    },
+    {
+      "id": "d2",
+      "date": "2026-01-31",
+      "donor": "Seyon Hunga",
+      "amount": 100000,
+      "note": ""
+    }
+  ],
+  "otherIncome": [],
+  "useOfFunds": [
+    {
+      "id": "uof1",
+      "date": "2026-01-31",
+      "category": "jambForm",
+      "beneficiary": "Hunvio Abigael Yenukunme",
+      "description": "JAMB Form",
+      "amount": 7200
+    },
+    {
+      "id": "uof2",
+      "date": "2026-01-31",
+      "category": "jambForm",
+      "beneficiary": "Mauyon Hunga",
+      "description": "JAMB Form",
+      "amount": 7200
+    }
+  ],
+  "cashAccounts": [
+    {
+      "id": "ca1",
+      "platform": "Palm Pay",
+      "name": "Palm Pay Savings",
+      "openingBalance": 0,
+      "transactions": [
+        {
+          "id": "cat1",
+          "date": "2026-01-31",
+          "type": "deposit",
+          "amount": 114400,
+          "note": "Donations received"
+        },
+        {
+          "id": "cat2",
+          "date": "2026-01-31",
+          "type": "withdrawal",
+          "amount": 79750,
+          "note": "Investment to Cowrywise"
+        },
+        {
+          "id": "cat3",
+          "date": "2026-01-31",
+          "type": "withdrawal",
+          "amount": 14400,
+          "note": "JAMB forms disbursed"
+        },
+        {
+          "id": "cat4",
+          "date": "2026-01-31",
+          "type": "fee",
+          "amount": 300,
+          "note": "Bank charges"
+        },
+        {
+          "id": "cat5",
+          "date": "2026-01-31",
+          "type": "income",
+          "amount": 37.45,
+          "note": "January interest"
+        }
+      ]
+    }
+  ],
+  "moneyMarketAccounts": [
+    {
+      "id": "mm1",
+      "platform": "Cowrywise",
+      "name": "Cowrywise Money Market Fund",
+      "openingBalance": 0,
+      "transactions": [
+        {
+          "id": "mmt1",
+          "date": "2026-01-31",
+          "type": "topup",
+          "amount": 79750,
+          "note": "Initial investment"
+        }
+      ]
+    }
+  ],
+  "placements": [],
+  "otherExpenses": [],
+  "narrative": {
+    "incomeStatement": "Two foundational donations were received during the month from Wale Methonmasa and Seyon Hunga, establishing the Fund's initial corpus. The Fund made its first deployments, settling JAMB registration for two candidates: Mauyon Hunga and Abigael Yenukunme Hunvio.",
+    "balanceSheet": "Asset allocation will continue to tilt towards money market instruments, in line with the Fund's conservative mandate of capital preservation and income generation.",
+    "cashFlows": "The Fund's initial operating inflows were deployed into the Cowrywise Money Market Fund. Bank charges of ₦300 were incurred on transfers.",
+    "nextSteps": "Priority for February: complete CAC registration, finalise governance documentation, and broaden the donor base."
+  },
+  "nextSteps": [
+    {
+      "title": "Registration",
+      "detail": "Complete CAC Registration for the community and the Fund."
+    },
+    {
+      "title": "Corporate Governance",
+      "detail": "Complete governance documentation (trust deed, investment policy statement, Board of Trustees selection) and open corporate accounts."
+    },
+    {
+      "title": "Fund Mobilisation",
+      "detail": "Drive active contributions from working members of the community and other potential sources."
+    },
+    {
+      "title": "Tutorials",
+      "detail": "Register WAEC and JAMB candidates for tutorial classes and pay for lesson teachers."
+    }
+  ],
+  "publishedAt": "2026-06-03T22:16:10.525Z"
+}

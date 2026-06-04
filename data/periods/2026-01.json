@@ -41,8 +41,8 @@
   "cashAccounts": [
     {
       "id": "ca1",
-      "platform": "Palm Pay",
-      "name": "Palm Pay Savings",
+      "platform": "PalmPay",
+      "name": "PalmPay",
       "openingBalance": 0,
       "transactions": [
         {
@@ -87,7 +87,7 @@
     {
       "id": "mm1",
       "platform": "Cowrywise",
-      "name": "Cowrywise Money Market Fund",
+      "name": "Cowrywise MMF",
       "openingBalance": 0,
       "transactions": [
         {
@@ -126,5 +126,5 @@
       "detail": "Register WAEC and JAMB candidates for tutorial classes and pay for lesson teachers."
     }
   ],
-  "publishedAt": "2026-06-03T22:21:24.821Z"
+  "publishedAt": "2026-06-04T11:13:05.861Z"
 }

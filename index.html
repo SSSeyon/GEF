@@ -31,12 +31,12 @@ p{margin:0 0 .8em}a{color:var(--grn)}
 .brand-mark img{width:100%;height:100%;object-fit:cover}
 .brand-name{font-family:var(--fs);font-size:1.05rem;color:#fff;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
 .hdr-controls{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.month-sel{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 8px 4px 12px}
+.month-sel{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:3px 6px 3px 10px}
 .month-sel label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);white-space:nowrap}
-.month-sel select{background:transparent;border:0;color:#fff;font-family:var(--f);font-size:.88rem;padding:4px 6px;cursor:pointer}
+.month-sel select{background:transparent;border:0;color:#fff;font-family:var(--f);font-size:.78rem;padding:3px 4px;cursor:pointer}
 .month-sel select option{background:var(--grnd);color:#fff}
 .view-toggle{display:flex;align-items:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;overflow:hidden}
-.view-toggle button{background:transparent;border:0;color:rgba(255,255,255,.7);font-family:var(--f);font-size:.72rem;font-weight:500;padding:5px 11px;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;transition:background .15s,color .15s}
+.view-toggle button{background:transparent;border:0;color:rgba(255,255,255,.7);font-family:var(--f);font-size:.66rem;font-weight:500;padding:4px 8px;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;transition:background .15s,color .15s}
 .view-toggle button.active{background:rgba(255,255,255,.22);color:#fff}
 .tab-nav{display:flex;border-top:1px solid rgba(255,255,255,.15)}
 .tab-btn{flex:1;min-width:0;min-height:52px;background:transparent;border:0;color:rgba(255,255,255,.65);font-family:var(--f);font-size:.75rem;font-weight:500;padding:8px 2px;cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;display:flex;flex-direction:column;align-items:center;gap:3px;letter-spacing:.01em;-webkit-tap-highlight-color:transparent}
@@ -156,6 +156,16 @@ p{margin:0 0 .8em}a{color:var(--grn)}
 .preview-banner{background:linear-gradient(90deg,#1B3B6F,#2a5099);color:#fff;padding:10px 18px;border-radius:var(--r);display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
 .preview-banner span{font-size:.88rem}
 .preview-banner strong{color:var(--glds)}
+.ytd-month-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:14px}
+.ytd-month-card{background:var(--bgc);border:1px solid var(--ln);border-radius:var(--r);overflow:hidden}
+.ytd-month-card-hdr{background:var(--grns);padding:10px 14px;font-weight:600;font-size:.88rem;color:var(--grnd);display:flex;justify-content:space-between;align-items:center}
+.ytd-month-card-hdr .num{font-size:.9rem}
+.ytd-month-card-body{padding:0 14px 10px}
+.ytd-month-card-body .stmt{font-size:.82rem}
+.ytd-month-card-body .stmt th,.ytd-month-card-body .stmt td{padding:5px 0}
+.ytd-details-toggle{cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px;padding:10px 0;color:var(--grnd);font-weight:600;font-size:.9rem;border-bottom:1px solid var(--ln);margin-bottom:4px}
+.ytd-details-toggle svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;transition:transform .2s;flex-shrink:0}
+.ytd-details-toggle.open svg{transform:rotate(180deg)}
 
 body.dark{--bg:#0E1812;--bgc:#141F17;--bge:#1A2620;--ink:#E8E3DA;--inks:#A8B4A4;--inkm:#6B7A68;--ln:#2A3A2E;--lnk:#3A4E3E;--grns:#0F2518;--glds:#3A2E0A;--reds:#2E1410;--sh:0 4px 16px rgba(0,0,0,.3)}
 body.dark .card{box-shadow:0 1px 4px rgba(0,0,0,.2)}
@@ -225,19 +235,20 @@ body.dark .erow{background:var(--bge)}
     <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.02.1</div>
+<div class="ver" id="ver-badge">V1.03.0</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.02.1';
+const APP_VERSION='V1.03.0';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
   function fmtM(v,plain){var sym=plain?'':'\u20A6',n=Number(v||0),a=Math.abs(n);var f=a.toLocaleString('en-GB',{minimumFractionDigits:0,maximumFractionDigits:0});return n<0?'('+(plain?'':sym)+f+')':sym+f;}
   function fmtPct(v,d){return(Number(v||0)*100).toFixed(d==null?2:d)+'%';}
   function pLabel(p){if(p.label)return p.label;var m=['January','February','March','April','May','June','July','August','September','October','November','December'];return m[p.month-1]+' '+p.year;}
+  function pLabelShort(p){var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return m[(p.month||1)-1]+' '+(p.year||'');}
   function sum(arr,k){return(arr||[]).reduce(function(a,i){return a+Number((k?i[k]:i)||0);},0);}
   function acctBal(a){return(a.transactions||[]).reduce(function(b,t){if(['deposit','topup','income','rollover'].includes(t.type))return b+Number(t.amount||0);return b-Number(t.amount||0);},Number(a.openingBalance||0));}
   function acctIncome(a){return(a.transactions||[]).filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+Number(t.amount||0);},0);}
@@ -246,12 +257,28 @@ const GEF=(function(){
   function mergePeriods(periods){
     if(!periods||!periods.length)return null;
     var base=periods[periods.length-1];
+    // For investment accounts: merge transactions from all periods so income, fees,
+    // and movements accumulate correctly in YTD view.
+    // Opening balance comes from the earliest period; transactions from all periods concatenated.
+    function mergeAccts(cat){
+      var first=periods[0];
+      var acctIds=[].concat.apply([],periods.map(function(p){return(p[cat]||[]).map(function(a){return a.id;});}));
+      acctIds=acctIds.filter(function(id,i){return acctIds.indexOf(id)===i;}); // unique
+      return acctIds.map(function(id){
+        var earliest=(first[cat]||[]).find(function(a){return a.id===id;});
+        if(!earliest)earliest=(base[cat]||[]).find(function(a){return a.id===id;})||{id:id,name:id,platform:'',openingBalance:0,transactions:[]};
+        var allTxns=[].concat.apply([],periods.map(function(p){return((p[cat]||[]).find(function(a){return a.id===id;})||{transactions:[]}).transactions||[];}));
+        return Object.assign({},earliest,{transactions:allTxns});
+      });
+    }
     return{id:base.id,label:base.label,year:base.year,month:base.month,
       donations:[].concat.apply([],periods.map(function(p){return p.donations||[];})),
       otherIncome:[].concat.apply([],periods.map(function(p){return p.otherIncome||[];})),
       useOfFunds:[].concat.apply([],periods.map(function(p){return p.useOfFunds||[];})),
       otherExpenses:[].concat.apply([],periods.map(function(p){return p.otherExpenses||[];})),
-      cashAccounts:base.cashAccounts,moneyMarketAccounts:base.moneyMarketAccounts,placements:base.placements,
+      cashAccounts:mergeAccts('cashAccounts'),
+      moneyMarketAccounts:mergeAccts('moneyMarketAccounts'),
+      placements:mergeAccts('placements'),
       narrative:base.narrative,nextSteps:base.nextSteps,keyActivities:base.keyActivities};
   }
   function pnl(p){
@@ -285,7 +312,7 @@ const GEF=(function(){
   function newId(pfx){return(pfx||'x')+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6);}
   function blank(yr,mo){return{id:yr+'-'+String(mo).padStart(2,'0'),label:'',year:yr,month:mo,donations:[],otherIncome:[],useOfFunds:[],cashAccounts:[],moneyMarketAccounts:[],placements:[],otherExpenses:[],keyActivities:[],narrative:{incomeStatement:'',balanceSheet:'',cashFlows:'',nextSteps:''},nextSteps:[]};}
   function carry(prev){if(!prev)return null;return{cashAccounts:(prev.cashAccounts||[]).map(function(a){return{id:a.id,platform:a.platform,name:a.name,openingBalance:acctBal(a),transactions:[]};}),moneyMarketAccounts:(prev.moneyMarketAccounts||[]).map(function(a){return{id:a.id,platform:a.platform,name:a.name,openingBalance:acctBal(a),transactions:[]};}),placements:(prev.placements||[]).map(function(a){return{id:a.id,platform:a.platform,name:a.name,rate:a.rate,tenor:a.tenor,startDate:a.startDate,maturityDate:a.maturityDate,openingBalance:acctBal(a),transactions:[]};})};}
-  return{UOF_CATS,fmtM,fmtPct,pLabel,sum,acctBal,pnl,bs,cf,invSum,newId,blank,carry,mergePeriods};
+  return{UOF_CATS,fmtM,fmtPct,pLabel,pLabelShort,sum,acctBal,pnl,bs,cf,invSum,newId,blank,carry,mergePeriods};
 })();
 
 (function(){
@@ -349,7 +376,7 @@ async function loadIndex(){
   var ps=((S.pubIdx.publishedPeriods)||[]).slice().sort(function(a,b){return b.id.localeCompare(a.id);});
   S.periods=ps;
   var sel=document.getElementById('month-sel');sel.innerHTML='';
-  ps.forEach(function(p){var o=document.createElement('option');o.value=p.id;o.textContent=p.label;sel.appendChild(o);});
+  ps.forEach(function(p){var o=document.createElement('option');o.value=p.id;o.textContent=GEF.pLabelShort(p);sel.appendChild(o);});
   sel.onchange=function(){S.previewPeriod=null;loadAndRender(sel.value);};
   if(ps.length){loadAndRender(ps[0].id);}else{S.period=null;renderDash();}
 }
@@ -414,7 +441,7 @@ function renderDash(){
     html+='<tr class="tot"><td colspan="3">Total</td><td class="r">\u20A6'+GEF.fmtM(r.totalUof,true)+'</td></tr></tbody></table></div></div>';
   }
   el.innerHTML=html;
-  setTimeout(function(){buildDashCharts(r,b,c,trendPeriods);},50);
+  requestAnimationFrame(function(){setTimeout(function(){buildDashCharts(r,b,c,trendPeriods);},60);});
 }
 
 function getTrendPeriods(year){
@@ -443,6 +470,7 @@ function buildSankeyDiagram(wrapperId,c){
     {id:'fees',l:'Fees',v:Math.abs(c.inv.fees),c:red},
   ].filter(function(n){return n.v>0;});
 
+  if(!ops.length&&!outs.length){wrap.innerHTML='<p style="color:var(--inkm);font-size:.85rem;padding:12px 0;text-align:center;">No cash flow data for this period.</p>';return;}
   var totalIn=ops.reduce(function(s,n){return s+n.v;},0);
   var netCash=c.cashChange;
   var opening=c.openCash;
@@ -518,18 +546,47 @@ function buildSankeyDiagram(wrapperId,c){
 
 var DL_PLUGIN={id:'dataLabels',afterDatasetsDraw:function(chart){
   var ctx=chart.ctx;
+  var type=chart.config.type;
   chart.data.datasets.forEach(function(ds,di){
     var meta=chart.getDatasetMeta(di);
     if(meta.hidden||ds.label==='_b')return;
-    meta.data.forEach(function(bar,idx){
-      var val=ds.data[idx];
-      if(!val&&val!==0)return;
-      var x=bar.x,y=bar.y;
-      var isNeg=Number(val)<0;
-      var lbl='\u20A6'+(Math.abs(Number(val))/1000).toFixed(0)+'k';
-      ctx.save();ctx.fillStyle=isNeg?'#A33A2E':'#0A3D24';ctx.font='600 10px Geist,sans-serif';ctx.textAlign='center';
-      ctx.fillText(lbl,x,isNeg?y+14:y-6);ctx.restore();
-    });
+    if(type==='doughnut'||type==='pie'){
+      // Draw percentage label in each segment
+      var total=ds.data.reduce(function(s,v){return s+Number(v||0);},0);
+      if(!total)return;
+      meta.data.forEach(function(arc,idx){
+        var val=Number(ds.data[idx]||0);
+        if(!val)return;
+        var pct=Math.round(val/total*100);
+        if(pct<5)return; // skip tiny slices
+        var angle=(arc.startAngle+arc.endAngle)/2;
+        var r=(arc.innerRadius+arc.outerRadius)/2;
+        var x=arc.x+Math.cos(angle)*r;
+        var y=arc.y+Math.sin(angle)*r;
+        ctx.save();ctx.fillStyle='#fff';ctx.font='600 10px Geist,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(pct+'%',x,y);ctx.restore();
+      });
+    } else if(type==='line'){
+      // Draw value labels above each point
+      meta.data.forEach(function(pt,idx){
+        var val=ds.data[idx];
+        if(val==null)return;
+        var lbl='\u20A6'+(Math.abs(Number(val))/1000).toFixed(0)+'k';
+        ctx.save();ctx.fillStyle='#0A3D24';ctx.font='600 10px Geist,sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';
+        ctx.fillText(lbl,pt.x,pt.y-6);ctx.restore();
+      });
+    } else {
+      // Bar / waterfall labels
+      meta.data.forEach(function(bar,idx){
+        var val=ds.data[idx];
+        if(!val&&val!==0)return;
+        var x=bar.x,y=bar.y;
+        var isNeg=Number(val)<0;
+        var lbl='\u20A6'+(Math.abs(Number(val))/1000).toFixed(0)+'k';
+        ctx.save();ctx.fillStyle=isNeg?'#A33A2E':'#0A3D24';ctx.font='600 10px Geist,sans-serif';ctx.textAlign='center';
+        ctx.fillText(lbl,x,isNeg?y+14:y-6);ctx.restore();
+      });
+    }
   });
 }};
 
@@ -556,7 +613,7 @@ function buildDashCharts(r,b,c,trendPeriods){
     var tI=trendPeriods.map(function(tp){return GEF.pnl(tp).totalRevenue;});
     var tD=trendPeriods.map(function(tp){return GEF.pnl(tp).totalUof;});
     var ta=document.getElementById('c-trend-assets');
-    if(ta)S.charts['c-trend-assets']=new Chart(ta,{type:'line',data:{labels:tL,datasets:[{label:'Net Assets',data:tA,borderColor:CLR.grn,backgroundColor:'rgba(15,81,50,.08)',fill:true,tension:.35,pointRadius:4,pointBackgroundColor:CLR.grn}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ct){return GEF.fmtM(ct.parsed.y);}}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Geist',size:10}}},y:{grid:{color:CLR.ln},ticks:{font:{family:'Geist Mono',size:10},callback:function(v){return(v/1000).toFixed(0)+'k';}}}}}});
+    if(ta)S.charts['c-trend-assets']=new Chart(ta,{type:'line',data:{labels:tL,datasets:[{label:'Net Assets',data:tA,borderColor:CLR.grn,backgroundColor:'rgba(15,81,50,.08)',fill:true,tension:.35,pointRadius:4,pointBackgroundColor:CLR.grn}]},plugins:[DL_PLUGIN],options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ct){return GEF.fmtM(ct.parsed.y);}}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Geist',size:10}}},y:{grid:{color:CLR.ln},ticks:{font:{family:'Geist Mono',size:10},callback:function(v){return(v/1000).toFixed(0)+'k';}}}}}});
     var tp2=document.getElementById('c-trend-pnl');
     if(tp2)S.charts['c-trend-pnl']=new Chart(tp2,{type:'bar',data:{labels:tL,datasets:[{label:'Total Income',data:tI,backgroundColor:CLR.grn,borderRadius:3},{label:'Deployments',data:tD,backgroundColor:CLR.gld,borderRadius:3}]},plugins:[DL_PLUGIN],options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Geist',size:11},padding:10,boxWidth:9,boxHeight:9}},tooltip:{callbacks:{label:function(ct){return ct.dataset.label+': '+GEF.fmtM(ct.parsed.y);}}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Geist',size:10}}},y:{grid:{color:CLR.ln},ticks:{font:{family:'Geist Mono',size:10},callback:function(v){return(v/1000).toFixed(0)+'k';}}}}}}); 
   }
@@ -646,7 +703,61 @@ function renderReport(){
     var tot=document.createElement('tr');tot.className='tot';tot.innerHTML='<td colspan="2">Total</td><td class="r">\u20A6'+GEF.fmtM(b.totalAssets,true)+'</td>';hb.appendChild(tot);
   }
   el.querySelectorAll('.stmt tr[data-click]').forEach(function(row){row.addEventListener('click',function(){showBreakdown(row.dataset.click,p,r);});});
-  setTimeout(function(){buildRptCharts(r,b,c);},50);
+  // YTD month-by-month breakdown
+  if(S.viewMode==='ytd'){
+    var ytdPeriods=[];
+    var basePeriod=S.previewPeriod||S.period;
+    if(basePeriod){
+      var ytdTargets=[];
+      (S.pubIdx&&S.pubIdx.publishedPeriods||[]).filter(function(pp){return pp.year===basePeriod.year&&pp.id<=basePeriod.id;}).forEach(function(pp){ytdTargets.push(pp.id);});
+      Object.keys(S.drafts).forEach(function(id){var d=S.drafts[id];if(d.year===basePeriod.year&&id<=basePeriod.id&&!ytdTargets.includes(id))ytdTargets.push(id);});
+      ytdTargets.sort().forEach(function(id){
+        if(id===basePeriod.id)ytdPeriods.push(basePeriod);
+        else if(S.loadedPeriods[id])ytdPeriods.push(S.loadedPeriods[id]);
+      });
+    }
+    if(ytdPeriods.length>0){
+      var mhd='<div class="sec"><div class="ytd-details-toggle" id="ytd-toggle"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Monthly breakdown ('+ytdPeriods.length+' period'+(ytdPeriods.length>1?'s':'')+' — click to expand)</div><div id="ytd-months-body" style="display:none;">';
+      mhd+='<div class="ytd-month-grid">';
+      ytdPeriods.forEach(function(mp){
+        var mr=GEF.pnl(mp),mb=GEF.bs(mp),mc=GEF.cf(mp);
+        var mlbl=GEF.pLabel(mp);
+        mhd+='<div class="ytd-month-card"><div class="ytd-month-card-hdr"><span>'+esc(mlbl)+'</span><span class="num">₦'+GEF.fmtM(mb.netAssets,true)+'</span></div>';
+        mhd+='<div class="ytd-month-card-body">';
+        // Mini income statement
+        mhd+=buildStmt([
+          {h:'Income',col:''},
+          {l:'Donations',v:mr.donations,ind:true},{l:'Inv. income',v:mr.investmentIncome,ind:true,dz:true},{l:'Other income',v:mr.otherIncome,ind:true,dz:true},
+          {l:'Total revenue',v:mr.totalRevenue,tot:true},
+          {l:'Total expenses',v:-mr.totalExpenses,tot:true},
+          {l:'Net income',v:mr.netIncome,gt:true}
+        ]);
+        mhd+='<div style="height:10px;"></div>';
+        // Mini balance sheet
+        mhd+=buildStmt([
+          {h:'Balance Sheet',col:''},
+          {l:'Cash',v:mb.cash,ind:true,dz:true},{l:'Money Market',v:mb.moneyMarket,ind:true,dz:true},{l:'Placements',v:mb.placements,ind:true,dz:true},
+          {l:'Net assets',v:mb.netAssets,gt:true}
+        ]);
+        mhd+='<div style="height:10px;"></div>';
+        // Mini cash flow
+        mhd+=buildStmt([
+          {h:'Cash Flows',col:''},
+          {l:'Net operating',v:mc.op.sub,ind:true},{l:'Net investing',v:mc.inv.sub,ind:true},
+          {l:'Movement',v:mc.cashChange,tot:true},
+          {l:'Opening cash',v:mc.openCash,ind:true},{l:'Closing cash',v:mc.booked,gt:true}
+        ]);
+        mhd+='</div></div>';
+      });
+      mhd+='</div></div></div>';
+      el.innerHTML+=mhd;
+      // Wire up toggle
+      var tog=document.getElementById('ytd-toggle');
+      var body=document.getElementById('ytd-months-body');
+      if(tog&&body){tog.addEventListener('click',function(){var open=body.style.display!=='none';body.style.display=open?'none':'block';tog.classList.toggle('open',!open);});}
+    }
+  }
+  requestAnimationFrame(function(){setTimeout(function(){buildRptCharts(r,b,c);},60);});
 }
 
 function showBreakdown(key,p,r){

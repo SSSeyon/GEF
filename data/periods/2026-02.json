@@ -175,7 +175,7 @@
         {
           "id": "txn-mpyn3btf-rahs",
           "date": "2026-02-02",
-          "type": "income",
+          "type": "topup",
           "amount": 100000,
           "note": ""
         },
@@ -240,5 +240,5 @@
     "nextSteps": ""
   },
   "nextSteps": [],
-  "publishedAt": "2026-06-04T02:04:34.238Z"
+  "publishedAt": "2026-06-04T02:07:09.670Z"
 }

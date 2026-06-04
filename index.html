@@ -29,7 +29,7 @@ p{margin:0 0 .8em}a{color:var(--grn)}
 .hdr-top{display:flex;align-items:center;gap:10px;padding:0 16px;height:var(--hh)}
 .brand-mark{width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0}
 .brand-mark img{width:100%;height:100%;object-fit:cover}
-.brand-name{font-family:var(--fs);font-size:1.05rem;color:#fff;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-name{font-family:var(--fs);font-size:1.05rem;color:#fff;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
 .hdr-controls{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .month-sel{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 8px 4px 12px}
 .month-sel label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);white-space:nowrap}
@@ -39,7 +39,7 @@ p{margin:0 0 .8em}a{color:var(--grn)}
 .view-toggle button{background:transparent;border:0;color:rgba(255,255,255,.7);font-family:var(--f);font-size:.72rem;font-weight:500;padding:5px 11px;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;transition:background .15s,color .15s}
 .view-toggle button.active{background:rgba(255,255,255,.22);color:#fff}
 .tab-nav{display:flex;border-top:1px solid rgba(255,255,255,.15)}
-.tab-btn{flex:1;background:transparent;border:0;color:rgba(255,255,255,.65);font-family:var(--f);font-size:.82rem;font-weight:500;padding:10px 4px;cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;display:flex;flex-direction:column;align-items:center;gap:3px;letter-spacing:.02em}
+.tab-btn{flex:1;min-width:0;min-height:52px;background:transparent;border:0;color:rgba(255,255,255,.65);font-family:var(--f);font-size:.75rem;font-weight:500;padding:8px 2px;cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;display:flex;flex-direction:column;align-items:center;gap:3px;letter-spacing:.01em;-webkit-tap-highlight-color:transparent}
 .tab-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tab-btn:hover{color:rgba(255,255,255,.9)}
 .tab-btn.active{color:#fff;border-bottom-color:var(--gld)}
@@ -134,6 +134,13 @@ p{margin:0 0 .8em}a{color:var(--grn)}
 .ver{position:fixed;bottom:8px;right:12px;font-size:.65rem;color:var(--inkm);letter-spacing:.08em;z-index:50;pointer-events:none}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--grnd);color:#fff;padding:10px 20px;border-radius:999px;font-size:.88rem;box-shadow:var(--sh);z-index:200;opacity:0;transition:opacity .25s}
 .toast.show{opacity:1}
+
+.ptr-indicator{position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-60px);background:var(--grnd);color:#fff;padding:8px 18px;border-radius:0 0 999px 999px;font-size:.8rem;z-index:500;transition:transform .25s ease;display:flex;align-items:center;gap:8px}
+.ptr-indicator.visible{transform:translateX(-50%) translateY(0)}
+.ptr-indicator svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;animation:ptr-spin 1s linear infinite}
+
+@media(max-width:500px){.brand-name{max-width:80px;font-size:.85rem}.month-sel label{display:none}.view-toggle button{padding:5px 8px;font-size:.65rem}.hdr-controls{gap:4px}}
+@keyframes ptr-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .sw-banner{background:var(--glds);color:#6B4F0E;text-align:center;padding:8px 16px;font-size:.84rem;border-bottom:1px solid #E0CB85}
 .modal-bg{position:fixed;inset:0;background:rgba(10,20,15,.55);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
 .modal{background:var(--bgc);border-radius:var(--rl);box-shadow:0 16px 48px rgba(10,20,15,.22);max-width:680px;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
@@ -149,15 +156,29 @@ p{margin:0 0 .8em}a{color:var(--grn)}
 .preview-banner{background:linear-gradient(90deg,#1B3B6F,#2a5099);color:#fff;padding:10px 18px;border-radius:var(--r);display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
 .preview-banner span{font-size:.88rem}
 .preview-banner strong{color:var(--glds)}
+
+body.dark{--bg:#0E1812;--bgc:#141F17;--bge:#1A2620;--ink:#E8E3DA;--inks:#A8B4A4;--inkm:#6B7A68;--ln:#2A3A2E;--lnk:#3A4E3E;--grns:#0F2518;--glds:#3A2E0A;--reds:#2E1410;--sh:0 4px 16px rgba(0,0,0,.3)}
+body.dark .card{box-shadow:0 1px 4px rgba(0,0,0,.2)}
+body.dark .fld input,body.dark .fld select,body.dark .fld textarea{background:var(--bge);border-color:var(--lnk);color:var(--ink)}
+body.dark .stmt tr.clickable:hover td{background:var(--grns)}
+body.dark .acct-hdr{background:var(--grns)}
+body.dark .login-card,body.dark .modal{background:var(--bgc);border-color:var(--ln)}
+body.dark .erow{background:var(--bge)}
+.dm-toggle{background:transparent;border:1px solid rgba(255,255,255,.2);border-radius:999px;color:rgba(255,255,255,.8);padding:5px 9px;cursor:pointer;font-size:.78rem;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:background .15s}
+.dm-toggle:hover{background:rgba(255,255,255,.12)}
+.dm-toggle svg{width:14px;height:14px;fill:currentColor;flex-shrink:0}
+
 </style>
 </head>
 <body>
+<div id="ptr-indicator" class="ptr-indicator"><svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Refreshing&hellip;</div>
 <div id="sw-banner" class="sw-banner hidden">New version available. <a href="" onclick="location.reload()">Refresh</a> to update.</div>
 <div class="app">
 <header class="app-header">
   <div class="hdr-top">
     <div class="brand-mark"><img src="icon-192.png" alt="GEF"/></div>
     <div class="brand-name">Gbago Endowment Fund</div>
+    <button class="dm-toggle" id="dm-toggle" title="Toggle dark mode"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     <div id="hdr-controls" class="hdr-controls hidden">
       <div id="month-wrap" class="month-sel">
         <label>Period</label>
@@ -204,13 +225,13 @@ p{margin:0 0 .8em}a{color:var(--grn)}
     <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.01.0</div>
+<div class="ver" id="ver-badge">V1.02.0</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.01.0';
+const APP_VERSION='V1.02.0';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -366,7 +387,7 @@ function renderDash(){
     +'</div></div>';
   html+='<div class="grid2 sec"><div class="card"><h3 style="margin-bottom:8px;">Income breakdown</h3><div class="chart-w dn"><canvas id="c-inc"></canvas></div></div>'
     +'<div class="card"><h3 style="margin-bottom:8px;">Asset allocation</h3><div class="chart-w dn"><canvas id="c-alloc"></canvas></div></div></div>';
-  html+='<div class="sec"><div class="sec-hd"><h2>Cash Flow</h2></div><div class="card"><div class="chart-w lg"><canvas id="c-cf-dash"></canvas></div></div></div>';
+  html+='<div class="sec"><div class="sec-hd"><h2>Cash Flow</h2></div><div class="card"><div id="c-sankey-wrap" style="width:100%;overflow-x:auto;"></div></div></div>';
   var trendPeriods=getTrendPeriods(p.year);
   if(trendPeriods.length>1){
     html+='<div class="sec"><div class="sec-hd"><h2>Trends</h2><div class="sec-meta">'+p.year+'</div></div>'
@@ -400,6 +421,101 @@ function getTrendPeriods(year){
   return Object.keys(S.loadedPeriods).filter(function(id){return S.loadedPeriods[id].year===year;}).sort().map(function(id){return S.loadedPeriods[id];});
 }
 
+function buildSankeyDiagram(wrapperId,c){
+  var wrap=document.getElementById(wrapperId);if(!wrap)return;
+  var isDark=document.body.classList.contains('dark');
+  var W=Math.min(wrap.offsetWidth||600,700),H=320;
+  var PAD={l:10,r:10,t:30,b:10},nW=110,nH=34,gap=12;
+  var ink=isDark?'#E8E3DA':'#14201A',muted=isDark?'#6B7A68':'#8A8E89',bg=isDark?'#141F17':'#FFFEFB';
+  var grn='#0F5132',gld='#C99A2E',red='#A33A2E',nvy='#1B3B6F';
+  var fmt=function(v){return'₦'+(Math.abs(Number(v))/1000).toFixed(0)+'k';};
+
+  // Nodes: sources -> operating -> net cash -> closing
+  var ops=[
+    {id:'don',l:'Donations',v:c.op.don,c:grn},
+    {id:'oi',l:'Other Income',v:c.op.oi,c:gld},
+    {id:'ii',l:'Inv. Income',v:c.inv.inc,c:gld},
+  ].filter(function(n){return n.v>0;});
+  var outs=[
+    {id:'uof',l:'Deployments',v:Math.abs(c.op.uof),c:red},
+    {id:'mm',l:'MM Movement',v:Math.abs(c.inv.netMM),c:nvy,pos:c.inv.netMM>=0},
+    {id:'fd',l:'FD Movement',v:Math.abs(c.inv.netFD),c:nvy,pos:c.inv.netFD>=0},
+    {id:'fees',l:'Fees',v:Math.abs(c.inv.fees),c:red},
+  ].filter(function(n){return n.v>0;});
+
+  var totalIn=ops.reduce(function(s,n){return s+n.v;},0);
+  var netCash=c.cashChange;
+  var opening=c.openCash;
+  var closing=c.booked;
+
+  // Layout: 4 columns
+  var col0x=PAD.l, col1x=PAD.l+nW+60, col2x=col1x+nW+60, col3x=col2x+nW+60;
+  var totalW=col3x+nW+PAD.r;
+  if(totalW>W){var scale=W/totalW;col0x*=scale;col1x*=scale;col2x*=scale;col3x*=scale;nW*=scale;}
+
+  // Y positions for source nodes
+  var srcTotal=Math.max(totalIn,1);
+  var srcY=PAD.t,srcNodes=ops.map(function(n){var h=Math.max(20,(n.v/srcTotal)*(H-PAD.t-PAD.b-ops.length*gap));var node=Object.assign({x:col0x,y:srcY,h:h},n);srcY+=h+gap;return node;});
+  // Central node
+  var ctrH=Math.min(H-PAD.t-PAD.b,Math.max(30,(totalIn/srcTotal)*(H-PAD.t-PAD.b)));
+  var ctrY=PAD.t+(H-PAD.t-PAD.b-ctrH)/2;
+  // Out nodes
+  var outTotal=Math.max(outs.reduce(function(s,n){return s+n.v;},1),1);
+  var outY=PAD.t,outNodes=outs.map(function(n){var h=Math.max(20,(n.v/outTotal)*(H-PAD.t-PAD.b-outs.length*gap));var node=Object.assign({x:col2x,y:outY,h:h},n);outY+=h+gap;return node;});
+  // Closing node
+  var closeH=Math.max(24,ctrH*0.5);
+  var closeY=ctrY+(ctrH-closeH)/2;
+
+  function bezier(x1,y1,x2,y2,color,alpha,strokeW){
+    var mx=(x1+x2)/2;
+    return '<path d="M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2+'" fill="none" stroke="'+color+'" stroke-opacity="'+(alpha||0.28)+'" stroke-width="'+(strokeW||8)+'"/>';
+  }
+
+  var svg='<svg viewBox="0 0 '+totalW+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:'+totalW+'px;height:'+H+'px;display:block;">';
+  
+  // Flow lines: sources -> central
+  var srcFlowY=ctrY;
+  srcNodes.forEach(function(n){
+    var flowH=Math.max(4,(n.v/Math.max(totalIn,1))*ctrH);
+    svg+=bezier(n.x+nW,n.y+n.h/2,col1x,srcFlowY+flowH/2,n.c,0.22,Math.max(4,flowH));
+    srcFlowY+=flowH;
+  });
+
+  // Flow lines: central -> outs
+  var outFlowY=ctrY;
+  outNodes.forEach(function(n){
+    var flowH=Math.max(4,(n.v/Math.max(outTotal,1))*ctrH);
+    svg+=bezier(col1x+nW,outFlowY+flowH/2,n.x,n.y+n.h/2,n.c,0.22,Math.max(4,flowH));
+    outFlowY+=flowH;
+  });
+
+  // Flow: central -> closing (net)
+  if(Math.abs(netCash)>0){
+    svg+=bezier(col1x+nW,ctrY+ctrH/2,col3x,closeY+closeH/2,netCash>=0?grn:red,0.3,Math.max(6,closeH));
+  }
+
+  // Draw nodes
+  function drawNode(x,y,w,h,color,label,value,light){
+    var r=6;
+    svg+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+r+'" fill="'+color+'" opacity="0.15"/>';
+    svg+='<rect x="'+x+'" y="'+y+'" width="4" height="'+h+'" rx="2" fill="'+color+'"/>';
+    var midY=y+h/2;
+    svg+='<text x="'+(x+10)+'" y="'+(midY-5)+'" font-family="Geist,sans-serif" font-size="9" fill="'+muted+'" dominant-baseline="auto">'+label+'</text>';
+    svg+='<text x="'+(x+10)+'" y="'+(midY+9)+'" font-family="Geist Mono,monospace" font-size="11" font-weight="600" fill="'+ink+'" dominant-baseline="auto">'+value+'</text>';
+  }
+
+  srcNodes.forEach(function(n){drawNode(n.x,n.y,nW,n.h,n.c,n.l,fmt(n.v));});
+  drawNode(col1x,ctrY,nW,ctrH,grn,'Total Inflows',fmt(totalIn));
+  outNodes.forEach(function(n){drawNode(n.x,n.y,nW,n.h,n.c,n.l,fmt(n.v));});
+  drawNode(col3x,closeY,nW,closeH,netCash>=0?grn:red,'Closing Cash',fmt(closing));
+
+  // Opening label
+  svg+='<text x="'+col3x+'" y="'+(closeY-6)+'" font-family="Geist,sans-serif" font-size="9" fill="'+muted+'">Opening: '+fmt(opening)+'</text>';
+
+  svg+='</svg>';
+  wrap.innerHTML=svg;
+}
+
 var DL_PLUGIN={id:'dataLabels',afterDatasetsDraw:function(chart){
   var ctx=chart.ctx;
   chart.data.datasets.forEach(function(ds,di){
@@ -422,7 +538,7 @@ function mkDonut(ctx,data){
 }
 
 function buildDashCharts(r,b,c,trendPeriods){
-  destroyCharts(['c-inc','c-alloc','c-cf-dash','c-trend-assets','c-trend-pnl']);
+  destroyCharts(['c-inc','c-alloc','c-trend-assets','c-trend-pnl']);document.getElementById('c-sankey-wrap')&&(document.getElementById('c-sankey-wrap').innerHTML='');
   var c1=document.getElementById('c-inc');
   if(c1){var d1=[{l:'Donations',v:r.donations,c:CLR.grn},{l:'Inv. income',v:r.investmentIncome,c:CLR.gld},{l:'Other income',v:r.otherIncome,c:CLR.nvy}].filter(function(x){return x.v>0;});if(d1.length)S.charts['c-inc']=mkDonut(c1,d1);}
   var c2=document.getElementById('c-alloc');
@@ -588,7 +704,7 @@ function showBreakdown(key,p,r){
 }
 
 function buildRptCharts(r,b,c){
-  destroyCharts(['c-wf','c-ri','c-ra','c-cf-rpt']);
+  destroyCharts(['c-wf','c-ri','c-ra']);document.getElementById('c-sankey-rpt-wrap')&&(document.getElementById('c-sankey-rpt-wrap').innerHTML='');
   var ctx=document.getElementById('c-wf');
   if(ctx){
     var steps=[];
@@ -607,13 +723,7 @@ function buildRptCharts(r,b,c){
   if(c1){var d1=[{l:'Donations',v:r.donations,c:CLR.grn},{l:'Investment income',v:r.investmentIncome,c:CLR.gld},{l:'Other',v:r.otherIncome,c:CLR.nvy}].filter(function(x){return x.v>0;});if(d1.length)S.charts['c-ri']=mkDonut(c1,d1);}
   var c2=document.getElementById('c-ra');
   if(c2){var d2=[{l:'Cash',v:b.cash,c:CLR.gld},{l:'Money Market',v:b.moneyMarket,c:CLR.grn},{l:'Placements',v:b.placements,c:CLR.nvy}].filter(function(x){return x.v>0;});if(d2.length)S.charts['c-ra']=mkDonut(c2,d2);}
-  var cc=document.getElementById('c-cf-rpt');
-  if(cc){
-    var cfL=['Donations','Other Inc.','Deployments','Inv. Income','MM Move','FD Move','Fees'];
-    var cfV=[c.op.don,c.op.oi,c.op.uof,c.inv.inc,c.inv.netMM,c.inv.netFD,c.inv.fees];
-    var cfC=cfV.map(function(v){return v>=0?CLR.grn:CLR.red;});
-    S.charts['c-cf-rpt']=new Chart(cc,{type:'bar',data:{labels:cfL,datasets:[{data:cfV,backgroundColor:cfC,borderRadius:4}]},plugins:[DL_PLUGIN],options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ct){return GEF.fmtM(ct.parsed.y);}}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Geist',size:10},color:CLR.inks}},y:{grid:{color:CLR.ln},ticks:{font:{family:'Geist Mono',size:10},color:CLR.inks,callback:function(v){return(v/1000).toFixed(0)+'k';}}}}}}); 
-  }
+  buildSankeyDiagram('c-sankey-rpt-wrap',c);
 }
 
 // ---- Statement builder ----
@@ -744,11 +854,13 @@ function cashAccountOpts(p,selId){
 
 // Auto-log a transaction to a cash account
 function logCashTxn(p,acctId,txnType,amount,date,note){
-  if(!acctId)return;
+  if(!acctId)return null;
   var acct=(p.cashAccounts||[]).find(function(a){return a.id===acctId;});
-  if(!acct)return;
+  if(!acct)return null;
   if(!acct.transactions)acct.transactions=[];
-  acct.transactions.push({id:GEF.newId('txn'),date:date||'',type:txnType,amount:Number(amount)||0,note:note||''});
+  var txnId=GEF.newId('txn');
+  acct.transactions.push({id:txnId,date:date||'',type:txnType,amount:Number(amount)||0,note:note||''});
+  return txnId;
 }
 
 // --- Donations & Income tab ---
@@ -796,11 +908,17 @@ function renderAdmDonations(el){
   // "Log to cash" button for donations
   var logDonBtn=document.createElement('button');logDonBtn.className='btn sm gh';logDonBtn.style.marginTop='10px';logDonBtn.style.marginLeft='8px';logDonBtn.textContent='Log all to cash accounts';
   logDonBtn.addEventListener('click',function(){
-    var logged=0;
+    var logged=0,skipped=0;
     (p.donations||[]).forEach(function(item){
-      if(item._cashAcct&&item.amount){logCashTxn(p,item._cashAcct,'deposit',item.amount,item.date,'Donation from '+(item.donor||''));logged++;}
+      if(item._cashAcct&&item.amount){
+        if(item._loggedTxnId){skipped++;return;} // already logged
+        var txnId=logCashTxn(p,item._cashAcct,'deposit',item.amount,item.date,'Donation from '+(item.donor||''));
+        item._loggedTxnId=txnId;logged++;
+      }
     });
-    autoSave();toast(logged+' donation(s) logged to cash accounts','ok');renderAdmPeriodEditor();
+    autoSave();
+    var msg=logged+' donation(s) logged';if(skipped)msg+=' ('+skipped+' skipped, already logged)';
+    toast(msg,'ok');renderAdmPeriodEditor();
   });
   donCard.appendChild(logDonBtn);
   el.appendChild(donCard);
@@ -856,9 +974,17 @@ function buildCashLsec(spec){
   if(hasCash&&spec.txnType){
     var logBtn=document.createElement('button');logBtn.className='btn sm gh';logBtn.textContent='Log all to cash accounts';
     logBtn.addEventListener('click',function(){
-      var n=0;
-      (p[spec.cat]||[]).forEach(function(item){if(item._cashAcct&&item.amount){logCashTxn(p,item._cashAcct,spec.txnType,item.amount,item.date,spec.txnNote(item));n++;}});
-      autoSave();toast(n+' entr'+( n===1?'y':'ies')+' logged to cash accounts','ok');renderAdmPeriodEditor();
+      var n=0,sk=0;
+      (p[spec.cat]||[]).forEach(function(item){
+        if(item._cashAcct&&item.amount){
+          if(item._loggedTxnId){sk++;return;}
+          var tid=logCashTxn(p,item._cashAcct,spec.txnType,item.amount,item.date,spec.txnNote(item));
+          item._loggedTxnId=tid;n++;
+        }
+      });
+      autoSave();
+      var msg=n+' entr'+(n===1?'y':'ies')+' logged';if(sk)msg+=' ('+sk+' skipped)';
+      toast(msg,'ok');renderAdmPeriodEditor();
     });
     bRow.appendChild(logBtn);
   }
@@ -905,9 +1031,17 @@ function renderAdmUoF(el){
   if(hasCash){
     var logBtn=document.createElement('button');logBtn.className='btn sm gh';logBtn.textContent='Log all to cash accounts';
     logBtn.addEventListener('click',function(){
-      var n=0;
-      (p.useOfFunds||[]).forEach(function(item){if(item._cashAcct&&item.amount){logCashTxn(p,item._cashAcct,'withdrawal',item.amount,item.date,(GEF.UOF_CATS[item.category]||item.category)+(item.beneficiary?' - '+item.beneficiary:''));n++;}});
-      autoSave();toast(n+' entr'+( n===1?'y':'ies')+' logged to cash accounts','ok');renderAdmPeriodEditor();
+      var n=0,sk=0;
+      (p.useOfFunds||[]).forEach(function(item){
+        if(item._cashAcct&&item.amount){
+          if(item._loggedTxnId){sk++;return;}
+          var tid=logCashTxn(p,item._cashAcct,'withdrawal',item.amount,item.date,(GEF.UOF_CATS[item.category]||item.category)+(item.beneficiary?' - '+item.beneficiary:''));
+          item._loggedTxnId=tid;n++;
+        }
+      });
+      autoSave();
+      var msg=n+' entr'+(n===1?'y':'ies')+' logged';if(sk)msg+=' ('+sk+' skipped)';
+      toast(msg,'ok');renderAdmPeriodEditor();
     });
     bRow.appendChild(logBtn);
   }
@@ -1130,7 +1264,10 @@ function renderSettings(){
 // ---- Draft / period management ----
 function loadDrafts(){try{S.drafts=JSON.parse(localStorage.getItem(LS.DR)||'{}')||{};}catch(e){S.drafts={};}}
 function saveDrafts(){localStorage.setItem(LS.DR,JSON.stringify(S.drafts));}
-function autoSave(){if(S.aperiod){S.drafts[S.aperiod.id]=S.aperiod;saveDrafts();}}
+function autoSave(){if(S.aperiod){S.drafts[S.aperiod.id]=S.aperiod;saveDrafts();
+  // Keep previewPeriod in sync so financials reflect live edits
+  if(S.previewPeriod&&S.previewPeriod.id===S.aperiod.id)S.previewPeriod=S.aperiod;
+}}
 function saveDraft(){autoSave();toast('Draft saved','ok');}
 function deleteDraft(id){if(!confirm('Delete draft for '+id+'?'))return;delete S.drafts[id];saveDrafts();if(S.aperiod&&S.aperiod.id===id)S.aperiod=null;renderAdmin();}
 function isPub(id){return S.pubIdx&&(S.pubIdx.publishedPeriods||[]).some(function(p){return p.id===id;});}
@@ -1180,9 +1317,25 @@ async function publish(){
   }catch(e){toast('Publish failed: '+e.message,'err');}
 }
 async function unpublish(id){
-  if(!confirm('Unpublish '+id+'?'))return;
-  try{var f=await ghGet('data/index.json');if(!f)throw new Error('No index.json');var idx=JSON.parse(decodeURIComponent(escape(atob(f.content.replace(/\n/g,'')))));idx.publishedPeriods=(idx.publishedPeriods||[]).filter(function(p){return p.id!==id;});idx.lastUpdated=new Date().toISOString();await ghPut('data/index.json',JSON.stringify(idx,null,2),'Unpublish '+id,f.sha);S.pubIdx=idx;toast('Unpublished '+id,'ok');renderAdmPeriodList();loadIndex();}
-  catch(e){toast('Failed: '+e.message,'err');}
+  if(!confirm('Unpublish '+id+'? The period data file will remain on GitHub but will be removed from the index.'))return;
+  toast('Unpublishing…','ok');
+  try{
+    var f=await ghGet('data/index.json');
+    if(!f)throw new Error('index.json not found on GitHub. Check your repo and branch settings.');
+    var rawContent=f.content.replace(/\n/g,'').replace(/\r/g,'').replace(/\s/g,'');
+    var idx;
+    try{idx=JSON.parse(decodeURIComponent(escape(atob(rawContent))));}
+    catch(parseErr){throw new Error('Could not parse index.json: '+parseErr.message);}
+    idx.publishedPeriods=(idx.publishedPeriods||[]).filter(function(p){return p.id!==id;});
+    idx.lastUpdated=new Date().toISOString();
+    await ghPut('data/index.json',JSON.stringify(idx,null,2),'Unpublish '+id,f.sha);
+    S.pubIdx=idx;
+    // Remove from local cache too
+    delete S.loadedPeriods[id];
+    toast('Unpublished '+id,'ok');
+    renderAdmPeriodList();
+    loadIndex();
+  }catch(e){toast('Unpublish failed: '+e.message,'err');}
 }
 function dlJSON(){if(!S.aperiod)return;var b=new Blob([JSON.stringify(S.aperiod,null,2)],{type:'application/json'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download=S.aperiod.id+'.json';a.click();URL.revokeObjectURL(u);}
 function importJSON(){var inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){try{var obj=JSON.parse(ev.target.result);if(!obj.id){toast('Invalid file: no id','err');return;}S.drafts[obj.id]=obj;saveDrafts();toast('Imported '+obj.id,'ok');selectAdmPeriod(obj.id);}catch(err){toast('Cannot parse JSON','err');}};r.readAsText(f);});inp.click();}
@@ -1192,12 +1345,46 @@ function destroyCharts(ids){(ids||Object.keys(S.charts)).forEach(function(id){if
 function toast(msg,level){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(level||'');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},3500);}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+
+
+// ---- Dark mode ----
+(function(){
+  var dm=document.getElementById('dm-toggle');
+  var isDark=localStorage.getItem('gef-dark')==='1';
+  if(isDark)document.body.classList.add('dark');
+  if(dm)dm.addEventListener('click',function(){
+    isDark=!isDark;
+    document.body.classList.toggle('dark',isDark);
+    localStorage.setItem('gef-dark',isDark?'1':'0');
+  });
+})();
+
+// ---- Pull-to-refresh ----
+(function(){
+  var startY=0,pulling=false,ptr=document.getElementById('ptr-indicator');
+  document.addEventListener('touchstart',function(e){if(window.scrollY===0)startY=e.touches[0].clientY;},{ passive:true});
+  document.addEventListener('touchmove',function(e){if(startY&&window.scrollY===0){var dy=e.touches[0].clientY-startY;if(dy>60&&!pulling){pulling=true;ptr&&ptr.classList.add('visible');}}},{ passive:true});
+  document.addEventListener('touchend',function(){if(pulling){setTimeout(function(){window.location.reload(true);},300);}startY=0;pulling=false;});
+})();
+
 // ---- Boot ----
 async function boot(){
   document.getElementById('ver-badge').textContent=APP_VERSION;
   S.authed=!!sessionStorage.getItem(LS.AUTH);
   document.querySelectorAll('.tab-btn').forEach(function(b){b.addEventListener('click',function(){setTab(b.dataset.tab);});});
-  if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').then(function(reg){reg.addEventListener('updatefound',function(){var nw=reg.installing;nw.addEventListener('statechange',function(){if(nw.state==='installed'&&navigator.serviceWorker.controller){document.getElementById('sw-banner').classList.remove('hidden');}});});});}
+  if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(function(reg){
+    reg.addEventListener('updatefound',function(){var nw=reg.installing;nw.addEventListener('statechange',function(){
+      if(nw.state==='installed'&&navigator.serviceWorker.controller){
+        // Send skip-waiting so new SW activates immediately
+        nw.postMessage({type:'SKIP_WAITING'});
+        document.getElementById('sw-banner').classList.remove('hidden');
+      }
+    });});
+    // If a waiting SW exists on load, prompt immediately
+    if(reg.waiting){reg.waiting.postMessage({type:'SKIP_WAITING'});document.getElementById('sw-banner').classList.remove('hidden');}
+    // When SW takes control, do a hard reload to get fresh content
+    navigator.serviceWorker.addEventListener('controllerchange',function(){window.location.reload(true);});
+  });}
   await loadIndex();
   setTab('dashboard');
 }

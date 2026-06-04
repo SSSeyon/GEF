@@ -296,21 +296,27 @@ const GEF=(function(){
   function mergePeriods(periods){
     if(!periods||!periods.length)return null;
     var base=periods[periods.length-1];
-    // For investment accounts: merge transactions from all periods so income, fees,
-    // and movements accumulate correctly in YTD view.
-    // Opening balance comes from the earliest period; transactions from all periods concatenated.
     function mergeAccts(cat){
-      var first=periods[0];
       var acctIds=[].concat.apply([],periods.map(function(p){return(p[cat]||[]).map(function(a){return a.id;});}));
-      acctIds=acctIds.filter(function(id,i){return acctIds.indexOf(id)===i;}); // unique
+      acctIds=acctIds.filter(function(id,i){return acctIds.indexOf(id)===i;});
       return acctIds.map(function(id){
-        var earliest=(first[cat]||[]).find(function(a){return a.id===id;});
-        if(!earliest)earliest=(base[cat]||[]).find(function(a){return a.id===id;})||{id:id,name:id,platform:'',openingBalance:0,transactions:[]};
+        // Find earliest appearance of this account for YTD opening cash
+        var earliest=null;
+        for(var pi=0;pi<periods.length;pi++){earliest=(periods[pi][cat]||[]).find(function(a){return a.id===id;});if(earliest)break;}
+        if(!earliest)earliest={id:id,name:id,platform:'',openingBalance:0,transactions:[]};
         var allTxns=[].concat.apply([],periods.map(function(p){return((p[cat]||[]).find(function(a){return a.id===id;})||{transactions:[]}).transactions||[];}));
-        return Object.assign({},earliest,{transactions:allTxns});
+        // Set openingBalance so acctBal(merged) == last period closing balance.
+        // This ensures bs() on merged always matches bs() on the last period (month view).
+        var lastAcct=(base[cat]||[]).find(function(a){return a.id===id;})||earliest;
+        var lastClose=acctBal(lastAcct);
+        var txnEffect=allTxns.reduce(function(s,t){return['deposit','topup','income','rollover'].includes(t.type)?s+Number(t.amount||0):s-Number(t.amount||0);},0);
+        var merged=Object.assign({},earliest,{transactions:allTxns,openingBalance:lastClose-txnEffect});
+        merged._ytdOpeningBalance=earliest.openingBalance;
+        return merged;
       });
     }
     return{id:base.id,label:base.label,year:base.year,month:base.month,
+      _isMerged:true,
       donations:[].concat.apply([],periods.map(function(p){return p.donations||[];})),
       otherIncome:[].concat.apply([],periods.map(function(p){return p.otherIncome||[];})),
       useOfFunds:[].concat.apply([],periods.map(function(p){return p.useOfFunds||[];})),
@@ -338,9 +344,12 @@ const GEF=(function(){
   }
   function cf(p){
     var r=pnl(p),b=bs(p);
-    var obCash=(p.cashAccounts||[]).reduce(function(s,a){return s+Number(a.openingBalance||0);},0);
-    var obMM=(p.moneyMarketAccounts||[]).reduce(function(s,a){return s+Number(a.openingBalance||0);},0);
-    var obFD=(p.placements||[]).reduce(function(s,a){return s+Number(a.openingBalance||0);},0);
+    // For YTD merged periods, use _ytdOpeningBalance (year-start balance) for the opening cash line.
+    // For regular periods, use the normal openingBalance.
+    function ob(a){return Number((p._isMerged?a._ytdOpeningBalance:a.openingBalance)||0);}
+    var obCash=(p.cashAccounts||[]).reduce(function(s,a){return s+ob(a);},0);
+    var obMM=(p.moneyMarketAccounts||[]).reduce(function(s,a){return s+ob(a);},0);
+    var obFD=(p.placements||[]).reduce(function(s,a){return s+ob(a);},0);
     var op={don:r.donations,oi:r.otherIncome,uof:-r.totalUof};op.sub=op.don+op.oi+op.uof;
     var cashFees=(p.cashAccounts||[]).reduce(function(s,a){return s+acctFees(a);},0);
     var inv={inc:r.investmentIncome,netMM:-(b.moneyMarket-obMM),netFD:-(b.placements-obFD),fees:-cashFees};

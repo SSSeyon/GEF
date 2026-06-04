@@ -188,16 +188,16 @@ body.dark .erow{background:var(--bge)}
   <div class="hdr-top">
     <div class="brand-mark"><img src="icon-192.png" alt="GEF"/></div>
     <div class="brand-name">Gbago Endowment Fund</div>
-    <button class="dm-toggle" id="dm-toggle" title="Toggle dark mode"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
-    <div id="hdr-controls" class="hdr-controls hidden">
-      <div id="month-wrap" class="month-sel">
+    <div id="hdr-controls" class="hdr-controls">
+      <div id="month-wrap" class="month-sel hidden">
         <label>Period</label>
         <select id="month-sel"></select>
       </div>
-      <div class="view-toggle">
+      <div id="view-toggle-wrap" class="view-toggle hidden">
         <button id="vt-month" class="active" onclick="setViewMode('month')">Month</button>
         <button id="vt-ytd" onclick="setViewMode('ytd')">YTD</button>
       </div>
+      <button class="dm-toggle" id="dm-toggle" title="Toggle dark mode"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     </div>
   </div>
   <nav class="tab-nav">
@@ -235,17 +235,23 @@ body.dark .erow{background:var(--bge)}
     <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.03.0</div>
+<div class="ver" id="ver-badge">V1.04.0</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.03.0';
+const APP_VERSION='V1.04.0';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
-  function fmtM(v,plain){var sym=plain?'':'\u20A6',n=Number(v||0),a=Math.abs(n);var f=a.toLocaleString('en-GB',{minimumFractionDigits:0,maximumFractionDigits:0});return n<0?'('+(plain?'':sym)+f+')':sym+f;}
+  function fmtM(v,plain){
+    var n=Number(v||0),a=Math.abs(n);
+    var f=a.toLocaleString('en-GB',{minimumFractionDigits:0,maximumFractionDigits:0});
+    if(n===0)return plain?'\u2013':'\u2013';
+    if(n<0)return plain?'('+f+')':'\u20A6('+f+')';
+    return plain?f:'\u20A6'+f;
+  }
   function fmtPct(v,d){return(Number(v||0)*100).toFixed(d==null?2:d)+'%';}
   function pLabel(p){if(p.label)return p.label;var m=['January','February','March','April','May','June','July','August','September','October','November','December'];return m[p.month-1]+' '+p.year;}
   function pLabelShort(p){var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return m[(p.month||1)-1]+' '+(p.year||'');}
@@ -362,8 +368,9 @@ function setTab(t){
   S.tab=t;
   document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t);});
   document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.toggle('active',p.id==='tab-'+t);});
-  var hc=document.getElementById('hdr-controls');
-  hc.classList.toggle('hidden',t!=='dashboard'&&t!=='report');
+  var showPeriod=t==='dashboard'||t==='report';
+  document.getElementById('month-wrap').classList.toggle('hidden',!showPeriod);
+  document.getElementById('view-toggle-wrap').classList.toggle('hidden',!showPeriod);
   if(t==='dashboard')renderDash();
   if(t==='report')renderReport();
   if(t==='admin')renderAdmin();
@@ -414,7 +421,6 @@ function renderDash(){
     +'</div></div>';
   html+='<div class="grid2 sec"><div class="card"><h3 style="margin-bottom:8px;">Income breakdown</h3><div class="chart-w dn"><canvas id="c-inc"></canvas></div></div>'
     +'<div class="card"><h3 style="margin-bottom:8px;">Asset allocation</h3><div class="chart-w dn"><canvas id="c-alloc"></canvas></div></div></div>';
-  html+='<div class="sec"><div class="sec-hd"><h2>Cash Flow</h2></div><div class="card"><div id="c-sankey-wrap" style="width:100%;overflow-x:auto;"></div></div></div>';
   var trendPeriods=getTrendPeriods(p.year);
   if(trendPeriods.length>1){
     html+='<div class="sec"><div class="sec-hd"><h2>Trends</h2><div class="sec-meta">'+p.year+'</div></div>'
@@ -425,9 +431,9 @@ function renderDash(){
   }
   var allA=[].concat(p.cashAccounts||[],p.moneyMarketAccounts||[],p.placements||[]);
   if(allA.length){
-    html+='<div class="sec"><div class="sec-hd"><h2>Holdings</h2></div><div class="card"><table class="itbl"><thead><tr><th>Account</th><th>Platform</th><th>Type</th><th class="r">Balance</th></tr></thead><tbody>';
-    allA.forEach(function(a){var type=(p.cashAccounts||[]).includes(a)?'Cash':(p.moneyMarketAccounts||[]).includes(a)?'Money Market':'Placement';html+='<tr><td>'+esc(a.name)+'</td><td>'+esc(a.platform)+'</td><td>'+type+'</td><td class="r">\u20A6'+GEF.fmtM(GEF.acctBal(a),true)+'</td></tr>';});
-    html+='<tr class="tot"><td colspan="3">Total</td><td class="r">\u20A6'+GEF.fmtM(allA.reduce(function(s,a){return s+GEF.acctBal(a);},0),true)+'</td></tr>';
+    html+='<div class="sec"><div class="sec-hd"><h2>Holdings</h2></div><div class="card"><table class="itbl"><thead><tr><th>Platform</th><th>Type</th><th class="r">Balance</th></tr></thead><tbody>';
+    allA.forEach(function(a){var type=(p.cashAccounts||[]).includes(a)?'Cash':(p.moneyMarketAccounts||[]).includes(a)?'Money Market':'Placement';html+='<tr><td>'+esc(a.platform)+'</td><td>'+type+'</td><td class="r">'+GEF.fmtM(GEF.acctBal(a))+'</td></tr>';});
+    html+='<tr class="tot"><td colspan="2">Total</td><td class="r">'+GEF.fmtM(allA.reduce(function(s,a){return s+GEF.acctBal(a);},0))+'</td></tr>';
     html+='</tbody></table></div></div>';
   }
   if((p.donations||[]).length){
@@ -436,9 +442,38 @@ function renderDash(){
     html+='<tr class="tot"><td colspan="2">Total</td><td class="r">\u20A6'+GEF.fmtM(r.donations,true)+'</td></tr></tbody></table></div></div>';
   }
   if((p.useOfFunds||[]).length){
-    html+='<div class="sec"><div class="sec-hd"><h2>Use of Funds</h2><div class="sec-meta">\u20A6'+GEF.fmtM(r.totalUof,true)+' deployed</div></div><div class="card"><table class="itbl"><thead><tr><th>Date</th><th>Category</th><th>Beneficiary</th><th class="r">Amount</th></tr></thead><tbody>';
-    p.useOfFunds.slice().sort(function(a,b){return(a.date||'').localeCompare(b.date||'');}).forEach(function(u){html+='<tr><td>'+esc(u.date)+'</td><td>'+(GEF.UOF_CATS[u.category]||u.category)+'</td><td>'+esc(u.beneficiary||'')+'</td><td class="r">\u20A6'+GEF.fmtM(u.amount,true)+'</td></tr>';});
-    html+='<tr class="tot"><td colspan="3">Total</td><td class="r">\u20A6'+GEF.fmtM(r.totalUof,true)+'</td></tr></tbody></table></div></div>';
+    html+='<div class="sec"><div class="sec-hd"><h2>Use of Funds</h2><div class="sec-meta">'+GEF.fmtM(r.totalUof)+' deployed</div></div><div class="card">';
+    // Group by category
+    var uofByCat={};
+    (p.useOfFunds||[]).forEach(function(u){var c=u.category||'other';if(!uofByCat[c])uofByCat[c]=[];uofByCat[c].push(u);});
+    Object.keys(GEF.UOF_CATS).forEach(function(cat){
+      if(!uofByCat[cat]||!uofByCat[cat].length)return;
+      var catItems=uofByCat[cat].slice().sort(function(a,b){return(a.date||'').localeCompare(b.date||'');});
+      var catTotal=catItems.reduce(function(s,u){return s+Number(u.amount||0);},0);
+      html+='<div style="margin-bottom:16px;">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--ln);margin-bottom:4px;">'
+        +'<strong style="font-size:.88rem;color:var(--grnd);">'+esc(GEF.UOF_CATS[cat])+'</strong>'
+        +'<span style="font-family:var(--fm);font-size:.85rem;">'+GEF.fmtM(catTotal)+'</span></div>';
+      html+='<table class="itbl"><thead><tr><th>Date</th><th>Beneficiary</th><th class="r">Amount</th></tr></thead><tbody>';
+      catItems.forEach(function(u){html+='<tr><td>'+esc(u.date)+'</td><td>'+esc(u.beneficiary||'')+'</td><td class="r">'+GEF.fmtM(u.amount)+'</td></tr>';});
+      html+='</tbody></table></div>';
+    });
+    // catch any uncategorised
+    var usedCats=Object.keys(GEF.UOF_CATS);
+    var others=(p.useOfFunds||[]).filter(function(u){return!usedCats.includes(u.category||'other')&&u.category!=='other';});
+    if(uofByCat['other']||others.length){
+      var otherItems=([].concat(uofByCat['other']||[],others)).slice().sort(function(a,b){return(a.date||'').localeCompare(b.date||'');});
+      var otherTotal=otherItems.reduce(function(s,u){return s+Number(u.amount||0);},0);
+      html+='<div style="margin-bottom:16px;">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--ln);margin-bottom:4px;">'
+        +'<strong style="font-size:.88rem;color:var(--grnd);">Other</strong>'
+        +'<span style="font-family:var(--fm);font-size:.85rem;">'+GEF.fmtM(otherTotal)+'</span></div>';
+      html+='<table class="itbl"><thead><tr><th>Date</th><th>Beneficiary</th><th class="r">Amount</th></tr></thead><tbody>';
+      otherItems.forEach(function(u){html+='<tr><td>'+esc(u.date)+'</td><td>'+esc(u.beneficiary||'')+'</td><td class="r">'+GEF.fmtM(u.amount)+'</td></tr>';});
+      html+='</tbody></table></div>';
+    }
+    html+='<div style="border-top:2px solid var(--ink);padding-top:10px;display:flex;justify-content:space-between;font-weight:600;"><span>Total</span><span style="font-family:var(--fm);">'+GEF.fmtM(r.totalUof)+'</span></div>';
+    html+='</div></div>';
   }
   el.innerHTML=html;
   requestAnimationFrame(function(){setTimeout(function(){buildDashCharts(r,b,c,trendPeriods);},60);});
@@ -595,19 +630,11 @@ function mkDonut(ctx,data){
 }
 
 function buildDashCharts(r,b,c,trendPeriods){
-  destroyCharts(['c-inc','c-alloc','c-trend-assets','c-trend-pnl']);document.getElementById('c-sankey-wrap')&&(document.getElementById('c-sankey-wrap').innerHTML='');
+  destroyCharts(['c-inc','c-alloc','c-trend-assets','c-trend-pnl']);
   var c1=document.getElementById('c-inc');
   if(c1){var d1=[{l:'Donations',v:r.donations,c:CLR.grn},{l:'Inv. income',v:r.investmentIncome,c:CLR.gld},{l:'Other income',v:r.otherIncome,c:CLR.nvy}].filter(function(x){return x.v>0;});if(d1.length)S.charts['c-inc']=mkDonut(c1,d1);}
   var c2=document.getElementById('c-alloc');
   if(c2){var d2=[{l:'Cash',v:b.cash,c:CLR.gld},{l:'Money Market',v:b.moneyMarket,c:CLR.grn},{l:'Placements',v:b.placements,c:CLR.nvy}].filter(function(x){return x.v>0;});if(d2.length)S.charts['c-alloc']=mkDonut(c2,d2);}
-  buildSankeyDiagram('c-sankey-wrap',c);
-  var cfc=document.getElementById('c-cf-dash');
-  if(cfc){
-    var cfL=['Donations','Other Income','Deployments','Inv. Income','MM Move','FD Move','Fees'];
-    var cfV=[c.op.don,c.op.oi,c.op.uof,c.inv.inc,c.inv.netMM,c.inv.netFD,c.inv.fees];
-    var cfC=cfV.map(function(v){return v>=0?CLR.grn:CLR.red;});
-    S.charts['c-cf-dash']=new Chart(cfc,{type:'bar',data:{labels:cfL,datasets:[{data:cfV,backgroundColor:cfC,borderRadius:4}]},plugins:[DL_PLUGIN],options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ct){return GEF.fmtM(ct.parsed.y);}}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Geist',size:10},color:CLR.inks}},y:{grid:{color:CLR.ln},ticks:{font:{family:'Geist Mono',size:10},color:CLR.inks,callback:function(v){return(v/1000).toFixed(0)+'k';}}}}}});
-  }
   if(trendPeriods&&trendPeriods.length>1){
     var tL=trendPeriods.map(function(tp){var ms=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return ms[tp.month-1];});
     var tA=trendPeriods.map(function(tp){return GEF.bs(tp).totalAssets;});
@@ -642,14 +669,14 @@ function renderReport(){
     {l:'Investment income',v:r.investmentIncome,ind:true,dz:true,click:'investmentIncome'},
     {l:'Other income',v:r.otherIncome,ind:true,dz:true,click:'otherIncome'},
     {l:'Total Revenue',v:r.totalRevenue,tot:true},
-    {h:'Use of Funds'},
+    {h:'Expenses'},
     ...Object.keys(GEF.UOF_CATS).filter(function(cat){return r.uofByC[cat]>0;}).map(function(cat){return{l:GEF.UOF_CATS[cat],v:-r.uofByC[cat],ind:true,click:'uof:'+cat};}),
     r.fees>0?{l:'Bank charges & fees',v:-r.fees,ind:true,click:'fees'}:null,
     r.otherExpenses>0?{l:'Other expenses',v:-r.otherExpenses,ind:true,click:'otherExpenses'}:null,
     {l:'Total Expenses',v:-r.totalExpenses,tot:true},
     {l:'Net Income',v:r.netIncome,gt:true}
   ].filter(Boolean),p)+'</div>'
-  +'<div class="card"><h3 style="margin-bottom:8px;">Net income bridge</h3><div class="chart-w wf"><canvas id="c-wf"></canvas></div><div class="spacer"></div><h3 style="margin-bottom:8px;">Income breakdown</h3><div class="chart-w dn"><canvas id="c-ri"></canvas></div></div></div>';
+  +'<div class="card"><h3 style="margin-bottom:8px;">Income breakdown</h3><div class="chart-w dn"><canvas id="c-ri"></canvas></div></div></div>';
   if(narr.incomeStatement)html+='<div class="spacer"></div><div class="narr"><p>'+esc(narr.incomeStatement)+'</p></div>';
   html+='</div>';
   html+='<div class="sec"><div class="sec-hd"><h2>Balance Sheet</h2><div class="sec-meta">As of period end</div></div>';
@@ -669,7 +696,7 @@ function renderReport(){
   +'</div></div>';
   if(narr.balanceSheet)html+='<div class="spacer"></div><div class="narr g"><p>'+esc(narr.balanceSheet)+'</p></div>';
   html+='</div>';
-  html+='<div class="sec"><div class="sec-hd"><h2>Cash Flow Statement</h2></div><div class="grid2"><div class="card">';
+  html+='<div class="sec"><div class="sec-hd"><h2>Cash Flow Statement</h2></div><div class="card">';
   html+=buildStmt([
     {h:'Operating Cash Flows',col:modeLabel},
     {l:'Donations received',v:c.op.don,ind:true,click:'donations'},
@@ -687,7 +714,7 @@ function renderReport(){
     {l:'Closing cash',v:c.booked,gt:true}
   ],p);
   if(!c.ok)html+='<div class="banner warn" style="margin-top:12px;">Cash gap: computed '+GEF.fmtM(c.computed)+' vs booked '+GEF.fmtM(c.booked)+'</div>';
-  html+='</div><div class="card"><h3 style="margin-bottom:8px;">Cash flow waterfall</h3><div class="chart-w wf"><canvas id="c-cf-rpt"></canvas></div><div class="spacer"></div><h3 style="margin-bottom:8px;">Cash flow</h3><div id="c-sankey-rpt-wrap" style="width:100%;overflow-x:auto;"></div></div></div>';
+  html+='</div></div>';
   if(narr.cashFlows)html+='<div class="spacer"></div><div class="narr"><p>'+esc(narr.cashFlows)+'</p></div>';
   html+='</div>';
   if((p.nextSteps||[]).length){
@@ -718,25 +745,28 @@ function renderReport(){
       });
     }
     if(ytdPeriods.length>0){
-      var mhd='<div class="sec"><div class="ytd-details-toggle" id="ytd-toggle"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Monthly breakdown ('+ytdPeriods.length+' period'+(ytdPeriods.length>1?'s':'')+' — click to expand)</div><div id="ytd-months-body" style="display:none;overflow-x:auto;">';
+      var mhd='<div class="sec"><div class="ytd-details-toggle" id="ytd-toggle"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Monthly breakdown ('+ytdPeriods.length+' period'+(ytdPeriods.length>1?'s':'')+' — click to expand)</div><div id="ytd-months-body" style="display:none;">';
+      mhd+='<div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:10px;">'
+        +'<button class="btn sm gh" id="ytd-landscape-btn" onclick="(function(){screen.orientation&&screen.orientation.lock&&screen.orientation.lock(\'landscape\').catch(function(){});})()">&#8645; View in landscape</button>'
+        +'</div>';
       // Build a single columnar table: rows = line items, columns = months
       var cols=ytdPeriods.map(function(mp){return{p:mp,r:GEF.pnl(mp),b:GEF.bs(mp),c:GEF.cf(mp),lbl:GEF.pLabelShort(mp)};});
-      mhd+='<table class="stmt" style="min-width:'+(200+cols.length*110)+'px;"><thead><tr>';
-      mhd+='<th style="min-width:180px;white-space:nowrap;"></th>';
-      cols.forEach(function(col){mhd+='<th class="r" style="min-width:110px;white-space:nowrap;">'+esc(col.lbl)+'</th>';});
+      mhd+='<div style="overflow-x:auto;"><table class="stmt" style="min-width:'+(140+cols.length*85)+'px;font-size:.82rem;"><thead><tr>';
+      mhd+='<th style="min-width:140px;white-space:nowrap;padding-right:12px;"></th>';
+      cols.forEach(function(col){mhd+='<th class="r" style="min-width:85px;white-space:nowrap;padding:6px 4px;">'+esc(col.lbl)+'</th>';});
       mhd+='</tr></thead><tbody>';
       function mrow(label,valFn,cls,indent){
-        var tr='<tr class="'+(cls||'')+(indent?' ind':'')+'"><td style="white-space:nowrap;">'+(indent?'<span style="padding-left:14px;color:var(--inks);">'+esc(label)+'</span>':esc(label))+'</td>';
+        var tr='<tr class="'+(cls||'')+(indent?' ind':'')+'"><td style="white-space:nowrap;padding-right:12px;">'+(indent?'<span style="padding-left:14px;color:var(--inks);">'+esc(label)+'</span>':esc(label))+'</td>';
         cols.forEach(function(col){
           var v=valFn(col);
           var neg=v<0;
-          tr+='<td class="r'+(neg?' neg':'')+'" style="white-space:nowrap;">'+GEF.fmtM(v)+'</td>';
+          tr+='<td class="r'+(neg?' neg':'')+'" style="white-space:nowrap;padding:5px 4px;font-family:var(--fm);font-size:.8rem;">'+GEF.fmtM(v)+'</td>';
         });
         tr+='</tr>';
         return tr;
       }
       // Income Statement
-      mhd+='<tr><th style="padding-top:16px;white-space:nowrap;" colspan="'+(cols.length+1)+'">Income</th></tr>';
+      mhd+='<tr><th style="padding-top:14px;white-space:nowrap;font-size:.72rem;letter-spacing:.08em;" colspan="'+(cols.length+1)+'">INCOME</th></tr>';
       mhd+=mrow('Donations',function(col){return col.r.donations;},null,true);
       mhd+=mrow('Investment income',function(col){return col.r.investmentIncome;},null,true);
       mhd+=mrow('Other income',function(col){return col.r.otherIncome;},null,true);
@@ -744,19 +774,19 @@ function renderReport(){
       mhd+=mrow('Total expenses',function(col){return-col.r.totalExpenses;},'tot');
       mhd+=mrow('Net income',function(col){return col.r.netIncome;},'gt');
       // Balance Sheet
-      mhd+='<tr><th style="padding-top:16px;white-space:nowrap;" colspan="'+(cols.length+1)+'">Balance Sheet</th></tr>';
+      mhd+='<tr><th style="padding-top:14px;white-space:nowrap;font-size:.72rem;letter-spacing:.08em;" colspan="'+(cols.length+1)+'">BALANCE SHEET</th></tr>';
       mhd+=mrow('Cash',function(col){return col.b.cash;},null,true);
       mhd+=mrow('Money Market',function(col){return col.b.moneyMarket;},null,true);
       mhd+=mrow('Placements',function(col){return col.b.placements;},null,true);
       mhd+=mrow('Net assets',function(col){return col.b.netAssets;},'gt');
       // Cash Flows
-      mhd+='<tr><th style="padding-top:16px;white-space:nowrap;" colspan="'+(cols.length+1)+'">Cash Flows</th></tr>';
+      mhd+='<tr><th style="padding-top:14px;white-space:nowrap;font-size:.72rem;letter-spacing:.08em;" colspan="'+(cols.length+1)+'">CASH FLOWS</th></tr>';
       mhd+=mrow('Net operating',function(col){return col.c.op.sub;},null,true);
       mhd+=mrow('Net investing',function(col){return col.c.inv.sub;},null,true);
       mhd+=mrow('Movement',function(col){return col.c.cashChange;},'tot');
       mhd+=mrow('Opening cash',function(col){return col.c.openCash;},null,true);
       mhd+=mrow('Closing cash',function(col){return col.c.booked;},'gt');
-      mhd+='</tbody></table>';
+      mhd+='</tbody></table></div>';
       mhd+='</div></div>';
       el.innerHTML+=mhd;
       // Wire up toggle
@@ -823,26 +853,11 @@ function showBreakdown(key,p,r){
 }
 
 function buildRptCharts(r,b,c){
-  destroyCharts(['c-wf','c-ri','c-ra']);document.getElementById('c-sankey-rpt-wrap')&&(document.getElementById('c-sankey-rpt-wrap').innerHTML='');
-  var ctx=document.getElementById('c-wf');
-  if(ctx){
-    var steps=[];
-    if(r.donations)steps.push({l:'Donations',v:r.donations,t:'i'});
-    if(r.investmentIncome)steps.push({l:'Inv. Income',v:r.investmentIncome,t:'i'});
-    if(r.otherIncome)steps.push({l:'Other Inc.',v:r.otherIncome,t:'i'});
-    Object.keys(GEF.UOF_CATS).forEach(function(cat){if(r.uofByC[cat])steps.push({l:GEF.UOF_CATS[cat],v:-r.uofByC[cat],t:'d'});});
-    if(r.fees)steps.push({l:'Fees',v:-r.fees,t:'d'});
-    if(r.otherExpenses)steps.push({l:'Other Exp.',v:-r.otherExpenses,t:'d'});
-    steps.push({l:'Net Income',v:r.netIncome,t:'total'});
-    var run=0,labs=[],base=[],bar=[],cols=[];
-    steps.forEach(function(s){labs.push(s.l);if(s.t==='total'){base.push(0);bar.push(s.v);cols.push(CLR.nvy);}else if(s.t==='i'){base.push(run);bar.push(s.v);cols.push(CLR.grn);run+=s.v;}else{run+=s.v;base.push(run);bar.push(-s.v);cols.push(CLR.red);}});
-    S.charts['c-wf']=new Chart(ctx,{type:'bar',data:{labels:labs,datasets:[{label:'_b',data:base,backgroundColor:'rgba(0,0,0,0)',stack:'a'},{label:'v',data:bar,backgroundColor:cols,stack:'a',borderRadius:3}]},plugins:[DL_PLUGIN],options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{display:false},ticks:{font:{family:'Geist',size:10},color:CLR.inks}},y:{stacked:true,grid:{color:CLR.ln},ticks:{font:{family:'Geist Mono',size:10},color:CLR.inks,callback:function(v){return(v/1000).toFixed(0)+'k';}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ct){return ct.dataset.label==='_b'?null:GEF.fmtM(ct.parsed.y);}}}}}});
-  }
+  destroyCharts(['c-ri','c-ra']);
   var c1=document.getElementById('c-ri');
   if(c1){var d1=[{l:'Donations',v:r.donations,c:CLR.grn},{l:'Investment income',v:r.investmentIncome,c:CLR.gld},{l:'Other',v:r.otherIncome,c:CLR.nvy}].filter(function(x){return x.v>0;});if(d1.length)S.charts['c-ri']=mkDonut(c1,d1);}
   var c2=document.getElementById('c-ra');
   if(c2){var d2=[{l:'Cash',v:b.cash,c:CLR.gld},{l:'Money Market',v:b.moneyMarket,c:CLR.grn},{l:'Placements',v:b.placements,c:CLR.nvy}].filter(function(x){return x.v>0;});if(d2.length)S.charts['c-ra']=mkDonut(c2,d2);}
-  buildSankeyDiagram('c-sankey-rpt-wrap',c);
 }
 
 // ---- Statement builder ----
@@ -1404,34 +1419,85 @@ function renderAdmNarration(el){
 // ---- Settings ----
 function renderSettings(){
   var el=document.getElementById('cfg-content');el.innerHTML='';
-  if(!S.authed){el.innerHTML='<div class="login-shell"><div class="login-card"><div class="login-logo"><img src="icon-192.png" alt="GEF"/></div><h2>Sign in first</h2><p style="color:var(--inks);">Visit the Admin tab to sign in.</p></div></div>';return;}
-  var html='<div class="card" style="margin-bottom:20px;"><h3 style="margin-bottom:12px;color:var(--grnd);">GitHub Publishing</h3>'
-    +'<p class="muted" style="font-size:.84rem;margin-bottom:14px;">The PAT is stored only in this browser. Create a fine-grained PAT with <strong>Contents: Read and Write</strong> on the target repo only.</p>'
-    +'<div class="frow">'
-    +'<div class="fld"><label>Repo</label><input type="text" id="cfg-repo" placeholder="username/repo-name" value="'+esc(S.repo)+'"/></div>'
-    +'<div class="fld"><label>Branch</label><input type="text" id="cfg-branch" value="'+esc(S.branch||'main')+'"/></div>'
-    +'<div class="fld" style="grid-column:span 2;"><label>GitHub PAT</label><input type="password" id="cfg-pat" placeholder="ghp_..." autocomplete="off" value="'+(S.pat?'••••••••':'')+'" /></div>'
-    +'</div><div class="fb" style="margin-top:12px;">'
-    +'<button class="btn" id="cfg-save">Save</button>'
-    +'<button class="btn gh" id="cfg-test">Test connection</button>'
-    +'<button class="btn dng" id="cfg-clear">Clear token</button>'
-    +'</div></div>'
-    +'<div class="card" style="margin-bottom:20px;"><h3 style="margin-bottom:12px;color:var(--grnd);">Data</h3>'
-    +'<div class="fb"><button class="btn gh" id="cfg-export">Export all drafts (JSON)</button></div></div>'
-    +'<div class="card"><h3 style="margin-bottom:8px;color:var(--grnd);">About</h3>'
+  var isDark=document.body.classList.contains('dark');
+  // --- Public settings (always visible) ---
+  var html='<div class="card" style="margin-bottom:20px;">'
+    +'<h3 style="margin-bottom:14px;color:var(--grnd);">Appearance</h3>'
+    +'<div class="fbw" style="margin-bottom:16px;">'
+    +'<div><div style="font-size:.9rem;font-weight:500;">Dark mode</div><div class="muted" style="font-size:.82rem;">Switch between light and dark theme</div></div>'
+    +'<button class="btn gh sm" id="cfg-dm-btn">'+(isDark?'Switch to light':'Switch to dark')+'</button>'
+    +'</div>'
+    +'</div>';
+  // PDF / Report download
+  html+='<div class="card" style="margin-bottom:20px;">'
+    +'<h3 style="margin-bottom:14px;color:var(--grnd);">Reports</h3>'
+    +'<div class="fbw" style="margin-bottom:12px;">'
+    +'<div><div style="font-size:.9rem;font-weight:500;">Download as PDF</div><div class="muted" style="font-size:.82rem;">Save the current report to your device</div></div>'
+    +'<button class="btn sm" id="cfg-pdf-btn">Download PDF</button>'
+    +'</div>'
+    +'<div class="fbw">'
+    +'<div><div style="font-size:.9rem;font-weight:500;">Print report</div><div class="muted" style="font-size:.82rem;">Open print dialog for the current view</div></div>'
+    +'<button class="btn gh sm" id="cfg-print-btn">Print</button>'
+    +'</div>'
+    +'</div>';
+  // About card (always visible, no passphrase hint)
+  html+='<div class="card" style="margin-bottom:20px;">'
+    +'<h3 style="margin-bottom:8px;color:var(--grnd);">About</h3>'
     +'<p style="font-size:.9rem;color:var(--inks);">Gbago Endowment Fund Portal &middot; <strong>'+APP_VERSION+'</strong></p>'
-    +'<p style="font-size:.82rem;color:var(--inkm);">Single-file PWA. Change the passphrase by editing <code>ADMIN_PASSPHRASE</code> in <code>index.html</code> before deploying.</p></div>';
+    +'</div>';
+  // --- Admin-only settings ---
+  if(S.authed){
+    html+='<div class="card" style="margin-bottom:20px;border-left:3px solid var(--gld);">'
+      +'<h3 style="margin-bottom:12px;color:var(--grnd);">GitHub Publishing</h3>'
+      +'<p class="muted" style="font-size:.84rem;margin-bottom:14px;">The PAT is stored only in this browser. Create a fine-grained PAT with <strong>Contents: Read and Write</strong> on the target repo only.</p>'
+      +'<div class="frow">'
+      +'<div class="fld"><label>Repo</label><input type="text" id="cfg-repo" placeholder="username/repo-name" value="'+esc(S.repo)+'"/></div>'
+      +'<div class="fld"><label>Branch</label><input type="text" id="cfg-branch" value="'+esc(S.branch||'main')+'"/></div>'
+      +'<div class="fld" style="grid-column:span 2;"><label>GitHub PAT</label><input type="password" id="cfg-pat" placeholder="ghp_..." autocomplete="off" value="'+(S.pat?'••••••••':'')+'" /></div>'
+      +'</div><div class="fb" style="margin-top:12px;">'
+      +'<button class="btn" id="cfg-save">Save</button>'
+      +'<button class="btn gh" id="cfg-test">Test connection</button>'
+      +'<button class="btn dng" id="cfg-clear">Clear token</button>'
+      +'</div></div>'
+      +'<div class="card" style="margin-bottom:20px;border-left:3px solid var(--gld);">'
+      +'<h3 style="margin-bottom:12px;color:var(--grnd);">Data</h3>'
+      +'<div class="fb"><button class="btn gh" id="cfg-export">Export all drafts (JSON)</button></div></div>'
+      +'<div class="card" style="margin-bottom:20px;border-left:3px solid var(--gld);">'
+      +'<h3 style="margin-bottom:8px;color:var(--grnd);">Technical</h3>'
+      +'<p style="font-size:.82rem;color:var(--inkm);">Single-file PWA. Change the passphrase by editing <code>ADMIN_PASSPHRASE</code> in <code>index.html</code> before deploying.</p></div>';
+  } else {
+    html+='<div class="card" style="margin-bottom:20px;background:var(--grns);border:1px solid #C8DCC9;">'
+      +'<p style="font-size:.85rem;color:var(--grnd);margin:0;">Sign in via the Admin tab to access publishing and data settings.</p>'
+      +'</div>';
+  }
   el.innerHTML=html;
-  el.querySelector('#cfg-save').addEventListener('click',function(){
-    S.repo=(el.querySelector('#cfg-repo').value||'').trim();
-    S.branch=(el.querySelector('#cfg-branch').value||'').trim()||'main';
-    var np=(el.querySelector('#cfg-pat').value||'').trim();if(np&&!np.startsWith('\u2022'))S.pat=np;
-    localStorage.setItem(LS.REPO,S.repo);localStorage.setItem(LS.BR,S.branch);if(S.pat)localStorage.setItem(LS.PAT,S.pat);
-    toast('Settings saved','ok');renderSettings();
+  // Dark mode toggle
+  el.querySelector('#cfg-dm-btn').addEventListener('click',function(){
+    var nowDark=document.body.classList.toggle('dark');
+    localStorage.setItem('gef-dark',nowDark?'1':'0');
+    renderSettings();
   });
-  el.querySelector('#cfg-test').addEventListener('click',testGH);
-  el.querySelector('#cfg-clear').addEventListener('click',function(){if(!confirm('Clear stored GitHub token?'))return;S.pat='';localStorage.removeItem(LS.PAT);toast('Token cleared','ok');renderSettings();});
-  el.querySelector('#cfg-export').addEventListener('click',function(){var blob=new Blob([JSON.stringify(S.drafts,null,2)],{type:'application/json'});var u=URL.createObjectURL(blob);var a=document.createElement('a');a.href=u;a.download='gef-drafts.json';a.click();URL.revokeObjectURL(u);});
+  // PDF download (print to PDF)
+  el.querySelector('#cfg-pdf-btn').addEventListener('click',function(){
+    setTab('report');
+    setTimeout(function(){window.print();},400);
+  });
+  el.querySelector('#cfg-print-btn').addEventListener('click',function(){
+    setTab('report');
+    setTimeout(function(){window.print();},400);
+  });
+  if(S.authed){
+    el.querySelector('#cfg-save').addEventListener('click',function(){
+      S.repo=(el.querySelector('#cfg-repo').value||'').trim();
+      S.branch=(el.querySelector('#cfg-branch').value||'').trim()||'main';
+      var np=(el.querySelector('#cfg-pat').value||'').trim();if(np&&!np.startsWith('\u2022'))S.pat=np;
+      localStorage.setItem(LS.REPO,S.repo);localStorage.setItem(LS.BR,S.branch);if(S.pat)localStorage.setItem(LS.PAT,S.pat);
+      toast('Settings saved','ok');renderSettings();
+    });
+    el.querySelector('#cfg-test').addEventListener('click',testGH);
+    el.querySelector('#cfg-clear').addEventListener('click',function(){if(!confirm('Clear stored GitHub token?'))return;S.pat='';localStorage.removeItem(LS.PAT);toast('Token cleared','ok');renderSettings();});
+    el.querySelector('#cfg-export').addEventListener('click',function(){var blob=new Blob([JSON.stringify(S.drafts,null,2)],{type:'application/json'});var u=URL.createObjectURL(blob);var a=document.createElement('a');a.href=u;a.download='gef-drafts.json';a.click();URL.revokeObjectURL(u);});
+  }
 }
 
 // ---- Draft / period management ----
@@ -1529,6 +1595,7 @@ function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'
     isDark=!isDark;
     document.body.classList.toggle('dark',isDark);
     localStorage.setItem('gef-dark',isDark?'1':'0');
+    if(S.tab==='settings')renderSettings();
   });
 })();
 

@@ -3,7 +3,26 @@
   "label": "April 2026",
   "year": 2026,
   "month": 4,
-  "donations": [],
+  "donations": [
+    {
+      "id": "don-mpyy4lmw-lh7c",
+      "date": "2026-04-04",
+      "donor": "Senapon Hunpe",
+      "amount": 5000,
+      "note": "",
+      "_cashAcct": "ca-mpywiyv3-p0ky",
+      "_loggedTxnId": "txn-mpyy5te0-myg4"
+    },
+    {
+      "id": "don-mpyy5csk-brqj",
+      "date": "2026-04-06",
+      "donor": "Monday Hunga",
+      "amount": 2000,
+      "note": "",
+      "_cashAcct": "ca-mpywiyv3-p0ky",
+      "_loggedTxnId": "txn-mpyy5te0-5fu2"
+    }
+  ],
   "otherIncome": [],
   "useOfFunds": [],
   "cashAccounts": [
@@ -11,15 +30,38 @@
       "id": "ca1",
       "platform": "Palm Pay",
       "name": "Palm Pay Savings",
-      "openingBalance": 33742.06999999999,
-      "transactions": []
+      "openingBalance": 32946.32,
+      "transactions": [
+        {
+          "id": "txn-mpyy68uq-9tea",
+          "date": "2026-04-30",
+          "type": "income",
+          "amount": 389.12,
+          "note": ""
+        }
+      ]
     },
     {
-      "id": "ca-mpyn7oxa-20k6",
+      "id": "ca-mpywiyv3-p0ky",
       "platform": "Opay",
-      "name": "Opay Account",
-      "openingBalance": 12000,
-      "transactions": []
+      "name": "Opay",
+      "openingBalance": 5000,
+      "transactions": [
+        {
+          "id": "txn-mpyy5te0-myg4",
+          "date": "2026-04-04",
+          "type": "deposit",
+          "amount": 5000,
+          "note": "Donation from Senapon Hunpe"
+        },
+        {
+          "id": "txn-mpyy5te0-5fu2",
+          "date": "2026-04-06",
+          "type": "deposit",
+          "amount": 2000,
+          "note": "Donation from Monday Hunga"
+        }
+      ]
     }
   ],
   "moneyMarketAccounts": [
@@ -27,12 +69,21 @@
       "id": "mm1",
       "platform": "Cowrywise",
       "name": "Cowrywise Money Market Fund",
-      "openingBalance": 159677.40000000002,
-      "transactions": []
+      "openingBalance": 154972.68000000002,
+      "transactions": [
+        {
+          "id": "txn-mpyy7ipg-k4lk",
+          "date": "2026-04-30",
+          "type": "income",
+          "amount": 2310.88,
+          "note": ""
+        }
+      ]
     }
   ],
   "placements": [],
   "otherExpenses": [],
+  "keyActivities": [],
   "narrative": {
     "incomeStatement": "",
     "balanceSheet": "",
@@ -40,5 +91,5 @@
     "nextSteps": ""
   },
   "nextSteps": [],
-  "publishedAt": "2026-06-03T23:41:18.744Z"
+  "publishedAt": "2026-06-04T03:48:13.477Z"
 }

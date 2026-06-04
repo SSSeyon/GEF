@@ -7,7 +7,14 @@
       "year": 2026,
       "month": 1,
       "publishedAt": "2026-06-03T22:21:24.821Z"
+    },
+    {
+      "id": "2026-02",
+      "label": "February 2026",
+      "year": 2026,
+      "month": 2,
+      "publishedAt": "2026-06-04T03:44:42.192Z"
     }
   ],
-  "lastUpdated": "2026-06-04T02:29:57.910Z"
+  "lastUpdated": "2026-06-04T03:44:43.055Z"
 }

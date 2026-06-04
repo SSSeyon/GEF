@@ -68,8 +68,8 @@
   "cashAccounts": [
     {
       "id": "ca1",
-      "platform": "Palm Pay",
-      "name": "Palm Pay Savings",
+      "platform": "PalmPay",
+      "name": "PalmPay",
       "openingBalance": 19987.45,
       "transactions": [
         {
@@ -171,7 +171,7 @@
     {
       "id": "mm1",
       "platform": "Cowrywise",
-      "name": "Cowrywise Money Market Fund",
+      "name": "Cowrywise MMF",
       "openingBalance": 79750,
       "transactions": [
         {
@@ -220,11 +220,11 @@
   "otherExpenses": [],
   "keyActivities": [],
   "narrative": {
-    "incomeStatement": "",
-    "balanceSheet": "",
+    "incomeStatement": "Three additional donations were received during the month from JFM, Kolawole Hunga and Senapon Hunpe. The donations totaled ₦110,000.\nJAMB forms were purchased for three candidates, Mercy, Jijoho and Mary.",
+    "balanceSheet": "In line with the Fund's conservative mandate of capital preservation, income generation and liquidity, c.80% of the fund was invested in a money market fund and the balance kept in cash.",
     "cashFlows": "",
-    "nextSteps": ""
+    "nextSteps": "Priority for February: complete CAC registration, finalise governance documentation, and broaden the donor base."
   },
   "nextSteps": [],
-  "publishedAt": "2026-06-04T03:44:42.192Z"
+  "publishedAt": "2026-06-04T11:21:45.306Z"
 }

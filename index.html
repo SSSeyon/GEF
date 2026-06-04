@@ -14,7 +14,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,30..100&family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root{--bg:#F5F0E6;--bgc:#FFFEFB;--bge:#FFF;--ink:#14201A;--inks:#4A554E;--inkm:#8A8E89;--ln:#E2D9C8;--lnk:#C8BCA4;--grn:#0F5132;--grnd:#0A3D24;--grns:#E6EFE9;--gld:#C99A2E;--glds:#F4E6BF;--nvy:#1B3B6F;--red:#A33A2E;--reds:#F4E1DD;--r:10px;--rl:16px;--sh:0 4px 16px rgba(20,32,26,.07);--f:'Geist','Inter',system-ui,sans-serif;--fs:'Fraunces','Times New Roman',serif;--fm:'Geist Mono',ui-monospace,monospace;--hh:56px}
 *{box-sizing:border-box}html,body{margin:0;padding:0}
@@ -186,9 +185,7 @@ body.dark .erow{background:var(--bge)}
 .pdf-preview-toolbar h3{margin:0;font-family:var(--fs);font-size:1rem;font-weight:500}
 .pdf-preview-toolbar .fb{gap:8px}
 .pdf-preview-frame-wrap{flex:1;width:100%;overflow-y:auto;background:#666;padding:20px;display:flex;flex-direction:column;align-items:center;gap:16px}
-.pdf-page{background:#fff;width:210mm;min-height:297mm;box-shadow:0 4px 20px rgba(0,0,0,.4);position:relative;padding:16mm 14mm;box-sizing:border-box;color:#14201A;font-family:'Geist','Inter',system-ui,sans-serif;font-size:10pt;line-height:1.45;page-break-after:always}
-.pdf-page:last-child{page-break-after:avoid}
-.pdf-page-num{position:absolute;bottom:10mm;right:14mm;font-size:8pt;color:#8A8E89}
+.pdf-page{background:#fff;width:210mm;min-height:297mm;box-shadow:0 4px 20px rgba(0,0,0,.4);position:relative;padding:16mm 14mm;box-sizing:border-box;color:#14201A;font-family:'Geist','Inter',system-ui,sans-serif;font-size:10pt;line-height:1.45}
 @media(max-width:240mm){.pdf-page{width:100%;min-height:auto;}}
 @media print{
   .app-header,.tab-nav,.ver,.toast,.ptr-indicator,.sw-banner,.pdf-preview-bg{display:none!important}
@@ -202,10 +199,10 @@ body.dark .erow{background:var(--bge)}
   .hero{page-break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   h2{page-break-after:avoid}
   table{page-break-inside:avoid}
-  .chart-w{page-break-inside:avoid}
-  .nxts{page-break-inside:avoid}
 }
 
+</style>
+</head>
 <body>
 <div id="ptr-indicator" class="ptr-indicator"><svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Refreshing&hellip;</div>
 <div id="sw-banner" class="sw-banner hidden">New version available. <a href="" onclick="location.reload()">Refresh</a> to update.</div>
@@ -271,13 +268,13 @@ body.dark .erow{background:var(--bge)}
   </div>
   <div class="pdf-preview-frame-wrap" id="pdf-preview-content"></div>
 </div>
-<div class="ver" id="ver-badge">V1.04.0</div>
+<div class="ver" id="ver-badge">V1.05.0</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.04.0';
+const APP_VERSION='V1.05.0';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -345,7 +342,8 @@ const GEF=(function(){
     var obMM=(p.moneyMarketAccounts||[]).reduce(function(s,a){return s+Number(a.openingBalance||0);},0);
     var obFD=(p.placements||[]).reduce(function(s,a){return s+Number(a.openingBalance||0);},0);
     var op={don:r.donations,oi:r.otherIncome,uof:-r.totalUof};op.sub=op.don+op.oi+op.uof;
-    var inv={inc:r.investmentIncome,netMM:-(b.moneyMarket-obMM),netFD:-(b.placements-obFD),fees:-(r.otherExpenses+r.fees)};
+    var cashFees=(p.cashAccounts||[]).reduce(function(s,a){return s+acctFees(a);},0);
+    var inv={inc:r.investmentIncome,netMM:-(b.moneyMarket-obMM),netFD:-(b.placements-obFD),fees:-cashFees};
     inv.sub=inv.inc+inv.netMM+inv.netFD+inv.fees;
     var openCash=obCash,change=op.sub+inv.sub,computed=openCash+change,booked=b.cash;
     return{op:op,inv:inv,cashChange:change,openCash:openCash,computed:computed,booked:booked,ok:Math.abs(computed-booked)<1};
@@ -743,7 +741,7 @@ function renderReport(){
     {l:'Investment income',v:c.inv.inc,ind:true,click:'investmentIncome'},
     {l:'Net money market movement',v:c.inv.netMM,ind:true,dz:true,click:'moneyMarketAccounts'},
     {l:'Net placements movement',v:c.inv.netFD,ind:true,dz:true,click:'placements'},
-    {l:'Charges & fees',v:c.inv.fees,ind:true,dz:true,click:'fees'},
+    {l:'Bank charges paid',v:c.inv.fees,ind:true,dz:true,click:'fees'},
     {l:'Net investing',v:c.inv.sub,tot:true},
     {l:'Movement in cash',v:c.cashChange,tot:true},
     {l:'Opening cash',v:c.openCash,ind:true},
@@ -1461,6 +1459,7 @@ function renderSettings(){
     +'<button class="btn gh sm" id="cfg-dm-btn">'+(isDark?'Switch to light':'Switch to dark')+'</button>'
     +'</div>'
     +'</div>';
+  // PDF / Report download
   html+='<div class="card" style="margin-bottom:20px;">'
     +'<h3 style="margin-bottom:14px;color:var(--grnd);">Reports</h3>'
     +'<div class="fbw" style="margin-bottom:12px;">'
@@ -1505,7 +1504,6 @@ function renderSettings(){
     localStorage.setItem('gef-dark',nowDark?'1':'0');
     renderSettings();
   });
-  // PDF download — preview then download
   el.querySelector('#cfg-pdf-btn').addEventListener('click',function(){openPdfPreview();});
   el.querySelector('#cfg-print-btn').addEventListener('click',function(){
     setTab('report');
@@ -1612,40 +1610,34 @@ function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'
 
 
 // ---- PDF Preview & Download ----
+var html2pdfLoaded=false;
+function loadHtml2Pdf(cb){
+  if(html2pdfLoaded||window.html2pdf){html2pdfLoaded=true;cb(null);return;}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js';
+  s.onload=function(){html2pdfLoaded=true;cb(null);};
+  s.onerror=function(){cb(new Error('Could not load PDF library. Use the Print button instead.'));};
+  document.head.appendChild(s);
+}
 function openPdfPreview(){
   var dp=getDisplayPeriod();
   if(!dp){toast('No report to preview','err');return;}
-  // Switch to report tab to ensure content is rendered
-  var wasTab=S.tab;
   setTab('report');
   setTimeout(function(){
     var src=document.getElementById('rpt-content');
     if(!src){toast('Report content not found','err');return;}
-
-    // Clone the report content
     var clone=src.cloneNode(true);
-
-    // Remove preview banner from clone
     var pb=clone.querySelector('.preview-banner');if(pb)pb.remove();
-
-    // Remove canvas elements (they don't clone well) and replace with placeholder text
     clone.querySelectorAll('canvas').forEach(function(c){
       var ph=document.createElement('div');
       ph.style.cssText='height:60px;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#8A8E89;border:1px dashed #ddd;border-radius:6px;margin:4px 0;';
       ph.textContent='[Chart — visible in browser view]';
       c.parentNode.replaceChild(ph,c);
     });
-
-    // Add page-break-inside:avoid to cards and sections
     clone.querySelectorAll('.card,.sec,.nxts,.itbl,.stmt,.narr').forEach(function(el){
-      el.style.pageBreakInside='avoid';
-      el.style.breakInside='avoid';
+      el.style.pageBreakInside='avoid';el.style.breakInside='avoid';
     });
-
-    // Wrap in a styled container
-    var wrapper=document.createElement('div');
-    wrapper.className='pdf-page';
-    // Inject a title header
+    var wrapper=document.createElement('div');wrapper.className='pdf-page';
     var titleBar=document.createElement('div');
     var dp2=getDisplayPeriod();
     var modeLabel=S.viewMode==='ytd'?'Year to Date ('+dp2.year+')':GEF.pLabel(dp2);
@@ -1653,55 +1645,30 @@ function openPdfPreview(){
       +'<strong style="font-family:Fraunces,serif;font-size:14pt;color:#0A3D24;">Gbago Endowment Fund</strong>'
       +'<span style="font-size:9pt;color:#8A8E89;">'+esc(modeLabel)+'</span>'
       +'</div>';
-    wrapper.appendChild(titleBar);
-    wrapper.appendChild(clone);
-
-    // Show in preview modal
+    wrapper.appendChild(titleBar);wrapper.appendChild(clone);
     var previewWrap=document.getElementById('pdf-preview-content');
-    previewWrap.innerHTML='';
-    previewWrap.appendChild(wrapper);
-
+    previewWrap.innerHTML='';previewWrap.appendChild(wrapper);
     var modal=document.getElementById('pdf-preview-modal');
     modal.classList.remove('hidden');
-
-    // Wire close
-    document.getElementById('pdf-close-btn').onclick=function(){
-      modal.classList.add('hidden');
-      previewWrap.innerHTML='';
-    };
-
-    // Wire download
+    document.getElementById('pdf-close-btn').onclick=function(){modal.classList.add('hidden');previewWrap.innerHTML='';};
     document.getElementById('pdf-download-btn').onclick=function(){
       var btn=document.getElementById('pdf-download-btn');
-      btn.disabled=true;btn.textContent='Generating…';
-      var el=wrapper;
-      var opt={
-        margin:[10,10,10,10],
-        filename:'GEF-Report-'+dp.id+'.pdf',
-        image:{type:'jpeg',quality:0.95},
-        html2canvas:{scale:2,useCORS:true,logging:false},
-        jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-        pagebreak:{mode:['avoid-all','css','legacy']}
-      };
-      html2pdf().set(opt).from(el).save().then(function(){
-        btn.disabled=false;btn.textContent='Download PDF';
-        toast('PDF downloaded','ok');
-      }).catch(function(e){
-        btn.disabled=false;btn.textContent='Download PDF';
-        toast('PDF generation failed: '+e.message,'err');
+      btn.disabled=true;btn.textContent='Loading…';
+      loadHtml2Pdf(function(err){
+        if(err){btn.disabled=false;btn.textContent='Download PDF';toast(err.message,'err');return;}
+        btn.textContent='Generating…';
+        var opt={margin:[10,10,10,10],filename:'GEF-Report-'+dp.id+'.pdf',image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['avoid-all','css','legacy']}};
+        html2pdf().set(opt).from(wrapper).save().then(function(){btn.disabled=false;btn.textContent='Download PDF';toast('PDF downloaded','ok');}).catch(function(e){btn.disabled=false;btn.textContent='Download PDF';toast('PDF failed: '+e.message,'err');});
       });
     };
-  }, 400);
+  },400);
 }
 
-
+// ---- Dark mode ----
 (function(){
   var MOON='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
   var SUN='<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
-  function updateDmIcon(dark){
-    var icon=document.getElementById('dm-icon');
-    if(icon)icon.innerHTML=dark?SUN:MOON;
-  }
+  function updateDmIcon(dark){var icon=document.getElementById('dm-icon');if(icon)icon.innerHTML=dark?SUN:MOON;}
   var dm=document.getElementById('dm-toggle');
   var isDark=localStorage.getItem('gef-dark')==='1';
   if(isDark)document.body.classList.add('dark');

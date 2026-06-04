@@ -268,13 +268,13 @@ body.dark .erow{background:var(--bge)}
   </div>
   <div class="pdf-preview-frame-wrap" id="pdf-preview-content"></div>
 </div>
-<div class="ver" id="ver-badge">V1.05.0</div>
+<div class="ver" id="ver-badge">V1.06.0</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.05.0';
+const APP_VERSION='V1.06.0';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -342,17 +342,32 @@ const GEF=(function(){
     var fd=(p.placements||[]).reduce(function(s,a){return s+acctBal(a);},0);
     return{cash:cash,moneyMarket:mm,placements:fd,totalAssets:cash+mm+fd,netAssets:cash+mm+fd};
   }
+  function netCashTransfer(a){
+    // Net cash physically moved into a non-cash account (topups/deposits minus withdrawals).
+    // Income and fee transactions are internal to the account and never touch the cash balance.
+    return(a.transactions||[]).reduce(function(s,t){
+      if(t.type==='topup'||t.type==='deposit'||t.type==='rollover')return s+Number(t.amount||0);
+      if(t.type==='withdrawal')return s-Number(t.amount||0);
+      return s;
+    },0);
+  }
   function cf(p){
     var r=pnl(p),b=bs(p);
-    // For YTD merged periods, use _ytdOpeningBalance (year-start balance) for the opening cash line.
-    // For regular periods, use the normal openingBalance.
+    // For YTD merged periods use _ytdOpeningBalance (year-start) for the opening cash line.
     function ob(a){return Number((p._isMerged?a._ytdOpeningBalance:a.openingBalance)||0);}
     var obCash=(p.cashAccounts||[]).reduce(function(s,a){return s+ob(a);},0);
-    var obMM=(p.moneyMarketAccounts||[]).reduce(function(s,a){return s+ob(a);},0);
-    var obFD=(p.placements||[]).reduce(function(s,a){return s+ob(a);},0);
     var op={don:r.donations,oi:r.otherIncome,uof:-r.totalUof};op.sub=op.don+op.oi+op.uof;
+    // inv.inc: only income credited directly to a cash account (e.g. bank interest on current account).
+    // MM and FD income stays inside those accounts and is already captured in netMM/netFD.
+    // Including it here would create a phantom cash inflow equal to the management fee.
+    var cashInvInc=(p.cashAccounts||[]).reduce(function(s,a){return s+acctIncome(a);},0);
+    // inv.netMM / netFD: only the cash physically transferred to/from each account.
+    // Income and fees within MM/FD are internal and must NOT be counted here.
+    var netToMM=(p.moneyMarketAccounts||[]).reduce(function(s,a){return s+netCashTransfer(a);},0);
+    var netToFD=(p.placements||[]).reduce(function(s,a){return s+netCashTransfer(a);},0);
+    // inv.fees: only fees paid directly from a cash account.
     var cashFees=(p.cashAccounts||[]).reduce(function(s,a){return s+acctFees(a);},0);
-    var inv={inc:r.investmentIncome,netMM:-(b.moneyMarket-obMM),netFD:-(b.placements-obFD),fees:-cashFees};
+    var inv={inc:cashInvInc,netMM:-netToMM,netFD:-netToFD,fees:-cashFees};
     inv.sub=inv.inc+inv.netMM+inv.netFD+inv.fees;
     var openCash=obCash,change=op.sub+inv.sub,computed=openCash+change,booked=b.cash;
     return{op:op,inv:inv,cashChange:change,openCash:openCash,computed:computed,booked:booked,ok:Math.abs(computed-booked)<1};

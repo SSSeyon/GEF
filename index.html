@@ -225,13 +225,13 @@ body.dark .erow{background:var(--bge)}
     <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.02.0</div>
+<div class="ver" id="ver-badge">V1.02.1</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.02.0';
+const APP_VERSION='V1.02.1';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -1100,27 +1100,81 @@ function renderAcctList(catKey,containerId,types,typeLabels){
     card.querySelectorAll('[data-f]').forEach(function(inp){inp.addEventListener('input',function(e){var f=e.target.dataset.f;acct[f]=f==='openingBalance'?Number(e.target.value||0):e.target.value;autoSave();});});
     card.querySelector('[data-addtxn]').addEventListener('click',function(){if(!acct.transactions)acct.transactions=[];acct.transactions.push({id:GEF.newId('txn'),date:'',type:types[0],amount:0,note:''});autoSave();renderAdmPeriodEditor();});
     wrap.appendChild(card);
-    renderTxnList('txn-list-'+acct.id,acct,types,typeLabels);
+    // Pass cash-linking config for MM and investment accounts
+    var cashTxnTypes=null,cashTxnMap=null;
+    if(catKey==='moneyMarketAccounts'){cashTxnTypes=['topup','withdrawal'];cashTxnMap={topup:'withdrawal',withdrawal:'deposit'};}
+    renderTxnList('txn-list-'+acct.id,acct,types,typeLabels,cashTxnTypes,cashTxnMap);
   });
 }
-function renderTxnList(containerId,acct,types,typeLabels){
+// cashTypes: array of txn types that show a cash account picker (e.g. deposits/withdrawals that move cash).
+// cashTypeMap: maps each cashType to the counterpart cash txn type.
+//   e.g. {topup:'withdrawal'} means topping up an MM fund withdraws from cash.
+function renderTxnList(containerId,acct,types,typeLabels,cashTypes,cashTypeMap){
   var wrap=document.getElementById(containerId);if(!wrap)return;wrap.innerHTML='';
   if(!(acct.transactions||[]).length){wrap.innerHTML='<div class="muted" style="font-size:.82rem;font-style:italic;padding:4px 0;">No transactions.</div>';return;}
-  // Sort by transaction date for display
+  var p=S.aperiod;
+  var hasCash=cashTypes&&cashTypes.length&&(p.cashAccounts||[]).length>0;
   var sorted=acct.transactions.slice().sort(function(a,b){return(a.date||'').localeCompare(b.date||'');});
   sorted.forEach(function(txn){
-    var row=document.createElement('div');row.className='erow';row.style.gridTemplateColumns='130px 150px 140px 1fr 70px';
+    var showPicker=hasCash&&cashTypes.includes(txn.type);
+    var row=document.createElement('div');row.className='erow';
+    row.style.gridTemplateColumns=showPicker?'120px 140px 130px 1fr 150px 70px':'130px 150px 140px 1fr 70px';
     row.innerHTML='<div class="fld"><label>Txn Date</label><input type="date" value="'+esc(txn.date||'')+'"/></div>'
       +'<div class="fld"><label>Type</label><select>'+types.map(function(t){return'<option value="'+t+'"'+(txn.type===t?' selected':'')+'>'+typeLabels[t]+'</option>';}).join('')+'</select></div>'
       +'<div class="fld"><label>Amount</label><input type="number" step="0.01" value="'+txn.amount+'"/></div>'
       +'<div class="fld"><label>Note</label><input type="text" value="'+esc(txn.note||'')+'"/></div>'
+      +(showPicker?'<div class="fld"><label>Cash account</label><select data-ca>'+cashAccountOpts(p,txn._cashAcct||'')+'</select></div>':'')
       +'<div class="rack"><button class="btn sm dng">Remove</button></div>';
     var inputs=row.querySelectorAll('input,select');
     inputs[0].addEventListener('input',function(e){txn.date=e.target.value;autoSave();});
-    inputs[1].addEventListener('change',function(e){txn.type=e.target.value;autoSave();});
+    inputs[1].addEventListener('change',function(e){
+      txn.type=e.target.value;autoSave();
+      // Re-render so picker shows/hides based on new type
+      renderTxnList(containerId,acct,types,typeLabels,cashTypes,cashTypeMap);
+    });
     inputs[2].addEventListener('input',function(e){txn.amount=Number(e.target.value||0);autoSave();});
     inputs[3].addEventListener('input',function(e){txn.note=e.target.value;autoSave();});
-    row.querySelector('button').addEventListener('click',function(){acct.transactions=acct.transactions.filter(function(t){return t.id!==txn.id;});autoSave();renderAdmPeriodEditor();});
+    if(showPicker){
+      var casel=row.querySelector('[data-ca]');
+      casel.addEventListener('change',function(e){txn._cashAcct=e.target.value;autoSave();});
+      // "Log to cash" button
+      var logBtn=document.createElement('button');
+      logBtn.className='btn sm gh';
+      logBtn.style.cssText='margin-top:18px;font-size:.72rem;padding:3px 8px;white-space:nowrap;';
+      logBtn.textContent=txn._cashLinkedTxnId?'Re-log':'Log to cash';
+      logBtn.title='Mirror this movement to the selected cash account';
+      logBtn.addEventListener('click',function(){
+        if(!txn._cashAcct){toast('Select a cash account first','err');return;}
+        // Determine the cash-side transaction type (opposite direction)
+        var cType=(cashTypeMap&&cashTypeMap[txn.type])||
+          (['topup','deposit'].includes(txn.type)?'withdrawal':'deposit');
+        // Remove any previously linked cash txn (re-log)
+        if(txn._cashLinkedTxnId){
+          (p.cashAccounts||[]).forEach(function(a){
+            a.transactions=(a.transactions||[]).filter(function(t){return t.id!==txn._cashLinkedTxnId;});
+          });
+        }
+        var note=(typeLabels[txn.type]||txn.type)+' \u2013 '+(acct.name||'Investment');
+        if(txn.note)note+=': '+txn.note;
+        var tid=logCashTxn(p,txn._cashAcct,cType,txn.amount,txn.date,note);
+        txn._cashLinkedTxnId=tid;
+        autoSave();
+        toast('Logged to cash account','ok');
+        logBtn.textContent='Re-log';
+      });
+      var caCell=row.querySelector('[data-ca]').parentNode;
+      caCell.appendChild(logBtn);
+    }
+    row.querySelector('button.dng').addEventListener('click',function(){
+      // Clean up linked cash txn on delete
+      if(txn._cashLinkedTxnId){
+        (p.cashAccounts||[]).forEach(function(a){
+          a.transactions=(a.transactions||[]).filter(function(t){return t.id!==txn._cashLinkedTxnId;});
+        });
+      }
+      acct.transactions=acct.transactions.filter(function(t){return t.id!==txn.id;});
+      autoSave();renderAdmPeriodEditor();
+    });
     wrap.appendChild(row);
   });
 }
@@ -1150,7 +1204,7 @@ function renderPlacementList(containerId){
     card.querySelectorAll('[data-f]').forEach(function(inp){inp.addEventListener('input',function(e){var f=e.target.dataset.f;pl[f]=['openingBalance','rate','tenor'].includes(f)?Number(e.target.value||0):e.target.value;autoSave();});});
     card.querySelector('[data-addtxn]').addEventListener('click',function(){if(!pl.transactions)pl.transactions=[];pl.transactions.push({id:GEF.newId('fdtxn'),date:'',type:'deposit',amount:0,note:''});autoSave();renderAdmPeriodEditor();});
     wrap.appendChild(card);
-    renderTxnList('fdtxn-'+pl.id,pl,['deposit','withdrawal','income','fee','rollover'],{deposit:'Deposit / initial',withdrawal:'Withdrawal / maturity',income:'Interest income',fee:'Management fee',rollover:'Rollover'});
+    renderTxnList('fdtxn-'+pl.id,pl,['deposit','withdrawal','income','fee','rollover'],{deposit:'Deposit / initial',withdrawal:'Withdrawal / maturity',income:'Interest income',fee:'Management fee',rollover:'Rollover'},['deposit','withdrawal'],{deposit:'withdrawal',withdrawal:'deposit'});
   });
 }
 

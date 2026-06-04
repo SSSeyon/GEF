@@ -5,55 +5,64 @@
   "month": 2,
   "donations": [
     {
+      "id": "don-mpywic2e-glba",
       "date": "2026-02-02",
       "donor": "JFM",
       "amount": 100000,
       "note": "",
-      "id": "donations-mpymw7s6-otb2",
-      "_cashAcct": "ca1"
+      "_cashAcct": "ca1",
+      "_loggedTxnId": "txn-mpywmci9-v031"
     },
     {
+      "id": "don-mpywk205-tnz9",
       "date": "2026-02-02",
       "donor": "Kola Hunga",
       "amount": 5000,
       "note": "",
-      "id": "donations-mpymwwpn-d8he",
-      "_cashAcct": "ca-mpyn7oxa-20k6"
+      "_cashAcct": "ca-mpywiyv3-p0ky",
+      "_loggedTxnId": "txn-mpywmcia-j5kf"
     },
     {
+      "id": "don-mpywl2vy-emc3",
       "date": "2026-02-10",
       "donor": "Senapon Hunpe",
       "amount": 5000,
       "note": "",
-      "id": "donations-mpymxcw7-tazx",
-      "_cashAcct": "ca1"
+      "_cashAcct": "ca1",
+      "_loggedTxnId": "txn-mpywmcia-h7p1"
     }
   ],
   "otherIncome": [],
   "useOfFunds": [
     {
-      "id": "uof-mpymyu3y-ejs0",
-      "date": "2026-06-02",
+      "id": "uof-mpywoxu9-w7oz",
+      "date": "2026-02-02",
       "category": "jambForm",
       "beneficiary": "Mercy",
       "description": "",
-      "amount": 7200
+      "amount": 7200,
+      "_cashAcct": "ca1",
+      "_loggedTxnId": "txn-mpywqmf6-4nyg"
     },
     {
-      "id": "uof-mpyn0683-lrgp",
+      "id": "uof-mpywpnyx-istx",
       "date": "2026-02-02",
       "category": "jambForm",
       "beneficiary": "Jijoho",
       "description": "",
-      "amount": 7200
+      "amount": 7200,
+      "_cashAcct": "ca1",
+      "_loggedTxnId": "txn-mpywqmf6-be9c"
     },
     {
-      "id": "uof-mpyn0mvq-fiwu",
+      "id": "uof-mpywq5gg-1gqp",
       "date": "2026-02-02",
       "category": "jambForm",
       "beneficiary": "Mary",
       "description": "",
-      "amount": 7200
+      "amount": 7200,
+      "_cashAcct": "ca1",
+      "_loggedTxnId": "txn-mpywqmf6-ktih"
     }
   ],
   "cashAccounts": [
@@ -64,103 +73,96 @@
       "openingBalance": 19987.45,
       "transactions": [
         {
-          "id": "txn-mpynauuz-9rv7",
-          "date": "2026-02-10",
-          "type": "deposit",
-          "amount": 5000,
-          "note": "Senapon Hunpe"
-        },
-        {
-          "id": "txn-mpynur6b-lt1s",
-          "date": "2026-02-28",
-          "type": "income",
-          "amount": 336.23,
-          "note": ""
-        },
-        {
-          "id": "txn-mpynvjn2-jd1k",
-          "date": "2026-02-02",
-          "type": "deposit",
-          "amount": 100000,
-          "note": "JFM"
-        },
-        {
-          "id": "txn-mpynykm2-elim",
-          "date": "2026-02-02",
-          "type": "withdrawal",
-          "amount": 21600,
-          "note": "Jamb Forms"
-        },
-        {
-          "id": "txn-mpyo1zr2-0ztf",
-          "date": "2026-02-02",
-          "type": "withdrawal",
-          "amount": 100000,
-          "note": "MMF"
-        },
-        {
-          "id": "txn-mpyo2rb2-gcos",
-          "date": "2026-02-02",
-          "type": "deposit",
-          "amount": 28925,
-          "note": "Withdrawal from MMF"
-        },
-        {
-          "id": "txn-mpyo4qsj-cjtm",
+          "id": "txn-mpywivyr-3b6l",
           "date": "2026-02-02",
           "type": "fee",
           "amount": 100,
           "note": ""
         },
         {
-          "id": "txn-mpyobo2s-5w8k",
-          "date": "",
+          "id": "txn-mpywmci9-v031",
+          "date": "2026-02-02",
           "type": "deposit",
-          "amount": 0,
-          "note": ""
+          "amount": 100000,
+          "note": "Donation from JFM"
         },
         {
-          "id": "txn-mpyu66oy-9w18",
+          "id": "txn-mpywmcia-h7p1",
           "date": "2026-02-10",
           "type": "deposit",
           "amount": 5000,
           "note": "Donation from Senapon Hunpe"
-        }
-      ]
-    },
-    {
-      "id": "ca-mpyn7oxa-20k6",
-      "platform": "Opay",
-      "name": "Opay Account",
-      "openingBalance": 0,
-      "transactions": [
+        },
         {
-          "id": "txn-mpyoen7m-vfvw",
+          "id": "txn-mpywqmf6-4nyg",
+          "date": "2026-02-02",
+          "type": "withdrawal",
+          "amount": 7200,
+          "note": "JAMB Form - Mercy"
+        },
+        {
+          "id": "txn-mpywqmf6-be9c",
+          "date": "2026-02-02",
+          "type": "withdrawal",
+          "amount": 7200,
+          "note": "JAMB Form - Jijoho"
+        },
+        {
+          "id": "txn-mpywqmf6-ktih",
+          "date": "2026-02-02",
+          "type": "withdrawal",
+          "amount": 7200,
+          "note": "JAMB Form - Mary"
+        },
+        {
+          "id": "txn-mpyxjjl5-0w23",
+          "date": "2026-02-02",
+          "type": "withdrawal",
+          "amount": 100000,
+          "note": "Top-up / deposit – Cowrywise Money Market Fund: MMF Addition"
+        },
+        {
+          "id": "txn-mpyxk2aa-1gi1",
           "date": "2026-02-02",
           "type": "deposit",
-          "amount": 5000,
-          "note": "Kola Hunga"
+          "amount": 28925,
+          "note": "Withdrawal – Cowrywise Money Market Fund: For Jamb Forms"
         },
         {
-          "id": "txn-mpyof5ea-oo0m",
-          "date": "2026-04-04",
-          "type": "deposit",
-          "amount": 5000,
-          "note": "Senapon Hunpe"
+          "id": "txn-mpyxtbgt-wocg",
+          "date": "2026-02-28",
+          "type": "income",
+          "amount": 336.23,
+          "note": ""
         },
         {
-          "id": "txn-mpyogbsp-pzx8",
-          "date": "2026-04-06",
-          "type": "deposit",
-          "amount": 2000,
-          "note": "Monday Hunga"
-        },
-        {
-          "id": "txn-mpyohaed-entr",
+          "id": "txn-mpyxu3ix-zsyb",
           "date": "",
           "type": "deposit",
           "amount": 0,
           "note": ""
+        }
+      ]
+    },
+    {
+      "id": "ca-mpywiyv3-p0ky",
+      "platform": "Opay",
+      "name": "Opay",
+      "openingBalance": 0,
+      "transactions": [
+        {
+          "id": "txn-mpywj9zm-3l18",
+          "date": "",
+          "type": "deposit",
+          "amount": 0,
+          "note": ""
+        },
+        {
+          "id": "txn-mpywmcia-j5kf",
+          "date": "2026-02-02",
+          "type": "deposit",
+          "amount": 5000,
+          "note": "Donation from Kola Hunga"
         }
       ]
     }
@@ -173,56 +175,39 @@
       "openingBalance": 79750,
       "transactions": [
         {
-          "id": "txn-mpyn3btf-rahs",
+          "id": "txn-mpywskax-ogh1",
           "date": "2026-02-02",
           "type": "topup",
           "amount": 100000,
-          "note": ""
+          "note": "MMF Addition",
+          "_cashAcct": "ca1",
+          "_cashLinkedTxnId": "txn-mpyxjjl5-0w23"
         },
         {
-          "id": "txn-mpyn42cw-mu5r",
-          "date": "2026-02-02",
-          "type": "withdrawal",
-          "amount": 28925,
-          "note": ""
-        },
-        {
-          "id": "txn-mpyn53v9-j43e",
+          "id": "txn-mpywtwam-s3md",
           "date": "2026-02-02",
           "type": "fee",
           "amount": 325,
           "note": ""
         },
         {
-          "id": "txn-mpyn5nq7-9u7b",
+          "id": "txn-mpywuwf2-b2ku",
+          "date": "2026-02-02",
+          "type": "withdrawal",
+          "amount": 28925,
+          "note": "For Jamb Forms",
+          "_cashAcct": "ca1",
+          "_cashLinkedTxnId": "txn-mpyxk2aa-1gi1"
+        },
+        {
+          "id": "txn-mpywvsmm-j0dy",
           "date": "2026-02-28",
           "type": "income",
           "amount": 2067.92,
           "note": ""
         },
         {
-          "id": "txn-mpyn6sbi-il2d",
-          "date": "2026-03-31",
-          "type": "income",
-          "amount": 2404.76,
-          "note": ""
-        },
-        {
-          "id": "txn-mpyonekn-dq1f",
-          "date": "2026-04-30",
-          "type": "income",
-          "amount": 2310.88,
-          "note": ""
-        },
-        {
-          "id": "txn-mpyonwzu-ext6",
-          "date": "2026-05-31",
-          "type": "income",
-          "amount": 2393.84,
-          "note": ""
-        },
-        {
-          "id": "txn-mpyoogg0-qfbx",
+          "id": "txn-mpyxrz1h-bm1w",
           "date": "",
           "type": "topup",
           "amount": 0,
@@ -233,6 +218,7 @@
   ],
   "placements": [],
   "otherExpenses": [],
+  "keyActivities": [],
   "narrative": {
     "incomeStatement": "",
     "balanceSheet": "",
@@ -240,5 +226,5 @@
     "nextSteps": ""
   },
   "nextSteps": [],
-  "publishedAt": "2026-06-04T02:07:09.670Z"
+  "publishedAt": "2026-06-04T03:44:42.192Z"
 }

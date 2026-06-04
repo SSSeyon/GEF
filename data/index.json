@@ -14,7 +14,14 @@
       "year": 2026,
       "month": 2,
       "publishedAt": "2026-06-04T03:44:42.192Z"
+    },
+    {
+      "id": "2026-03",
+      "label": "March 2026",
+      "year": 2026,
+      "month": 3,
+      "publishedAt": "2026-06-04T03:46:27.786Z"
     }
   ],
-  "lastUpdated": "2026-06-04T03:44:43.055Z"
+  "lastUpdated": "2026-06-04T03:46:28.703Z"
 }

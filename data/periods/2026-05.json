@@ -11,13 +11,21 @@
       "id": "ca1",
       "platform": "Palm Pay",
       "name": "Palm Pay Savings",
-      "openingBalance": 33742.06999999999,
-      "transactions": []
+      "openingBalance": 33335.44,
+      "transactions": [
+        {
+          "id": "txn-mpyya5s0-7w17",
+          "date": "2026-05-31",
+          "type": "income",
+          "amount": 406.63,
+          "note": ""
+        }
+      ]
     },
     {
-      "id": "ca-mpyn7oxa-20k6",
+      "id": "ca-mpywiyv3-p0ky",
       "platform": "Opay",
-      "name": "Opay Account",
+      "name": "Opay",
       "openingBalance": 12000,
       "transactions": []
     }
@@ -27,12 +35,21 @@
       "id": "mm1",
       "platform": "Cowrywise",
       "name": "Cowrywise Money Market Fund",
-      "openingBalance": 159677.40000000002,
-      "transactions": []
+      "openingBalance": 157283.56000000003,
+      "transactions": [
+        {
+          "id": "txn-mpyy9292-xqle",
+          "date": "2026-05-31",
+          "type": "income",
+          "amount": 2393.84,
+          "note": ""
+        }
+      ]
     }
   ],
   "placements": [],
   "otherExpenses": [],
+  "keyActivities": [],
   "narrative": {
     "incomeStatement": "",
     "balanceSheet": "",
@@ -40,5 +57,5 @@
     "nextSteps": ""
   },
   "nextSteps": [],
-  "publishedAt": "2026-06-03T23:43:28.012Z"
+  "publishedAt": "2026-06-04T03:49:15.042Z"
 }

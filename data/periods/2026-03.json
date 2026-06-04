@@ -9,8 +9,8 @@
   "cashAccounts": [
     {
       "id": "ca1",
-      "platform": "Palm Pay",
-      "name": "Palm Pay Savings",
+      "platform": "PalmPay",
+      "name": "PalmPay",
       "openingBalance": 32548.679999999997,
       "transactions": [
         {
@@ -34,7 +34,7 @@
     {
       "id": "mm1",
       "platform": "Cowrywise",
-      "name": "Cowrywise Money Market Fund",
+      "name": "Cowrywise MMF",
       "openingBalance": 152567.92,
       "transactions": [
         {
@@ -51,11 +51,11 @@
   "otherExpenses": [],
   "keyActivities": [],
   "narrative": {
-    "incomeStatement": "",
+    "incomeStatement": "No donations received in this period",
     "balanceSheet": "",
     "cashFlows": "",
     "nextSteps": ""
   },
   "nextSteps": [],
-  "publishedAt": "2026-06-04T03:46:27.786Z"
+  "publishedAt": "2026-06-04T11:27:27.235Z"
 }

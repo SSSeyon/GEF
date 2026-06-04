@@ -9,21 +9,24 @@
       "donor": "JFM",
       "amount": 100000,
       "note": "",
-      "id": "donations-mpymw7s6-otb2"
+      "id": "donations-mpymw7s6-otb2",
+      "_cashAcct": "ca1"
     },
     {
       "date": "2026-02-02",
       "donor": "Kola Hunga",
       "amount": 5000,
       "note": "",
-      "id": "donations-mpymwwpn-d8he"
+      "id": "donations-mpymwwpn-d8he",
+      "_cashAcct": "ca-mpyn7oxa-20k6"
     },
     {
       "date": "2026-02-10",
       "donor": "Senapon Hunpe",
       "amount": 5000,
       "note": "",
-      "id": "donations-mpymxcw7-tazx"
+      "id": "donations-mpymxcw7-tazx",
+      "_cashAcct": "ca1"
     }
   ],
   "otherIncome": [],
@@ -110,32 +113,18 @@
           "note": ""
         },
         {
-          "id": "txn-mpyo779g-wk42",
-          "date": "2026-03-31",
-          "type": "income",
-          "amount": 397.64,
-          "note": ""
-        },
-        {
-          "id": "txn-mpyoaibc-fspu",
-          "date": "2026-04-30",
-          "type": "income",
-          "amount": 389.12,
-          "note": ""
-        },
-        {
-          "id": "txn-mpyob3kv-74ls",
-          "date": "2026-05-31",
-          "type": "income",
-          "amount": 406.63,
-          "note": ""
-        },
-        {
           "id": "txn-mpyobo2s-5w8k",
           "date": "",
           "type": "deposit",
           "amount": 0,
           "note": ""
+        },
+        {
+          "id": "txn-mpyu66oy-9w18",
+          "date": "2026-02-10",
+          "type": "deposit",
+          "amount": 5000,
+          "note": "Donation from Senapon Hunpe"
         }
       ]
     },
@@ -251,5 +240,5 @@
     "nextSteps": ""
   },
   "nextSteps": [],
-  "publishedAt": "2026-06-03T23:26:23.049Z"
+  "publishedAt": "2026-06-04T02:04:34.238Z"
 }

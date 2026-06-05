@@ -260,13 +260,19 @@ body.dark .erow{background:var(--bge)}
 .bnav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .bnav-btn.active{color:#fff;border-top-color:var(--gld)}
 .bnav-btn:hover{color:rgba(255,255,255,.9)}
-/* ── report action bar ── */
-.rpt-actions{display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap}
-.rpt-actions .btn{font-size:.78rem;padding:5px 12px}
+/* ── page toolbar (dashboard & report) ── */
+.pg-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.pg-toolbar .btn{font-size:.78rem;padding:5px 12px}
+.pg-toolbar .month-sel-inline{display:flex;align-items:center;gap:6px;background:var(--grns);border:1px solid var(--ln);border-radius:999px;padding:3px 6px 3px 10px;font-size:.78rem}
+.pg-toolbar .month-sel-inline label{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--inkm);white-space:nowrap}
+.pg-toolbar .month-sel-inline select{background:transparent;border:0;color:var(--ink);font-family:var(--f);font-size:.78rem;padding:2px 4px;cursor:pointer}
+.pg-toolbar .vt-inline{display:flex;align-items:center;background:var(--grns);border:1px solid var(--ln);border-radius:999px;overflow:hidden}
+.pg-toolbar .vt-inline button{background:transparent;border:0;color:var(--inkm);font-family:var(--f);font-size:.66rem;font-weight:500;padding:4px 9px;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;transition:background .15s,color .15s}
+.pg-toolbar .vt-inline button.active{background:var(--grn);color:#fff}
 /* ── print improvements ── */
 @page{margin:20mm 18mm}
 @media print{
-  .offline-banner,.bottom-nav,.share-btn{display:none!important}
+  .offline-banner,.bottom-nav,.share-btn,.pg-toolbar{display:none!important}
   body{font-size:9pt}
   .stmt,.itbl{font-size:8.5pt}
   .hero{background:#0A3D24!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -287,14 +293,6 @@ body.dark .erow{background:var(--bge)}
     <div class="brand-mark"><img src="icon-192.png" alt="GEF"/></div>
     <div class="brand-name">Gbago Endowment Fund</div>
     <div id="hdr-controls" class="hdr-controls">
-      <div id="month-wrap" class="month-sel hidden">
-        <label>Period</label>
-        <select id="month-sel"></select>
-      </div>
-      <div id="view-toggle-wrap" class="view-toggle hidden">
-        <button id="vt-month" class="active" onclick="setViewMode('month')">Month</button>
-        <button id="vt-ytd" onclick="setViewMode('ytd')">YTD</button>
-      </div>
       <button class="dm-toggle" id="dm-toggle" title="Toggle dark mode"><svg id="dm-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     </div>
   </div>
@@ -361,13 +359,13 @@ body.dark .erow{background:var(--bge)}
   </div>
   <div class="pdf-preview-frame-wrap" id="pdf-preview-content"></div>
 </div>
-<div class="ver" id="ver-badge">V1.08.0</div>
+<div class="ver" id="ver-badge">V1.09.0</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.08.0';
+const APP_VERSION='V1.09.0';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -481,8 +479,7 @@ let toastT;
 
 window.setViewMode=function(m){
   S.viewMode=m;
-  document.getElementById('vt-month').classList.toggle('active',m==='month');
-  document.getElementById('vt-ytd').classList.toggle('active',m==='ytd');
+  // Re-render active tab (toolbar rebuilds from S.viewMode)
   if(S.tab==='dashboard')renderDash();
   if(S.tab==='report')renderReport();
 };
@@ -519,9 +516,7 @@ function setTab(t){
   S.tab=t;
   document.querySelectorAll('.tab-btn,.bnav-btn').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t);});
   document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.toggle('active',p.id==='tab-'+t);});
-  var showPeriod=t==='dashboard'||t==='report';
-  document.getElementById('month-wrap').classList.toggle('hidden',!showPeriod);
-  document.getElementById('view-toggle-wrap').classList.toggle('hidden',!showPeriod);
+
   if(t==='dashboard')renderDash();
   if(t==='report')renderReport();
   if(t==='admin')renderAdmin();
@@ -533,9 +528,7 @@ async function loadIndex(){
   try{S.pubIdx=await fetchJSON('data/index.json');}catch(e){S.pubIdx={fundName:'Gbago Endowment Fund',publishedPeriods:[]};}
   var ps=((S.pubIdx.publishedPeriods)||[]).slice().sort(function(a,b){return b.id.localeCompare(a.id);});
   S.periods=ps;
-  var sel=document.getElementById('month-sel');sel.innerHTML='';
-  ps.forEach(function(p){var o=document.createElement('option');o.value=p.id;o.textContent=GEF.pLabelShort(p);sel.appendChild(o);});
-  sel.onchange=function(){S.previewPeriod=null;loadAndRender(sel.value);};
+  // Period selectors are now built inline in each page's toolbar — no header <select> to populate
   if(ps.length){loadAndRender(ps[0].id);}else{S.period=null;renderDash();}
 }
 async function loadAndRender(id){
@@ -590,6 +583,51 @@ function calcRunway(b,r){
   if(!r.totalExpenses||!b.cash)return null;
   return Math.round(b.cash/r.totalExpenses*10)/10;
 }
+// ---- Inline toolbar HTML builder ----
+function buildToolbarHtml(includePdfShare){
+  // Period selector options
+  var optHtml='';
+  (S.periods||[]).forEach(function(p){
+    optHtml+='<option value="'+esc(p.id)+'"'+(p.id===(S.pid||'')?'  selected':'')+'>'+esc(GEF.pLabelShort(p))+'</option>';
+  });
+  // Also include any draft periods
+  Object.keys(S.drafts||{}).forEach(function(id){
+    if(!(S.periods||[]).some(function(p){return p.id===id;})){
+      var d=S.drafts[id];
+      optHtml+='<option value="'+esc(id)+'"'+(id===(S.pid||'')?'  selected':'')+'>'+esc(GEF.pLabelShort(d))+'</option>';
+    }
+  });
+  var isYtd=S.viewMode==='ytd';
+  var toolbar='<div class="pg-toolbar">';
+  if(includePdfShare){
+    toolbar+='<button class="btn gh sm tb-share-btn"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button>';
+    toolbar+='<button class="btn gh sm tb-pdf-btn">Download PDF</button>';
+  }
+  if(optHtml){
+    toolbar+='<div class="month-sel-inline"><label>Period</label><select class="tb-period-sel">'+optHtml+'</select></div>';
+  }
+  toolbar+='<div class="vt-inline"><button class="'+(isYtd?'':'active')+' tb-vt-month">Month</button><button class="'+(isYtd?'active':'')+' tb-vt-ytd">YTD</button></div>';
+  toolbar+='</div>';
+  return toolbar;
+}
+// Wire toolbar interactions after innerHTML is set
+function wireToolbar(el){
+  var shareBtns=el.querySelectorAll('.tb-share-btn');
+  shareBtns.forEach(function(b){b.addEventListener('click',copyShareLink);});
+  var pdfBtns=el.querySelectorAll('.tb-pdf-btn');
+  pdfBtns.forEach(function(b){b.addEventListener('click',function(){openPdfPreview();});});
+  var periodSels=el.querySelectorAll('.tb-period-sel');
+  periodSels.forEach(function(sel){
+    sel.addEventListener('change',function(){
+      S.previewPeriod=null;
+      loadAndRender(sel.value);
+    });
+  });
+  var vtMonth=el.querySelectorAll('.tb-vt-month');
+  var vtYtd=el.querySelectorAll('.tb-vt-ytd');
+  vtMonth.forEach(function(b){b.addEventListener('click',function(){window.setViewMode('month');});});
+  vtYtd.forEach(function(b){b.addEventListener('click',function(){window.setViewMode('ytd');});});
+}
 // ---- Share link helper ----
 function copyShareLink(){
   var pid=S.pid||'';
@@ -606,7 +644,7 @@ function renderDash(){
   if(!dp){el.innerHTML='<div class="empty-s"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><h3>No published reports yet</h3><p>Publish a period in the Admin tab to get started.</p></div>';return;}
   var p=dp,r=GEF.pnl(p),b=GEF.bs(p),c=GEF.cf(p);
   var modeLabel=S.viewMode==='ytd'?'Year to Date ('+p.year+')':GEF.pLabel(p);
-  var html='';
+  var html=buildToolbarHtml(false);
   if(S.previewPeriod)html+='<div class="preview-banner"><span>&#128065; Previewing draft: <strong>'+GEF.pLabel(p)+'</strong> &mdash; not yet published.</span><button class="btn sm" onclick="exitPreview()">Exit Preview</button></div>';
   html+='<div class="hero">'
     +'<div class="hero-ey">'+esc(modeLabel)+' &middot; Dashboard</div>'
@@ -703,6 +741,7 @@ function renderDash(){
     html+='</div></div>';
   }
   el.innerHTML=html;
+  wireToolbar(el);
   requestAnimationFrame(function(){setTimeout(function(){
     buildDashCharts(r,b,c,trendPeriods);
     // UoF bar chart
@@ -904,7 +943,7 @@ function renderReport(){
   var modeLabel=S.viewMode==='ytd'?'Year to Date '+p.year:GEF.pLabel(p);
   var html='';
   if(S.previewPeriod)html+='<div class="preview-banner"><span>&#128065; Previewing draft: <strong>'+esc(GEF.pLabel(p))+'</strong> &mdash; not yet published.</span><button class="btn sm" onclick="exitPreview()">Exit Preview</button></div>';
-  html+='<div class="rpt-actions"><button class="btn gh sm" id="rpt-share-btn"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button><button class="btn gh sm" id="rpt-pdf-btn">Download PDF</button><button class="btn gh sm" id="rpt-print-btn">Print</button></div>';
+  html+=buildToolbarHtml(true);
   if((p.keyActivities||[]).length){
     html+='<div class="sec"><div class="sec-hd"><h2>Key Activities</h2><div class="sec-meta">'+esc(modeLabel)+'</div></div><div class="ka-grid">';
     p.keyActivities.forEach(function(ka){html+='<div class="ka-item"><h4>'+esc(ka.title)+'</h4><p>'+esc(ka.detail)+'</p></div>';});
@@ -987,9 +1026,7 @@ function renderReport(){
     var tot=document.createElement('tr');tot.className='tot';tot.innerHTML='<td colspan="2">Total</td><td class="r">\u20A6'+GEF.fmtM(b.totalAssets,true)+'</td>';hb.appendChild(tot);
   }
   el.querySelectorAll('.stmt tr[data-click]').forEach(function(row){row.addEventListener('click',function(){showBreakdown(row.dataset.click,p,r);});});
-  var rptShare=el.querySelector('#rpt-share-btn');if(rptShare)rptShare.addEventListener('click',copyShareLink);
-  var rptPdf=el.querySelector('#rpt-pdf-btn');if(rptPdf)rptPdf.addEventListener('click',function(){openPdfPreview();});
-  var rptPrint=el.querySelector('#rpt-print-btn');if(rptPrint)rptPrint.addEventListener('click',function(){window.print();});
+  wireToolbar(el);
   // YTD month-by-month breakdown
   if(S.viewMode==='ytd'){
     var ytdPeriods=[];
@@ -1885,26 +1922,34 @@ function openPdfPreview(){
   var dp=getDisplayPeriod();
   if(!dp){toast('No report to preview','err');return;}
   if(S.tab!=='report')setTab('report');
+  // Allow extra time for YTD merge + chart rendering before cloning
+  var pdfDelay=S.viewMode==='ytd'?900:500;
   setTimeout(function(){
     var src=document.getElementById('rpt-content');
     if(!src){toast('Report content not found','err');return;}
     var clone=src.cloneNode(true);
     var pb=clone.querySelector('.preview-banner');if(pb)pb.remove();
-    clone.querySelectorAll('canvas').forEach(function(c){
-      var ph=document.createElement('div');
-      ph.style.cssText='height:60px;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#8A8E89;border:1px dashed #ddd;border-radius:6px;margin:4px 0;';
-      ph.textContent='[Chart — visible in browser view]';
-      c.parentNode.replaceChild(ph,c);
+    var tb=clone.querySelector('.pg-toolbar');if(tb)tb.remove();
+    // Replace live canvases with static images for PDF
+    var liveCanvases=src.querySelectorAll('canvas');
+    clone.querySelectorAll('canvas').forEach(function(c,i){
+      var live=liveCanvases[i];
+      var img=document.createElement('img');
+      try{
+        img.src=(live&&live.width>0)?live.toDataURL('image/png'):'';
+        img.style.cssText='width:100%;height:auto;display:block;';
+        if(img.src)c.parentNode.replaceChild(img,c);
+        else c.remove();
+      }catch(e){c.remove();}
     });
     clone.querySelectorAll('.card,.sec,.nxts,.itbl,.stmt,.narr').forEach(function(el){
       el.style.pageBreakInside='avoid';el.style.breakInside='avoid';
     });
     var wrapper=document.createElement('div');wrapper.className='pdf-page';
     var titleBar=document.createElement('div');
-    var dp2=getDisplayPeriod();
-    var modeLabel=S.viewMode==='ytd'?'Year to Date ('+dp2.year+')':GEF.pLabel(dp2);
-    titleBar.innerHTML='<div style="border-bottom:2px solid #0F5132;padding-bottom:10px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:baseline;">'
-      +'<strong style="font-family:Fraunces,serif;font-size:14pt;color:#0A3D24;">Gbago Endowment Fund</strong>'
+    var modeLabel=S.viewMode==='ytd'?'Year to Date ('+dp.year+')':GEF.pLabel(dp);
+    titleBar.innerHTML='<div style="border-bottom:2px solid #0F5132;padding-bottom:10px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">'
+      +'<div style="display:flex;align-items:center;gap:10px;"><img src="icon-192.png" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" alt="GEF"/><strong style="font-family:Fraunces,serif;font-size:14pt;color:#0A3D24;">Gbago Endowment Fund</strong></div>'
       +'<span style="font-size:9pt;color:#8A8E89;">'+esc(modeLabel)+'</span>'
       +'</div>';
     wrapper.appendChild(titleBar);wrapper.appendChild(clone);
@@ -1919,11 +1964,11 @@ function openPdfPreview(){
       loadHtml2Pdf(function(err){
         if(err){btn.disabled=false;btn.textContent='Download PDF';toast(err.message,'err');return;}
         btn.textContent='Generating…';
-        var opt={margin:[10,10,10,10],filename:'GEF-Report-'+dp.id+'.pdf',image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['avoid-all','css','legacy']}};
+        var opt={margin:[10,10,10,10],filename:'GEF-Report-'+(S.viewMode==='ytd'?dp.year+'-YTD':dp.id)+'.pdf',image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['avoid-all','css','legacy']}};
         html2pdf().set(opt).from(wrapper).save().then(function(){btn.disabled=false;btn.textContent='Download PDF';toast('PDF downloaded','ok');}).catch(function(e){btn.disabled=false;btn.textContent='Download PDF';toast('PDF failed: '+e.message,'err');});
       });
     };
-  },400);
+  },pdfDelay);
 }
 
 // ---- Dark mode ----
@@ -1992,11 +2037,7 @@ async function boot(){
     var parts=hash.split(':');
     var pid=parts[0],mode=parts[1]||'month';
     if(pid&&S.periods.some(function(p){return p.id===pid;})){
-      var sel=document.getElementById('month-sel');
-      if(sel)sel.value=pid;
       S.viewMode=mode;
-      document.getElementById('vt-month').classList.toggle('active',mode==='month');
-      document.getElementById('vt-ytd').classList.toggle('active',mode==='ytd');
       loadAndRender(pid);
     }
   })();

@@ -153,6 +153,13 @@ p{margin:0 0 .8em}a{color:var(--grn)}
 }
 @keyframes ptr-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .sw-banner{background:var(--glds);color:#6B4F0E;text-align:center;padding:8px 16px;font-size:.84rem;border-bottom:1px solid #E0CB85}
+/* ── Update notification banner ── */
+.update-banner{background:var(--nvy);color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;padding:9px 16px;font-size:.84rem;border-bottom:2px solid var(--gld);flex-wrap:wrap}
+.update-banner.hidden{display:none!important}
+.update-banner-btn{background:var(--gld);color:#1a1400;border:0;border-radius:999px;padding:4px 14px;font-size:.78rem;font-weight:600;font-family:var(--f);cursor:pointer;flex-shrink:0;transition:background .15s}
+.update-banner-btn:hover{background:#ffe04a}
+.update-banner-dismiss{background:transparent;border:0;color:rgba(255,255,255,.6);font-size:1.2rem;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0;margin-left:4px}
+.update-banner-dismiss:hover{color:#fff}
 .modal-bg{position:fixed;inset:0;background:rgba(10,20,15,.55);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
 .modal{background:var(--bgc);border-radius:var(--rl);box-shadow:0 16px 48px rgba(10,20,15,.22);max-width:680px;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
 .modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--ln);flex-shrink:0}
@@ -326,6 +333,11 @@ body.dark .erow{background:var(--bge)}
 <div id="offline-banner" class="offline-banner">You're offline &mdash; showing cached data</div>
 <div id="ptr-indicator" class="ptr-indicator"><svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Refreshing&hellip;</div>
 <div id="sw-banner" class="sw-banner hidden">New version available. <a href="" onclick="location.reload()">Refresh</a> to update.</div>
+<div id="update-banner" class="update-banner hidden">
+  <span id="update-banner-msg"></span>
+  <button id="update-banner-btn" class="update-banner-btn">Update now</button>
+  <button id="update-banner-dismiss" class="update-banner-dismiss" aria-label="Dismiss">&times;</button>
+</div>
 <div class="app">
 <header class="app-header">
   <div class="hdr-top">
@@ -398,13 +410,13 @@ body.dark .erow{background:var(--bge)}
   </div>
   <div class="pdf-preview-frame-wrap" id="pdf-preview-content"></div>
 </div>
-<div class="ver" id="ver-badge">V1.11.2</div>
+<div class="ver" id="ver-badge">V1.11.3</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.11.2';
+const APP_VERSION='V1.11.3';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -2265,6 +2277,73 @@ function openPdfPreview(mode){
       },300);
     }
     startY=0;pulling=false;
+  });
+})();
+
+// ---- Version check ----
+// Derives the live app URL from window.location so it works regardless of
+// which GitHub Pages repo is hosting it. No PAT needed — index.html is public.
+(function(){
+  // Parse a version string like "V1.11.2" or "1.11.2" into a comparable array of ints
+  function parseVer(str){
+    return (str||'').replace(/^[Vv]/,'').split('.').map(function(n){return parseInt(n,10)||0;});
+  }
+  // Returns true if b > a
+  function isNewer(a,b){
+    var av=parseVer(a),bv=parseVer(b);
+    var len=Math.max(av.length,bv.length);
+    for(var i=0;i<len;i++){
+      var ai=av[i]||0,bi=bv[i]||0;
+      if(bi>ai)return true;
+      if(bi<ai)return false;
+    }
+    return false;
+  }
+
+  var banner=null,msgEl=null;
+  function showUpdateBanner(remoteVer){
+    if(!banner){banner=document.getElementById('update-banner');msgEl=document.getElementById('update-banner-msg');}
+    if(!banner)return;
+    if(msgEl)msgEl.textContent='A new version is available ('+remoteVer+' — you have '+APP_VERSION+').';
+    banner.classList.remove('hidden');
+    var btn=document.getElementById('update-banner-btn');
+    if(btn)btn.onclick=function(){
+      // Clear service worker cache then hard reload
+      if('caches' in window){
+        caches.keys().then(function(keys){
+          return Promise.all(keys.map(function(k){return caches.delete(k);}));
+        }).finally(function(){window.location.reload(true);});
+      }else{window.location.reload(true);}
+    };
+    var dismiss=document.getElementById('update-banner-dismiss');
+    if(dismiss)dismiss.onclick=function(){banner.classList.add('hidden');};
+  }
+
+  async function checkForUpdate(){
+    // Build the URL to the live index.html from the current page's origin + path
+    // Works for GitHub Pages at any repo path (e.g. /GEF/ or just /)
+    var base=window.location.origin+window.location.pathname;
+    // Ensure it ends in index.html or /
+    if(!base.endsWith('index.html')&&!base.endsWith('/')){base=base.substring(0,base.lastIndexOf('/')+1);}
+    var url=base.replace(/\/?$\/?/,'').replace(/index\.html$/,'')+'index.html';
+    // Add a cache-bust so we always get the freshest copy
+    url+='?_v='+Date.now();
+    try{
+      var resp=await fetch(url,{method:'GET',cache:'no-store',headers:{Accept:'text/html'}});
+      if(!resp.ok)return;
+      var text=await resp.text();
+      // Extract version from: const APP_VERSION='V1.11.2';  (any quote style)
+      var m=text.match(/const\s+APP_VERSION\s*=\s*['"`]([^'"`]+)['"`]/);
+      if(!m)return;
+      var remoteVer=m[1];
+      if(isNewer(APP_VERSION,remoteVer)){showUpdateBanner(remoteVer);}
+    }catch(e){/* network error or CORS — fail silently */}
+  }
+
+  // Run once after a short delay on boot, then every 30 minutes
+  window.addEventListener('load',function(){
+    setTimeout(checkForUpdate,3000);
+    setInterval(checkForUpdate,30*60*1000);
   });
 })();
 

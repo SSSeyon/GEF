@@ -407,13 +407,13 @@ body.dark .erow{background:var(--bge)}
     <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.11.5</div>
+<div class="ver" id="ver-badge">V1.12.0</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.11.5';
+const APP_VERSION='V1.12.0';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -1876,6 +1876,10 @@ function renderSettings(){
       +'<div class="card" style="margin-bottom:20px;border-left:3px solid var(--gld);">'
       +'<h3 style="margin-bottom:12px;color:var(--grnd);">Data</h3>'
       +'<div class="fb"><button class="btn gh" id="cfg-export">Export all drafts (JSON)</button></div></div>'
+      +'<div class="card" style="margin-bottom:20px;border-left:3px solid var(--red);">'
+      +'<h3 style="margin-bottom:6px;color:var(--grnd);">Hard Refresh</h3>'
+      +'<p class="muted" style="font-size:.82rem;margin-bottom:12px;">Clears all caches and the service worker, then reloads the app. Use this if the app appears stuck on an old version or something looks broken. Your drafts and login session are kept.</p>'
+      +'<button class="btn dng" id="cfg-hard-refresh">Hard refresh now</button></div>'
       +'<div class="card" style="margin-bottom:20px;border-left:3px solid var(--gld);">'
       +'<h3 style="margin-bottom:8px;color:var(--grnd);">Technical</h3>'
       +'<p style="font-size:.82rem;color:var(--inkm);">Single-file PWA. Change the passphrase by editing <code>ADMIN_PASSPHRASE</code> in <code>index.html</code> before deploying.</p></div>';
@@ -1925,6 +1929,25 @@ function renderSettings(){
     el.querySelector('#cfg-test').addEventListener('click',testGH);
     el.querySelector('#cfg-clear').addEventListener('click',function(){if(!confirm('Clear stored GitHub token?'))return;S.pat='';localStorage.removeItem(LS.PAT);toast('Token cleared','ok');renderSettings();});
     el.querySelector('#cfg-export').addEventListener('click',function(){var blob=new Blob([JSON.stringify(S.drafts,null,2)],{type:'application/json'});var u=URL.createObjectURL(blob);var a=document.createElement('a');a.href=u;a.download='gef-drafts.json';a.click();URL.revokeObjectURL(u);});
+    el.querySelector('#cfg-hard-refresh').addEventListener('click',async function(){
+      if(!confirm('Hard refresh? This clears all caches and reloads the app. Drafts and login are kept.'))return;
+      var btn=el.querySelector('#cfg-hard-refresh');
+      btn.disabled=true;btn.textContent='Refreshing\u2026';
+      try{
+        // Unregister all service workers
+        if('serviceWorker' in navigator){
+          var regs=await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(function(r){return r.unregister();}));
+        }
+        // Clear all caches
+        if('caches' in window){
+          var keys=await caches.keys();
+          await Promise.all(keys.map(function(k){return caches.delete(k);}));
+        }
+      }catch(e){/* keep going regardless */}
+      // Hard reload — bypass HTTP cache
+      window.location.reload(true);
+    });
   }
 }
 
@@ -2042,6 +2065,12 @@ function buildPdfHtml(pdfMode,dp){
   var cloneYtd=clone.querySelector('#ytd-months-body');
   if(cloneYtd)cloneYtd.style.display='block';
 
+  // Remove the inline "Priorities Ahead" section — it will become the closing slide
+  clone.querySelectorAll('.sec').forEach(function(sec){
+    var h=sec.querySelector('.sec-hd h2');
+    if(h&&/priorities ahead/i.test(h.textContent||''))sec.remove();
+  });
+
   // Replace canvases with data-URL images
   var liveCanvases=src.querySelectorAll('canvas');
   clone.querySelectorAll('canvas').forEach(function(c,i){
@@ -2151,9 +2180,88 @@ function buildPdfHtml(pdfMode,dp){
 +'.sec{page-break-inside:avoid;}'
 +'.nxts,.grid2,.metric-grid{page-break-inside:avoid;}'
 +'@page{margin:15mm 18mm;size:A4;}'
-+'}';
++'}'
+/* ── Cover slide (slide 1) ── */
++'.cover-slide{position:relative;width:960px;height:1409px;background:#fff;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 60px;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
++'.cover-slide .cs-shape{position:absolute;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
++'.cover-slide .cs-tl{top:-110px;left:-110px;width:220px;height:220px;border-radius:50%;background:#0F2F70;}'
++'.cover-slide .cs-tr{top:-180px;right:-180px;width:360px;height:360px;border-radius:50%;background:#0F2F70;}'
++'.cover-slide .cs-tr2{top:30px;right:-50px;width:90px;height:90px;border-radius:50%;background:#0F2F70;}'
++'.cover-slide .cs-bl{bottom:-90px;left:90px;width:240px;height:240px;border-radius:50%;background:#F8C01C;}'
++'.cover-slide .cs-bl-bg{bottom:-150px;left:-150px;width:340px;height:340px;border-radius:50%;background:transparent;border:0;}'
++'.cover-slide .cs-bl2{bottom:-30px;left:-30px;width:140px;height:140px;border-radius:50%;background:#fff;border:2px solid transparent;}'
++'.cover-slide .cs-br{bottom:-180px;right:-180px;width:380px;height:380px;border-radius:50%;background:#006145;}'
++'.cover-slide .cs-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:760px;}'
++'.cover-slide .cs-logo{width:240px;height:240px;border-radius:50%;object-fit:cover;margin-bottom:30px;display:block;}'
++'.cover-slide .cs-title{font-family:"Fraunces","Times New Roman",serif;font-weight:700;font-size:64pt;line-height:1.05;color:#006145;letter-spacing:-.01em;margin:0 0 60px;text-align:center;}'
++'.cover-slide .cs-sub{font-family:"Geist","Inter",sans-serif;font-size:28pt;color:#0D1F15;line-height:1.2;text-align:center;font-weight:400;}'
+/* ── Final next-steps slide (slide 5) ── */
++'.final-slide{position:relative;width:960px;min-height:1409px;background:#fff;padding:80px 60px 60px;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
++'.final-slide-title{font-family:"Fraunces","Times New Roman",serif;font-weight:700;font-size:44pt;line-height:1.1;color:#006145;letter-spacing:-.01em;margin:0 0 50px;}'
++'.final-slide-grid{display:grid;grid-template-columns:repeat(var(--cols,4),1fr);gap:30px;}'
++'.fs-card{display:flex;flex-direction:column;align-items:center;text-align:center;}'
++'.fs-badge-wrap{position:relative;width:170px;height:170px;margin-bottom:16px;}'
++'.fs-badge{position:absolute;left:0;top:0;width:170px;height:170px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"Fraunces","Times New Roman",serif;font-weight:700;font-size:90pt;color:#fff;line-height:1;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
++'.fs-slash{position:absolute;left:-15px;top:0;width:200px;height:170px;pointer-events:none;}'
++'.fs-title{font-family:"Geist","Inter",sans-serif;font-size:14pt;font-weight:700;margin:0 0 14px;line-height:1.2;}'
++'.fs-detail{font-family:"Geist","Inter",sans-serif;font-size:11.5pt;line-height:1.45;color:#0D1F15;margin:0;text-align:center;}'
++'.fs-card.c1 .fs-badge{background:#006145;}.fs-card.c1 .fs-title{color:#006145;}'
++'.fs-card.c2 .fs-badge{background:#F8C01C;}.fs-card.c2 .fs-title{color:#AD7436;}'
++'.fs-card.c3 .fs-badge{background:#0F2F70;}.fs-card.c3 .fs-title{color:#0F2F70;}'
++'.fs-card.c4 .fs-badge{background:#AD7436;}.fs-card.c4 .fs-title{color:#AD7436;}'
++'.final-slide-logo{position:absolute;top:36px;right:60px;width:54px;height:54px;border-radius:50%;object-fit:cover;}'
+/* ── Spacer between sections to align with PDF page breaks ── */
++'.pdf-page-break{height:0;width:100%;page-break-before:always;break-before:page;}';
 
   var bodyHtml=clone.outerHTML;
+
+  // ── Cover slide (slide 1 style) ──
+  var coverSlide=
+    '<section class="cover-slide" data-pdf-page="cover">'
+    +'<div class="cs-shape cs-tl"></div>'
+    +'<div class="cs-shape cs-tr"></div>'
+    +'<div class="cs-shape cs-tr2"></div>'
+    +'<div class="cs-shape cs-br"></div>'
+    +'<div class="cs-shape cs-bl"></div>'
+    +'<div class="cs-content">'
+    +'<img src="https://ssseyon.github.io/GEF/icon-512.png" class="cs-logo" alt="GEF"/>'
+    +'<h1 class="cs-title">Gbago Endowment Fund</h1>'
+    +'<div class="cs-sub">'+esc(modeLabel)+(pdfMode==='dashboard'?' Dashboard':' Report')+'</div>'
+    +'</div>'
+    +'</section>'
+    +'<div class="pdf-page-break" data-pdf-break="1"></div>';
+
+  // ── Final next-steps slide (slide 5 style) — only if data exists ──
+  var finalSlide='';
+  var ns=(dp&&dp.nextSteps)||[];
+  if(ns.length>0){
+    var nsItems=ns.slice(0,4);
+    var cols=nsItems.length;
+    var titleSuffix='';
+    // Look up next month's name for the title (e.g. "Key Next Steps (February)")
+    var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    if(dp&&dp.month){
+      var nextMonth=dp.month===12?1:dp.month+1;
+      titleSuffix=' ('+months[nextMonth-1]+')';
+    }
+    finalSlide=
+      '<div class="pdf-page-break" data-pdf-break="1"></div>'
+      +'<section class="final-slide" data-pdf-page="final" style="--cols:'+cols+';">'
+      +'<img src="https://ssseyon.github.io/GEF/icon-192.png" class="final-slide-logo" alt="GEF"/>'
+      +'<h2 class="final-slide-title">Key Next Steps'+esc(titleSuffix)+'</h2>'
+      +'<div class="final-slide-grid">';
+    nsItems.forEach(function(item,i){
+      finalSlide+=
+        '<div class="fs-card c'+(i+1)+'">'
+        +'<div class="fs-badge-wrap">'
+        +'<div class="fs-badge">'+(i+1)+'</div>'
+        +'</div>'
+        +'<h3 class="fs-title">'+esc(item.title||'')+'</h3>'
+        +'<p class="fs-detail">'+esc(item.detail||'')+'</p>'
+        +'</div>';
+    });
+    finalSlide+='</div></section>';
+  }
 
   return '<!DOCTYPE html><html lang="en-GB"><head>'
     +'<meta charset="UTF-8"/>'
@@ -2164,6 +2272,7 @@ function buildPdfHtml(pdfMode,dp){
     +'<title>GEF '+esc(pageLbl)+' \u2014 '+esc(modeLabel)+'</title>'
     +'<style>'+css+'</style>'
     +'</head><body>'
+    +coverSlide
     +'<div class="pdf-wrap">'
     +'<div class="pdf-header">'
     +'<div class="pdf-header-left">'
@@ -2175,6 +2284,7 @@ function buildPdfHtml(pdfMode,dp){
     +'</div>'
     +bodyHtml
     +'</div>'
+    +finalSlide
     +'</body></html>';
 }
 
@@ -2252,6 +2362,15 @@ function openPdfPreview(mode){
       var fullH=renderEl.scrollHeight;
       hiddenIframe.style.height=fullH+'px';
 
+      // Collect page-break sentinel positions (in iframe CSS pixels, then converted to canvas pixels later)
+      var breaks=[];
+      var bks=renderDoc.querySelectorAll('[data-pdf-break]');
+      bks.forEach(function(el){
+        var r=el.getBoundingClientRect();
+        // r.top is relative to the viewport; the iframe scrollY is 0 so it equals document offset
+        breaks.push(Math.round(r.top));
+      });
+
       setTimeout(function(){
         html2canvas(renderEl,{
           scale:2,
@@ -2272,11 +2391,29 @@ function openPdfPreview(mode){
           var imgW=pageW-(margin*2);
           var usableH=pageH-(margin*2);
           var pxPerMm=canvas.width/imgW;
+          // Convert CSS break positions to canvas-pixel positions (canvas.width / 960 = scale ratio)
+          var scaleRatio=canvas.width/960;
+          var brkPx=breaks.map(function(b){return Math.round(b*scaleRatio);}).filter(function(b){return b>10&&b<canvas.height-10;});
+          brkPx.sort(function(a,b){return a-b;});
           var srcYpx=0;
           var pageIndex=0;
+          var maxSliceHpx=Math.round(usableH*pxPerMm);
           while(srcYpx<canvas.height){
-            var sliceHpx=Math.round(usableH*pxPerMm);
-            if(srcYpx+sliceHpx>canvas.height)sliceHpx=canvas.height-srcYpx;
+            // Determine end of this slice: either the next page-break or the natural page limit
+            var nextBreak=null;
+            for(var bi=0;bi<brkPx.length;bi++){
+              if(brkPx[bi]>srcYpx+5){nextBreak=brkPx[bi];break;}
+            }
+            var naturalEnd=srcYpx+maxSliceHpx;
+            var sliceEnd;
+            if(nextBreak!==null&&nextBreak<=naturalEnd){
+              // Break falls inside this page — end the slice at the break
+              sliceEnd=nextBreak;
+            }else{
+              sliceEnd=Math.min(naturalEnd,canvas.height);
+            }
+            var sliceHpx=sliceEnd-srcYpx;
+            if(sliceHpx<=0)break;
             var sliceMm=(sliceHpx/pxPerMm);
             var sc=document.createElement('canvas');
             sc.width=canvas.width;sc.height=sliceHpx;
@@ -2285,7 +2422,7 @@ function openPdfPreview(mode){
             ctx.drawImage(canvas,0,srcYpx,canvas.width,sliceHpx,0,0,sc.width,sc.height);
             if(pageIndex>0)doc.addPage();
             doc.addImage(sc.toDataURL('image/jpeg',0.95),'JPEG',margin,margin,imgW,sliceMm);
-            srcYpx+=sliceHpx;
+            srcYpx=sliceEnd;
             pageIndex++;
           }
           doc.save(pdfName);

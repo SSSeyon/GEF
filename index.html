@@ -260,6 +260,9 @@ body.dark .erow{background:var(--bge)}
 .bnav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .bnav-btn.active{color:#fff;border-top-color:var(--gld)}
 .bnav-btn:hover{color:rgba(255,255,255,.9)}
+/* ── report action bar ── */
+.rpt-actions{display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.rpt-actions .btn{font-size:.78rem;padding:5px 12px}
 /* ── print improvements ── */
 @page{margin:20mm 18mm}
 @media print{
@@ -292,7 +295,6 @@ body.dark .erow{background:var(--bge)}
         <button id="vt-month" class="active" onclick="setViewMode('month')">Month</button>
         <button id="vt-ytd" onclick="setViewMode('ytd')">YTD</button>
       </div>
-      <button class="share-btn" id="share-btn" title="Share this report"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button>
       <button class="dm-toggle" id="dm-toggle" title="Toggle dark mode"><svg id="dm-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     </div>
   </div>
@@ -305,13 +307,13 @@ body.dark .erow{background:var(--bge)}
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
       Report
     </button>
-    <button class="tab-btn" data-tab="admin">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/><path d="M16 11l1.5 3h3l-2.5 2 1 3L16 17.5 13 19l1-3-2.5-2h3z"/></svg>
-      Admin
-    </button>
     <button class="tab-btn" data-tab="settings">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Settings
+    </button>
+    <button class="tab-btn" data-tab="admin">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/><path d="M16 11l1.5 3h3l-2.5 2 1 3L16 17.5 13 19l1-3-2.5-2h3z"/></svg>
+      Admin
     </button>
   </nav>
 </header>
@@ -331,13 +333,13 @@ body.dark .erow{background:var(--bge)}
     <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
     Report
   </button>
-  <button class="bnav-btn" data-tab="admin">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/><path d="M16 11l1.5 3h3l-2.5 2 1 3L16 17.5 13 19l1-3-2.5-2h3z"/></svg>
-    Admin
-  </button>
   <button class="bnav-btn" data-tab="settings">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     Settings
+  </button>
+  <button class="bnav-btn" data-tab="admin">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/><path d="M16 11l1.5 3h3l-2.5 2 1 3L16 17.5 13 19l1-3-2.5-2h3z"/></svg>
+    Admin
   </button>
 </nav>
 <div id="breakdown-modal" class="modal-bg hidden">
@@ -359,13 +361,13 @@ body.dark .erow{background:var(--bge)}
   </div>
   <div class="pdf-preview-frame-wrap" id="pdf-preview-content"></div>
 </div>
-<div class="ver" id="ver-badge">V1.07.0</div>
+<div class="ver" id="ver-badge">V1.08.0</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.07.0';
+const APP_VERSION='V1.08.0';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -467,7 +469,7 @@ const GEF=(function(){
   function newId(pfx){return(pfx||'x')+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6);}
   function blank(yr,mo){return{id:yr+'-'+String(mo).padStart(2,'0'),label:'',year:yr,month:mo,donations:[],otherIncome:[],useOfFunds:[],cashAccounts:[],moneyMarketAccounts:[],placements:[],otherExpenses:[],keyActivities:[],narrative:{incomeStatement:'',balanceSheet:'',cashFlows:'',nextSteps:''},nextSteps:[]};}
   function carry(prev){if(!prev)return null;return{cashAccounts:(prev.cashAccounts||[]).map(function(a){return{id:a.id,platform:a.platform,name:a.name,openingBalance:acctBal(a),transactions:[]};}),moneyMarketAccounts:(prev.moneyMarketAccounts||[]).map(function(a){return{id:a.id,platform:a.platform,name:a.name,openingBalance:acctBal(a),transactions:[]};}),placements:(prev.placements||[]).map(function(a){return{id:a.id,platform:a.platform,name:a.name,rate:a.rate,tenor:a.tenor,startDate:a.startDate,maturityDate:a.maturityDate,openingBalance:acctBal(a),transactions:[]};})};}
-  return{UOF_CATS,fmtM,fmtPct,pLabel,pLabelShort,sum,acctBal,pnl,bs,cf,invSum,newId,blank,carry,mergePeriods};
+  return{UOF_CATS,fmtM,fmtPct,pLabel,pLabelShort,sum,acctBal,acctIncome,acctFees,pnl,bs,cf,invSum,newId,blank,carry,mergePeriods};
 })();
 
 (function(){
@@ -515,7 +517,7 @@ window.exitPreview=function(){S.previewPeriod=null;if(S.tab==='dashboard')render
 
 function setTab(t){
   S.tab=t;
-  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t);});
+  document.querySelectorAll('.tab-btn,.bnav-btn').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t);});
   document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.toggle('active',p.id==='tab-'+t);});
   var showPeriod=t==='dashboard'||t==='report';
   document.getElementById('month-wrap').classList.toggle('hidden',!showPeriod);
@@ -604,7 +606,7 @@ function renderDash(){
   if(!dp){el.innerHTML='<div class="empty-s"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><h3>No published reports yet</h3><p>Publish a period in the Admin tab to get started.</p></div>';return;}
   var p=dp,r=GEF.pnl(p),b=GEF.bs(p),c=GEF.cf(p);
   var modeLabel=S.viewMode==='ytd'?'Year to Date ('+p.year+')':GEF.pLabel(p);
-  var html='<div class="print-header"><strong>Gbago Endowment Fund</strong><span>'+esc(modeLabel)+'</span></div>';
+  var html='';
   if(S.previewPeriod)html+='<div class="preview-banner"><span>&#128065; Previewing draft: <strong>'+GEF.pLabel(p)+'</strong> &mdash; not yet published.</span><button class="btn sm" onclick="exitPreview()">Exit Preview</button></div>';
   html+='<div class="hero">'
     +'<div class="hero-ey">'+esc(modeLabel)+' &middot; Dashboard</div>'
@@ -902,6 +904,7 @@ function renderReport(){
   var modeLabel=S.viewMode==='ytd'?'Year to Date '+p.year:GEF.pLabel(p);
   var html='';
   if(S.previewPeriod)html+='<div class="preview-banner"><span>&#128065; Previewing draft: <strong>'+esc(GEF.pLabel(p))+'</strong> &mdash; not yet published.</span><button class="btn sm" onclick="exitPreview()">Exit Preview</button></div>';
+  html+='<div class="rpt-actions"><button class="btn gh sm" id="rpt-share-btn"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button><button class="btn gh sm" id="rpt-pdf-btn">Download PDF</button><button class="btn gh sm" id="rpt-print-btn">Print</button></div>';
   if((p.keyActivities||[]).length){
     html+='<div class="sec"><div class="sec-hd"><h2>Key Activities</h2><div class="sec-meta">'+esc(modeLabel)+'</div></div><div class="ka-grid">';
     p.keyActivities.forEach(function(ka){html+='<div class="ka-item"><h4>'+esc(ka.title)+'</h4><p>'+esc(ka.detail)+'</p></div>';});
@@ -984,6 +987,9 @@ function renderReport(){
     var tot=document.createElement('tr');tot.className='tot';tot.innerHTML='<td colspan="2">Total</td><td class="r">\u20A6'+GEF.fmtM(b.totalAssets,true)+'</td>';hb.appendChild(tot);
   }
   el.querySelectorAll('.stmt tr[data-click]').forEach(function(row){row.addEventListener('click',function(){showBreakdown(row.dataset.click,p,r);});});
+  var rptShare=el.querySelector('#rpt-share-btn');if(rptShare)rptShare.addEventListener('click',copyShareLink);
+  var rptPdf=el.querySelector('#rpt-pdf-btn');if(rptPdf)rptPdf.addEventListener('click',function(){openPdfPreview();});
+  var rptPrint=el.querySelector('#rpt-print-btn');if(rptPrint)rptPrint.addEventListener('click',function(){window.print();});
   // YTD month-by-month breakdown
   if(S.viewMode==='ytd'){
     var ytdPeriods=[];
@@ -1643,6 +1649,13 @@ function renderAdmNarration(el){
   var card=document.createElement('div');card.className='card';card.style.marginBottom='16px';
   var copyBtn=prevId?'<button class="btn gh sm" id="copy-narr-btn" style="margin-bottom:14px;">Copy narration from previous period ('+prevId+')</button><br/>':'';
   card.innerHTML=copyBtn
+    +'<div style="background:var(--grns);border-radius:var(--r);padding:12px 14px;margin-bottom:16px;">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><strong style="font-size:.9rem;color:var(--grnd);">Fundraising target</strong></div>'
+    +'<p style="font-size:.82rem;color:var(--inks);margin-bottom:8px;">Annual donation target — shows a progress bar on the dashboard.</p>'
+    +'<div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;">'
+    +'<div class="fld"><label>Target amount (₦)</label><input type="number" id="adm-ft" step="1000" min="0" value="'+(S.fundTarget||0)+'"/></div>'
+    +'<button class="btn sm" id="adm-ft-save" style="margin-bottom:1px;">Save</button>'
+    +'</div></div>'
     +'<h3 style="margin-bottom:14px;">Report Narrations</h3>'
     +'<div class="fld" style="margin-bottom:12px;"><label>Income Statement narration</label><textarea id="n-is" rows="4">'+esc(narr.incomeStatement||'')+'</textarea></div>'
     +'<div class="fld" style="margin-bottom:12px;"><label>Balance Sheet narration</label><textarea id="n-bs" rows="4">'+esc(narr.balanceSheet||'')+'</textarea></div>'
@@ -1678,6 +1691,11 @@ function renderAdmNarration(el){
   card.querySelector('#n-ns').addEventListener('input',function(e){narr.nextSteps=e.target.value;autoSave();});
 
   // Key activities
+  card.querySelector('#adm-ft-save').addEventListener('click',function(){
+    var v=Number(card.querySelector('#adm-ft').value||0);
+    S.fundTarget=v;localStorage.setItem(LS.FT,v);
+    toast(v>0?'Target saved: '+GEF.fmtM(v):'Target cleared','ok');
+  });
   card.querySelector('#add-ka').addEventListener('click',function(){if(!p.keyActivities)p.keyActivities=[];p.keyActivities.push({title:'',detail:''});autoSave();renderAdmNarration(el);});
   var kal=card.querySelector('#ka-list');
   (p.keyActivities||[]).forEach(function(ka,i){
@@ -1718,25 +1736,7 @@ function renderSettings(){
     +'<button class="btn gh sm" id="cfg-dm-btn">'+(isDark?'Switch to light':'Switch to dark')+'</button>'
     +'</div>'
     +'</div>';
-  // PDF / Report download
-  html+='<div class="card" style="margin-bottom:20px;">'
-    +'<h3 style="margin-bottom:14px;color:var(--grnd);">Reports</h3>'
-    +'<div class="fbw" style="margin-bottom:12px;">'
-    +'<div><div style="font-size:.9rem;font-weight:500;">Download as PDF</div><div class="muted" style="font-size:.82rem;">Preview the report and download as a PDF file</div></div>'
-    +'<button class="btn sm" id="cfg-pdf-btn">Download PDF</button>'
-    +'</div>'
-    +'<div class="fbw">'
-    +'<div><div style="font-size:.9rem;font-weight:500;">Print report</div><div class="muted" style="font-size:.82rem;">Open print dialog for the current view</div></div>'
-    +'<button class="btn gh sm" id="cfg-print-btn">Print</button>'
-    +'</div>'
-    +'</div>';
-  // Fundraising target
-  html+='<div class="card" style="margin-bottom:20px;">'
-    +'<h3 style="margin-bottom:14px;color:var(--grnd);">Fundraising target</h3>'
-    +'<p class="muted" style="font-size:.82rem;margin-bottom:10px;">Set an annual donation target to show a progress bar on the dashboard.</p>'
-    +'<div class="frow"><div class="fld"><label>Annual target (₦)</label><input type="number" id="cfg-ft" step="1000" min="0" value="'+(S.fundTarget||0)+'"/></div>'
-    +'<div class="fld" style="justify-content:end;"><label>&nbsp;</label><button class="btn sm" id="cfg-ft-save">Save target</button></div></div>'
-    +'</div>';
+
   // About card (always visible, no passphrase hint)
   html+='<div class="card" style="margin-bottom:20px;">'
     +'<h3 style="margin-bottom:8px;color:var(--grnd);">About</h3>'
@@ -1770,16 +1770,7 @@ function renderSettings(){
     localStorage.setItem('gef-dark',nowDark?'1':'0');
     renderSettings();
   });
-  el.querySelector('#cfg-pdf-btn').addEventListener('click',function(){openPdfPreview();});
-  el.querySelector('#cfg-ft-save').addEventListener('click',function(){
-    var v=Number(el.querySelector('#cfg-ft').value||0);
-    S.fundTarget=v;localStorage.setItem(LS.FT,v);
-    toast(v>0?'Target saved: '+GEF.fmtM(v):'Target cleared','ok');
-  });
-  el.querySelector('#cfg-print-btn').addEventListener('click',function(){
-    setTab('report');
-    setTimeout(function(){window.print();},400);
-  });
+
   if(S.authed){
     el.querySelector('#cfg-save').addEventListener('click',function(){
       S.repo=(el.querySelector('#cfg-repo').value||'').trim();
@@ -1893,7 +1884,7 @@ function loadHtml2Pdf(cb){
 function openPdfPreview(){
   var dp=getDisplayPeriod();
   if(!dp){toast('No report to preview','err');return;}
-  setTab('report');
+  if(S.tab!=='report')setTab('report');
   setTimeout(function(){
     var src=document.getElementById('rpt-content');
     if(!src){toast('Report content not found','err');return;}
@@ -2009,22 +2000,14 @@ async function boot(){
       loadAndRender(pid);
     }
   })();
-  // Share button
-  var shareBtn=document.getElementById('share-btn');
-  if(shareBtn)shareBtn.addEventListener('click',copyShareLink);
+  // Share button is on report page action bar
   // Offline indicator
   function updateOnline(){document.getElementById('offline-banner').classList.toggle('visible',!navigator.onLine);}
   window.addEventListener('online',updateOnline);window.addEventListener('offline',updateOnline);updateOnline();
-  // Bottom nav sync
+  // Bottom nav
   document.querySelectorAll('.bnav-btn').forEach(function(b){
     b.addEventListener('click',function(){setTab(b.dataset.tab);});
   });
-  // Sync bottom nav active state on tab change (patch setTab)
-  var _origSetTab=setTab;
-  setTab=function(t){
-    _origSetTab(t);
-    document.querySelectorAll('.bnav-btn').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t);});
-  };
   setTab('dashboard');
 }
 document.addEventListener('DOMContentLoaded',boot);

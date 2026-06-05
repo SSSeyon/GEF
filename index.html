@@ -201,9 +201,81 @@ body.dark .erow{background:var(--bge)}
   table{page-break-inside:avoid}
 }
 
+/* ── metric cards (second row) ── */
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:28px}
+.metric-card{background:var(--bgc);border:1px solid var(--ln);border-radius:var(--rl);padding:16px 18px;box-shadow:0 1px 3px rgba(20,32,26,.04)}
+.mc-lbl{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--inkm);margin-bottom:4px}
+.mc-val{font-family:var(--fs);font-size:1.35rem;font-weight:500;line-height:1.1;color:var(--ink)}
+.mc-sub{font-size:.75rem;color:var(--inkm);margin-top:3px}
+.mc-val.pos{color:var(--grn)}.mc-val.neg{color:var(--red)}
+/* ── fundraising progress bar ── */
+.fund-progress{margin-bottom:28px}
+.fp-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.fp-title{font-family:var(--fs);font-size:1rem;font-weight:500;color:var(--grnd)}
+.fp-pct{font-family:var(--fm);font-size:.85rem;color:var(--inkm)}
+.fp-bar-bg{height:10px;background:var(--ln);border-radius:999px;overflow:hidden}
+.fp-bar-fill{height:100%;background:linear-gradient(90deg,var(--grn),#1a7a50);border-radius:999px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.fp-bar-fill.over{background:linear-gradient(90deg,var(--gld),#e5b030)}
+.fp-stats{display:flex;justify-content:space-between;margin-top:6px;font-size:.78rem;color:var(--inkm);flex-wrap:wrap;gap:4px}
+/* ── UoF bar chart ── */
+.uof-chart-bars{margin-top:10px}
+.uof-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.uof-bar-label{font-size:.78rem;color:var(--inks);width:130px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.uof-bar-track{flex:1;height:8px;background:var(--ln);border-radius:999px;overflow:hidden}
+.uof-bar-fill{height:100%;border-radius:999px;transition:width .5s ease}
+.uof-bar-amt{font-family:var(--fm);font-size:.75rem;color:var(--inkm);white-space:nowrap;min-width:70px;text-align:right}
+/* ── empty states ── */
+.empty-s{text-align:center;padding:60px 20px}
+.empty-s svg{width:72px;height:72px;stroke:var(--ln);fill:none;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto}
+.empty-s h3{color:var(--inks);margin-bottom:8px;font-family:var(--f);font-weight:600}
+.empty-s p{color:var(--inkm);font-size:.88rem;max-width:300px;margin:0 auto 16px}
+/* ── offline banner ── */
+.offline-banner{background:#A33A2E;color:#fff;text-align:center;font-size:.82rem;padding:6px 16px;position:sticky;top:var(--hh);z-index:99;display:none}
+.offline-banner.visible{display:block}
+/* ── share button ── */
+.share-btn{background:transparent;border:1px solid rgba(255,255,255,.2);border-radius:999px;color:rgba(255,255,255,.8);padding:5px 10px;cursor:pointer;font-size:.72rem;font-family:var(--f);display:flex;align-items:center;gap:4px;flex-shrink:0;transition:background .15s;letter-spacing:.03em}
+.share-btn:hover{background:rgba(255,255,255,.12)}
+.share-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* ── carry-forward checker ── */
+.carry-ok{display:inline-flex;align-items:center;gap:5px;font-size:.78rem;color:var(--grn);font-weight:500}
+.carry-warn{display:inline-flex;align-items:center;gap:5px;font-size:.78rem;color:var(--gld);font-weight:500}
+.carry-ok::before{content:'✓'}.carry-warn::before{content:'⚠'}
+/* ── admin validation ── */
+.fld input.invalid,.fld select.invalid{border-color:var(--red)!important;background:var(--reds)!important}
+.field-err{font-size:.72rem;color:var(--red);margin-top:3px;display:none}
+.field-err.show{display:block}
+/* ── narration markdown ── */
+.narr-md p{margin:0 0 .6em}.narr-md ul{padding-left:1.2em;margin:.3em 0}.narr-md li{margin-bottom:.25em}
+.narr-md strong{font-weight:600}.narr-md em{font-style:italic}
+/* ── holdings yield ── */
+.yield-pill{display:inline-block;font-family:var(--fm);font-size:.72rem;background:var(--grns);color:var(--grnd);padding:1px 7px;border-radius:999px;margin-left:6px}
+/* ── bottom nav (mobile) ── */
+@media(max-width:599px){
+  .tab-nav{display:none!important}
+  .bottom-nav{display:flex!important}
+  .app-main{padding-bottom:72px!important}
+}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--grnd);border-top:1px solid rgba(255,255,255,.12);z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.25)}
+.bnav-btn{flex:1;min-height:56px;background:transparent;border:0;color:rgba(255,255,255,.55);font-family:var(--f);font-size:.68rem;font-weight:500;padding:6px 4px;cursor:pointer;border-top:2px solid transparent;display:flex;flex-direction:column;align-items:center;gap:3px;letter-spacing:.01em;-webkit-tap-highlight-color:transparent;transition:color .15s}
+.bnav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.bnav-btn.active{color:#fff;border-top-color:var(--gld)}
+.bnav-btn:hover{color:rgba(255,255,255,.9)}
+/* ── print improvements ── */
+@page{margin:20mm 18mm}
+@media print{
+  .offline-banner,.bottom-nav,.share-btn{display:none!important}
+  body{font-size:9pt}
+  .stmt,.itbl{font-size:8.5pt}
+  .hero{background:#0A3D24!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .hero-val{font-size:22pt!important}
+  .print-header{display:block!important;border-bottom:2pt solid #0F5132;padding-bottom:8pt;margin-bottom:14pt;display:flex;justify-content:space-between}
+}
+.print-header{display:none}
+
 </style>
 </head>
 <body>
+<div id="offline-banner" class="offline-banner">You're offline &mdash; showing cached data</div>
 <div id="ptr-indicator" class="ptr-indicator"><svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Refreshing&hellip;</div>
 <div id="sw-banner" class="sw-banner hidden">New version available. <a href="" onclick="location.reload()">Refresh</a> to update.</div>
 <div class="app">
@@ -220,6 +292,7 @@ body.dark .erow{background:var(--bge)}
         <button id="vt-month" class="active" onclick="setViewMode('month')">Month</button>
         <button id="vt-ytd" onclick="setViewMode('ytd')">YTD</button>
       </div>
+      <button class="share-btn" id="share-btn" title="Share this report"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button>
       <button class="dm-toggle" id="dm-toggle" title="Toggle dark mode"><svg id="dm-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     </div>
   </div>
@@ -248,7 +321,25 @@ body.dark .erow{background:var(--bge)}
   <div id="tab-admin"     class="tab-pane"><div id="adm-content"></div></div>
   <div id="tab-settings"  class="tab-pane"><div id="cfg-content"></div></div>
 </main>
-</div>
+</div><!-- /.app -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bnav-btn active" data-tab="dashboard">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </button>
+  <button class="bnav-btn" data-tab="report">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Report
+  </button>
+  <button class="bnav-btn" data-tab="admin">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/><path d="M16 11l1.5 3h3l-2.5 2 1 3L16 17.5 13 19l1-3-2.5-2h3z"/></svg>
+    Admin
+  </button>
+  <button class="bnav-btn" data-tab="settings">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Settings
+  </button>
+</nav>
 <div id="breakdown-modal" class="modal-bg hidden">
   <div class="modal">
     <div class="modal-hdr">
@@ -381,9 +472,9 @@ const GEF=(function(){
 
 (function(){
 'use strict';
-const LS={AUTH:'gef-auth',PAT:'gef-pat',REPO:'gef-repo',BR:'gef-br',DR:'gef-drafts',CUR:'gef-cur'};
+const LS={AUTH:'gef-auth',PAT:'gef-pat',REPO:'gef-repo',BR:'gef-br',DR:'gef-drafts',CUR:'gef-cur',FT:'gef-fund-target'};
 const CLR={grn:'#0F5132',grnD:'#0A3D24',gld:'#C99A2E',nvy:'#1B3B6F',red:'#A33A2E',inks:'#4A554E',ln:'#E2D9C8'};
-let S={tab:'dashboard',periods:[],pid:null,period:null,authed:false,drafts:{},aperiod:null,atab:'donations',repo:localStorage.getItem(LS.REPO)||DEFAULT_REPO,branch:localStorage.getItem(LS.BR)||DEFAULT_BRANCH,pat:localStorage.getItem(LS.PAT)||'',pubIdx:null,charts:{},viewMode:'month',previewPeriod:null,loadedPeriods:{}};
+let S={tab:'dashboard',fundTarget:Number(localStorage.getItem('gef-fund-target')||0),periods:[],pid:null,period:null,authed:false,drafts:{},aperiod:null,atab:'donations',repo:localStorage.getItem(LS.REPO)||DEFAULT_REPO,branch:localStorage.getItem(LS.BR)||DEFAULT_BRANCH,pat:localStorage.getItem(LS.PAT)||'',pubIdx:null,charts:{},viewMode:'month',previewPeriod:null,loadedPeriods:{}};
 let toastT;
 
 window.setViewMode=function(m){
@@ -458,14 +549,62 @@ async function loadAndRender(id){
   if(S.tab==='report')renderReport();
 }
 
+// ---- Lightweight markdown renderer (bold, italic, bullets only) ----
+function renderMd(text){
+  if(!text)return'';
+  var escaped=esc(text);
+  // Bold
+  escaped=escaped.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  // Italic
+  escaped=escaped.replace(/\*([^*]+)\*/g,'<em>$1</em>');
+  // Bullet lines
+  var lines=escaped.split('\n');
+  var out='',inList=false;
+  lines.forEach(function(line){
+    var m=line.match(/^[-*]\s+(.*)/);
+    if(m){if(!inList){out+='<ul>';inList=true;}out+='<li>'+m[1]+'</li>';}
+    else{if(inList){out+='</ul>';inList=false;}if(line.trim())out+='<p>'+line+'</p>';}
+  });
+  if(inList)out+='</ul>';
+  return out;
+}
+// ---- Investment yield helper ----
+function calcYield(p){
+  var allInv=[].concat(p.moneyMarketAccounts||[],p.placements||[]);
+  if(!allInv.length)return null;
+  var inc=allInv.reduce(function(s,a){return s+GEF.acctIncome(a);},0);
+  var avgBal=allInv.reduce(function(s,a){return s+Number(a.openingBalance||0)+GEF.acctBal(a);},0)/2;
+  if(!avgBal)return null;
+  return(inc/avgBal)*12*100; // annualised %
+}
+// ---- Beneficiary count helper ----
+function countBeneficiaries(p){
+  var names=new Set();
+  (p.useOfFunds||[]).forEach(function(u){if(u.beneficiary&&u.beneficiary.trim())names.add(u.beneficiary.trim().toLowerCase());});
+  return names.size;
+}
+// ---- Runway helper (months at current spend) ----
+function calcRunway(b,r){
+  if(!r.totalExpenses||!b.cash)return null;
+  return Math.round(b.cash/r.totalExpenses*10)/10;
+}
+// ---- Share link helper ----
+function copyShareLink(){
+  var pid=S.pid||'';
+  var mode=S.viewMode||'month';
+  var url=window.location.href.split('#')[0]+'#'+pid+':'+mode;
+  if(navigator.clipboard){navigator.clipboard.writeText(url).then(function(){toast('Link copied to clipboard','ok');}).catch(function(){toast('Could not copy link','err');});}
+  else{var ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Link copied','ok');}
+}
+
 // ---- Dashboard ----
 function renderDash(){
   var el=document.getElementById('dash-content');el.innerHTML='';
   var dp=getDisplayPeriod();
-  if(!dp){el.innerHTML='<div class="empty-s"><h3>No published reports yet</h3><p>Publish a period in the Admin tab.</p></div>';return;}
+  if(!dp){el.innerHTML='<div class="empty-s"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><h3>No published reports yet</h3><p>Publish a period in the Admin tab to get started.</p></div>';return;}
   var p=dp,r=GEF.pnl(p),b=GEF.bs(p),c=GEF.cf(p);
   var modeLabel=S.viewMode==='ytd'?'Year to Date ('+p.year+')':GEF.pLabel(p);
-  var html='';
+  var html='<div class="print-header"><strong>Gbago Endowment Fund</strong><span>'+esc(modeLabel)+'</span></div>';
   if(S.previewPeriod)html+='<div class="preview-banner"><span>&#128065; Previewing draft: <strong>'+GEF.pLabel(p)+'</strong> &mdash; not yet published.</span><button class="btn sm" onclick="exitPreview()">Exit Preview</button></div>';
   html+='<div class="hero">'
     +'<div class="hero-ey">'+esc(modeLabel)+' &middot; Dashboard</div>'
@@ -477,6 +616,33 @@ function renderDash(){
     +'<div><div class="hs-lbl">Inv. Income</div><div class="hs-val num">\u20A6'+GEF.fmtM(r.investmentIncome,true)+'</div></div>'
     +'<div><div class="hs-lbl">Total Deployed</div><div class="hs-val num">\u20A6'+GEF.fmtM(r.totalUof,true)+'</div></div>'
     +'</div></div>';
+  // ── Fundraising progress bar ──
+  if(S.fundTarget>0){
+    var pct=Math.min(r.donations/S.fundTarget,1);
+    var over=r.donations>S.fundTarget;
+    var pctDisp=Math.round(pct*100);
+    html+='<div class="fund-progress card" style="margin-bottom:20px;">'
+      +'<div class="fp-header"><span class="fp-title">Fundraising target '+p.year+'</span><span class="fp-pct">'+pctDisp+'% reached</span></div>'
+      +'<div class="fp-bar-bg"><div class="fp-bar-fill'+(over?' over':'')+'" style="width:'+Math.min(pct*100,100)+'%"></div></div>'
+      +'<div class="fp-stats"><span>'+GEF.fmtM(r.donations)+' raised</span><span>Target: '+GEF.fmtM(S.fundTarget)+'</span><span>'+(over?GEF.fmtM(r.donations-S.fundTarget)+' over target':GEF.fmtM(S.fundTarget-r.donations)+' remaining')+'</span></div>'
+      +'</div>';
+  }
+  // ── Metric cards ──
+  var yd=calcYield(p);
+  var runway=calcRunway(b,r);
+  var benef=countBeneficiaries(p);
+  var cashPct=b.totalAssets?Math.round(b.cash/b.totalAssets*100):0;
+  var mCards=[
+    {l:'Net Income',v:GEF.fmtM(r.netIncome,true),cls:r.netIncome>=0?'pos':'neg',sub:''},
+    {l:'Investment yield',v:yd?yd.toFixed(1)+'%':'–',cls:'',sub:'Annualised'},
+    {l:'Beneficiaries',v:benef||'–',cls:'',sub:'This period'},
+    {l:'Cash as % of assets',v:cashPct+'%',cls:'',sub:'Liquidity ratio'},
+  ];
+  if(runway!==null)mCards.push({l:'Estimated runway',v:runway+'mo',cls:runway<3?'neg':'',sub:'At current spend'});
+  html+='<div class="metric-grid">';
+  mCards.forEach(function(mc){html+='<div class="metric-card"><div class="mc-lbl">'+mc.l+'</div><div class="mc-val num '+mc.cls+'">'+mc.v+'</div>'+(mc.sub?'<div class="mc-sub">'+mc.sub+'</div>':'')+'</div>';});
+  html+='</div>';
+  // ── Charts ──
   html+='<div class="grid2 sec"><div class="card"><h3 style="margin-bottom:8px;">Income breakdown</h3><div class="chart-w dn"><canvas id="c-inc"></canvas></div></div>'
     +'<div class="card"><h3 style="margin-bottom:8px;">Asset allocation</h3><div class="chart-w dn"><canvas id="c-alloc"></canvas></div></div></div>';
   var trendPeriods=getTrendPeriods(p.year);
@@ -531,10 +697,31 @@ function renderDash(){
       html+='</tbody></table></div>';
     }
     html+='<div style="border-top:2px solid var(--ink);padding-top:10px;display:flex;justify-content:space-between;font-weight:600;"><span>Total</span><span style="font-family:var(--fm);">'+GEF.fmtM(r.totalUof)+'</span></div>';
+    html+='<div class="uof-chart-bars" id="uof-bars-dash"></div>';
     html+='</div></div>';
   }
   el.innerHTML=html;
-  requestAnimationFrame(function(){setTimeout(function(){buildDashCharts(r,b,c,trendPeriods);},60);});
+  requestAnimationFrame(function(){setTimeout(function(){
+    buildDashCharts(r,b,c,trendPeriods);
+    // UoF bar chart
+    var uofBars=document.getElementById('uof-bars-dash');
+    if(uofBars&&r.totalUof>0){
+      var bHtml='';
+      var uofColors=['#0F5132','#1a7a50','#C99A2E','#1B3B6F','#A33A2E','#4A554E','#8A8E89'];
+      var ci=0;
+      Object.keys(GEF.UOF_CATS).forEach(function(cat){
+        var v=r.uofByC[cat];if(!v)return;
+        var pct=Math.round(v/r.totalUof*100);
+        bHtml+='<div class="uof-bar-row">'
+          +'<div class="uof-bar-label">'+esc(GEF.UOF_CATS[cat])+'</div>'
+          +'<div class="uof-bar-track"><div class="uof-bar-fill" style="width:'+pct+'%;background:'+uofColors[ci%uofColors.length]+'"></div></div>'
+          +'<div class="uof-bar-amt">'+GEF.fmtM(v)+'</div>'
+          +'</div>';
+        ci++;
+      });
+      uofBars.innerHTML=bHtml;
+    }
+  },60);});
 }
 
 function getTrendPeriods(year){
@@ -709,7 +896,7 @@ function buildDashCharts(r,b,c,trendPeriods){
 function renderReport(){
   var el=document.getElementById('rpt-content');el.innerHTML='';
   var dp=getDisplayPeriod();
-  if(!dp){el.innerHTML='<div class="empty-s"><h3>No report to display</h3></div>';return;}
+  if(!dp){el.innerHTML='<div class="empty-s"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><h3>No report to display</h3><p>Select a published period using the period selector above.</p></div>';return;}
   var p=dp,r=GEF.pnl(p),b=GEF.bs(p),c=GEF.cf(p);
   var narr=p.narrative||{};
   var modeLabel=S.viewMode==='ytd'?'Year to Date '+p.year:GEF.pLabel(p);
@@ -735,7 +922,7 @@ function renderReport(){
     {l:'Net Income',v:r.netIncome,gt:true}
   ].filter(Boolean),p)+'</div>'
   +'<div class="card"><h3 style="margin-bottom:8px;">Income breakdown</h3><div class="chart-w dn"><canvas id="c-ri"></canvas></div></div></div>';
-  if(narr.incomeStatement)html+='<div class="spacer"></div><div class="narr"><p>'+esc(narr.incomeStatement)+'</p></div>';
+  if(narr.incomeStatement)html+='<div class="spacer"></div><div class="narr narr-md">'+renderMd(narr.incomeStatement)+'</div>';
   html+='</div>';
   html+='<div class="sec"><div class="sec-hd"><h2>Balance Sheet</h2><div class="sec-meta">As of period end</div></div>';
   html+='<div class="grid2"><div class="card">'+buildStmt([
@@ -752,7 +939,7 @@ function renderReport(){
   +'<div class="card"><h3 style="margin-bottom:8px;">Asset allocation</h3><div class="chart-w dn"><canvas id="c-ra"></canvas></div><div class="spacer"></div>'
   +'<h3 style="margin-bottom:8px;">Holdings</h3><table class="itbl"><thead><tr><th>Account</th><th>Platform</th><th class="r">Balance</th></tr></thead><tbody id="rpt-hld"></tbody></table>'
   +'</div></div>';
-  if(narr.balanceSheet)html+='<div class="spacer"></div><div class="narr g"><p>'+esc(narr.balanceSheet)+'</p></div>';
+  if(narr.balanceSheet)html+='<div class="spacer"></div><div class="narr g narr-md">'+renderMd(narr.balanceSheet)+'</div>';
   html+='</div>';
   html+='<div class="sec"><div class="sec-hd"><h2>Cash Flow Statement</h2></div><div class="card">';
   html+=buildStmt([
@@ -773,7 +960,7 @@ function renderReport(){
   ],p);
   if(!c.ok)html+='<div class="banner warn" style="margin-top:12px;">Cash gap: computed '+GEF.fmtM(c.computed)+' vs booked '+GEF.fmtM(c.booked)+'</div>';
   html+='</div></div>';
-  if(narr.cashFlows)html+='<div class="spacer"></div><div class="narr"><p>'+esc(narr.cashFlows)+'</p></div>';
+  if(narr.cashFlows)html+='<div class="spacer"></div><div class="narr narr-md">'+renderMd(narr.cashFlows)+'</div>';
   html+='</div>';
   if((p.nextSteps||[]).length){
     html+='<div class="sec"><div class="sec-hd"><h2>Priorities Ahead</h2></div><div class="nxts">';
@@ -785,7 +972,15 @@ function renderReport(){
   el.innerHTML=html;
   var hb=document.getElementById('rpt-hld');
   if(hb){
-    [].concat(p.cashAccounts||[],p.moneyMarketAccounts||[],p.placements||[]).forEach(function(a){var tr=document.createElement('tr');tr.innerHTML='<td>'+esc(a.name)+'</td><td>'+esc(a.platform)+'</td><td class="r">\u20A6'+GEF.fmtM(GEF.acctBal(a),true)+'</td>';hb.appendChild(tr);});
+    var invAcctIds=new Set([].concat(p.moneyMarketAccounts||[],p.placements||[]).map(function(a){return a.id;}));
+    [].concat(p.cashAccounts||[],p.moneyMarketAccounts||[],p.placements||[]).forEach(function(a){
+      var inc=invAcctIds.has(a.id)?GEF.acctIncome(a):0;
+      var avgBal=(Number(a.openingBalance||0)+GEF.acctBal(a))/2;
+      var yld=(inc&&avgBal)?(inc/avgBal*12*100).toFixed(1)+'%':'';
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td>'+esc(a.name)+(yld?'<span class="yield-pill">'+yld+' p.a.</span>':'')+'</td><td>'+esc(a.platform)+'</td><td class="r">\u20A6'+GEF.fmtM(GEF.acctBal(a),true)+'</td>';
+      hb.appendChild(tr);
+    });
     var tot=document.createElement('tr');tot.className='tot';tot.innerHTML='<td colspan="2">Total</td><td class="r">\u20A6'+GEF.fmtM(b.totalAssets,true)+'</td>';hb.appendChild(tot);
   }
   el.querySelectorAll('.stmt tr[data-click]').forEach(function(row){row.addEventListener('click',function(){showBreakdown(row.dataset.click,p,r);});});
@@ -1005,10 +1200,31 @@ function renderAdmPeriodEditor(){
   var wrap=document.getElementById('adm-editor');if(!wrap)return;
   if(!S.aperiod){wrap.innerHTML='<div class="empty-s"><h3>Select a period above</h3></div>';return;}
   var p=S.aperiod;
+  // Carry-forward checker
+  var carryHtml='';
+  (function(){
+    var allIds=Array.from(new Set(Object.keys(S.drafts).concat((S.pubIdx&&S.pubIdx.publishedPeriods||[]).map(function(x){return x.id;})))).filter(function(x){return x<p.id;}).sort();
+    var prevId=allIds[allIds.length-1];
+    if(!prevId)return;
+    var prev=S.drafts[prevId]||S.loadedPeriods[prevId];
+    if(!prev)return;
+    var cats=['cashAccounts','moneyMarketAccounts','placements'];
+    var mismatches=0;
+    cats.forEach(function(cat){
+      (p[cat]||[]).forEach(function(a){
+        var pa=(prev[cat]||[]).find(function(x){return x.id===a.id;});
+        if(!pa)return;
+        var prevClose=GEF.acctBal(pa);
+        if(Math.abs(Number(a.openingBalance||0)-prevClose)>1)mismatches++;
+      });
+    });
+    if(mismatches===0)carryHtml='<span class="carry-ok">Opening balances verified from '+prevId+'</span>';
+    else carryHtml='<span class="carry-warn">'+mismatches+' opening balance'+(mismatches>1?'s':'')+' differ from '+prevId+' closing</span>';
+  })();
   var hdr='<div class="card" style="margin-bottom:16px;">'
     +'<div class="fbw" style="margin-bottom:12px;">'
     +'<div><h2 style="color:var(--grnd);">'+(p.label||GEF.pLabel(p))+'</h2>'
-    +'<div class="muted" style="font-size:.82rem;">'+p.id+(isPub(p.id)?' &middot; <span class="pill" style="margin-left:4px;">Published</span>':' &middot; <span class="pill gld" style="margin-left:4px;">Draft</span>')+'</div></div>'
+    +'<div class="muted" style="font-size:.82rem;">'+p.id+(isPub(p.id)?' &middot; <span class="pill" style="margin-left:4px;">Published</span>':' &middot; <span class="pill gld" style="margin-left:4px;">Draft</span>')+'</div>'+(carryHtml?'<div style="margin-top:4px;">'+carryHtml+'</div>':'')+'</div>'
     +'<div class="fb"><button class="btn gh sm" id="ahdr-save">Save draft</button><button class="btn gh sm" id="ahdr-dl">Download</button></div></div>'
     +'<div class="frow"><div class="fld"><label>Period label</label><input type="text" id="af-lbl" value="'+esc(p.label||'')+'" placeholder="e.g. January 2026"/></div></div></div>';
   var tabs=['donations','useOfFunds','cashAccounts','investments','narration'];
@@ -1052,6 +1268,24 @@ function logCashTxn(p,acctId,txnType,amount,date,note){
   return txnId;
 }
 
+// ---- Admin field validation ----
+function validateAmount(input){
+  var v=Number(input.value);
+  var bad=isNaN(v)||v<0;
+  input.classList.toggle('invalid',bad);
+  var err=input.parentElement.querySelector('.field-err');
+  if(err){err.classList.toggle('show',bad);if(bad)err.textContent='Amount must be a positive number';}
+  return!bad;
+}
+function attachAmountValidation(el){
+  var inputs=el.querySelectorAll('input[type=number]');
+  inputs.forEach(function(inp){
+    var errDiv=document.createElement('div');errDiv.className='field-err';
+    inp.parentElement.appendChild(errDiv);
+    inp.addEventListener('blur',function(){validateAmount(inp);});
+    inp.addEventListener('input',function(){if(inp.classList.contains('invalid'))validateAmount(inp);});
+  });
+}
 // --- Donations & Income tab ---
 function renderAdmDonations(el){
   el.innerHTML='';
@@ -1084,6 +1318,7 @@ function renderAdmDonations(el){
     row.querySelector('button').addEventListener('click',function(){p.donations=p.donations.filter(function(x){return x.id!==item.id;});autoSave();renderAdmPeriodEditor();});
     donList.appendChild(row);
   });
+  attachAmountValidation(donList);
   donCard.appendChild(donList);
   var addDon=document.createElement('button');addDon.className='btn sm';addDon.style.marginTop='10px';addDon.textContent='Add donation';
   addDon.addEventListener('click',function(){
@@ -1495,6 +1730,13 @@ function renderSettings(){
     +'<button class="btn gh sm" id="cfg-print-btn">Print</button>'
     +'</div>'
     +'</div>';
+  // Fundraising target
+  html+='<div class="card" style="margin-bottom:20px;">'
+    +'<h3 style="margin-bottom:14px;color:var(--grnd);">Fundraising target</h3>'
+    +'<p class="muted" style="font-size:.82rem;margin-bottom:10px;">Set an annual donation target to show a progress bar on the dashboard.</p>'
+    +'<div class="frow"><div class="fld"><label>Annual target (₦)</label><input type="number" id="cfg-ft" step="1000" min="0" value="'+(S.fundTarget||0)+'"/></div>'
+    +'<div class="fld" style="justify-content:end;"><label>&nbsp;</label><button class="btn sm" id="cfg-ft-save">Save target</button></div></div>'
+    +'</div>';
   // About card (always visible, no passphrase hint)
   html+='<div class="card" style="margin-bottom:20px;">'
     +'<h3 style="margin-bottom:8px;color:var(--grnd);">About</h3>'
@@ -1529,6 +1771,11 @@ function renderSettings(){
     renderSettings();
   });
   el.querySelector('#cfg-pdf-btn').addEventListener('click',function(){openPdfPreview();});
+  el.querySelector('#cfg-ft-save').addEventListener('click',function(){
+    var v=Number(el.querySelector('#cfg-ft').value||0);
+    S.fundTarget=v;localStorage.setItem(LS.FT,v);
+    toast(v>0?'Target saved: '+GEF.fmtM(v):'Target cleared','ok');
+  });
   el.querySelector('#cfg-print-btn').addEventListener('click',function(){
     setTab('report');
     setTimeout(function(){window.print();},400);
@@ -1711,7 +1958,20 @@ function openPdfPreview(){
   var startY=0,pulling=false,ptr=document.getElementById('ptr-indicator');
   document.addEventListener('touchstart',function(e){if(window.scrollY===0)startY=e.touches[0].clientY;},{ passive:true});
   document.addEventListener('touchmove',function(e){if(startY&&window.scrollY===0){var dy=e.touches[0].clientY-startY;if(dy>60&&!pulling){pulling=true;ptr&&ptr.classList.add('visible');}}},{ passive:true});
-  document.addEventListener('touchend',function(){if(pulling){setTimeout(function(){window.location.reload(true);},300);}startY=0;pulling=false;});
+  document.addEventListener('touchend',function(){
+    if(pulling){
+      setTimeout(function(){
+        // Soft reload: refetch index and current period instead of full page reload
+        S.loadedPeriods={};
+        loadIndex().then(function(){
+          if(ptr)ptr.classList.remove('visible');
+        }).catch(function(){
+          if(ptr)ptr.classList.remove('visible');
+        });
+      },300);
+    }
+    startY=0;pulling=false;
+  });
 })();
 
 // ---- Boot ----
@@ -1732,7 +1992,39 @@ async function boot(){
     // When SW takes control, do a hard reload to get fresh content
     navigator.serviceWorker.addEventListener('controllerchange',function(){window.location.reload(true);});
   });}
+  S.fundTarget=Number(localStorage.getItem(LS.FT)||0);
   await loadIndex();
+  // Deep-link: read hash #periodId:mode
+  (function(){
+    var hash=window.location.hash.replace('#','');
+    if(!hash)return;
+    var parts=hash.split(':');
+    var pid=parts[0],mode=parts[1]||'month';
+    if(pid&&S.periods.some(function(p){return p.id===pid;})){
+      var sel=document.getElementById('month-sel');
+      if(sel)sel.value=pid;
+      S.viewMode=mode;
+      document.getElementById('vt-month').classList.toggle('active',mode==='month');
+      document.getElementById('vt-ytd').classList.toggle('active',mode==='ytd');
+      loadAndRender(pid);
+    }
+  })();
+  // Share button
+  var shareBtn=document.getElementById('share-btn');
+  if(shareBtn)shareBtn.addEventListener('click',copyShareLink);
+  // Offline indicator
+  function updateOnline(){document.getElementById('offline-banner').classList.toggle('visible',!navigator.onLine);}
+  window.addEventListener('online',updateOnline);window.addEventListener('offline',updateOnline);updateOnline();
+  // Bottom nav sync
+  document.querySelectorAll('.bnav-btn').forEach(function(b){
+    b.addEventListener('click',function(){setTab(b.dataset.tab);});
+  });
+  // Sync bottom nav active state on tab change (patch setTab)
+  var _origSetTab=setTab;
+  setTab=function(t){
+    _origSetTab(t);
+    document.querySelectorAll('.bnav-btn').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t);});
+  };
   setTab('dashboard');
 }
 document.addEventListener('DOMContentLoaded',boot);

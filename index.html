@@ -410,13 +410,13 @@ body.dark .erow{background:var(--bge)}
   </div>
   <div class="pdf-preview-frame-wrap" id="pdf-preview-content"></div>
 </div>
-<div class="ver" id="ver-badge">V1.11.3</div>
+<div class="ver" id="ver-badge">V1.11.4</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.11.3';
+const APP_VERSION='V1.11.4';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -2181,6 +2181,29 @@ function buildPdfHtml(pdfMode,dp){
     +'</body></html>';
 }
 
+// html2canvas + jsPDF: loaded once on first use
+var _h2cLoaded=false,_jspdfLoaded=false;
+function loadPdfLibs(cb){
+  function done(){if(_h2cLoaded&&_jspdfLoaded)cb(null);}
+  if(window.html2canvas){_h2cLoaded=true;}
+  else{
+    var s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+    s.onload=function(){_h2cLoaded=true;done();};
+    s.onerror=function(){cb(new Error('Could not load rendering library'));};
+    document.head.appendChild(s);
+  }
+  if(window.jspdf||window.jsPDF){_jspdfLoaded=true;}
+  else{
+    var s2=document.createElement('script');
+    s2.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
+    s2.onload=function(){_jspdfLoaded=true;done();};
+    s2.onerror=function(){cb(new Error('Could not load PDF library'));};
+    document.head.appendChild(s2);
+  }
+  done();
+}
+
 function openPdfPreview(mode){
   var pdfMode=mode||'report';
   var dp=getDisplayPeriod();
@@ -2194,47 +2217,139 @@ function openPdfPreview(mode){
 
     var modeLabel=S.viewMode==='ytd'?'Year to Date ('+dp.year+')':GEF.pLabel(dp);
     var pageLbl=pdfMode==='dashboard'?'Dashboard':'Report';
+    var pdfName='GEF-'+(pdfMode==='dashboard'?'Dashboard':'Report')+'-'+(S.viewMode==='ytd'?dp.year+'-YTD':dp.id)+'.pdf';
 
-    // Show preview in iframe inside the modal
     var previewWrap=document.getElementById('pdf-preview-content');
     previewWrap.innerHTML='';
-    var iframe=document.createElement('iframe');
-    iframe.style.cssText='width:100%;min-height:80vh;border:none;background:#fff;';
-    previewWrap.appendChild(iframe);
-    iframe.contentDocument.open();
-    iframe.contentDocument.write(html);
-    iframe.contentDocument.close();
+
+    // Hidden off-screen iframe — rendered at exactly 960px so layout is always
+    // desktop-width regardless of the device. html2canvas reads from THIS document,
+    // which has all CSS variables already resolved to real hex values.
+    var hiddenIframe=document.createElement('iframe');
+    hiddenIframe.style.cssText='position:fixed;left:-9999px;top:0;width:960px;height:1px;border:none;visibility:hidden;pointer-events:none;';
+    document.body.appendChild(hiddenIframe);
+
+    // Visible preview iframe shown inside the modal
+    var visIframe=document.createElement('iframe');
+    visIframe.style.cssText='width:100%;flex:1;min-height:80vh;border:none;background:#fff;';
+    previewWrap.appendChild(visIframe);
+
+    function writeHtml(ifr,onLoaded){
+      if(onLoaded)ifr.onload=onLoaded;
+      try{
+        ifr.contentDocument.open();
+        ifr.contentDocument.write(html);
+        ifr.contentDocument.close();
+      }catch(e){}
+    }
+
+    // Write to visible preview — user sees this immediately
+    writeHtml(visIframe);
+
+    // Write to hidden render iframe; wait for fonts before allowing download
+    var fontsReady=false;
+    writeHtml(hiddenIframe,function(){
+      // Give Google Fonts ~900ms inside the iframe to load
+      setTimeout(function(){
+        try{
+          var ch=hiddenIframe.contentDocument.documentElement.scrollHeight;
+          if(ch>1)hiddenIframe.style.height=ch+'px';
+        }catch(e){}
+        fontsReady=true;
+      },900);
+    });
 
     var modal=document.getElementById('pdf-preview-modal');
-    // Update toolbar label
-    // Update toolbar label
-    var toolbarH3=document.getElementById('pdf-preview-title');
-    if(toolbarH3)toolbarH3.textContent=pageLbl+' \u2014 '+modeLabel;
+    var titleEl=document.getElementById('pdf-preview-title');
+    if(titleEl)titleEl.textContent=pageLbl+' \u2014 '+modeLabel;
     modal.classList.remove('hidden');
 
-    document.getElementById('pdf-close-btn').onclick=function(){
-      modal.classList.add('hidden');previewWrap.innerHTML='';
-    };
-    document.getElementById('pdf-download-btn').onclick=function(){
-      // Open a new popup window with the same HTML and call print()
-      var win=window.open('','_blank','width=960,height=800,scrollbars=yes');
-      if(!win){toast('Allow popups to download PDF','err');return;}
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
-      // Wait for fonts then print
-      win.addEventListener('load',function(){
-        setTimeout(function(){
-          win.focus();
-          win.print();
-          // Close the window after print dialog is handled
-          setTimeout(function(){win.close();},1000);
-        },600);
+    function cleanup(){
+      modal.classList.add('hidden');
+      previewWrap.innerHTML='';
+      try{document.body.removeChild(hiddenIframe);}catch(e){}
+    }
+
+    document.getElementById('pdf-close-btn').onclick=cleanup;
+
+    // Download button — wired here as a direct user-gesture handler (no extra setTimeout)
+    // so it is never blocked by mobile browsers
+    var dlBtn=document.getElementById('pdf-download-btn');
+    dlBtn.disabled=false;
+    dlBtn.textContent='Download PDF';
+    dlBtn.onclick=function(){
+      dlBtn.disabled=true;
+      dlBtn.textContent='Loading\u2026';
+      loadPdfLibs(function(err){
+        if(err){dlBtn.disabled=false;dlBtn.textContent='Download PDF';toast(err.message,'err');return;}
+
+        function doRender(){
+          dlBtn.textContent='Rendering\u2026';
+          var renderDoc=hiddenIframe.contentDocument||hiddenIframe.contentWindow.document;
+          var renderEl=renderDoc.documentElement;
+          // Expand to full content height before capture
+          var fullH=renderEl.scrollHeight;
+          hiddenIframe.style.height=fullH+'px';
+
+          setTimeout(function(){
+            html2canvas(renderEl,{
+              scale:2,
+              useCORS:true,
+              allowTaint:false,
+              logging:false,
+              windowWidth:960,
+              windowHeight:fullH,
+              scrollX:0,
+              scrollY:0,
+              backgroundColor:'#ffffff'
+            }).then(function(canvas){
+              var JsPDF=window.jspdf?window.jspdf.jsPDF:(window.jsPDF);
+              var doc=new JsPDF({unit:'mm',format:'a4',orientation:'portrait'});
+              var pageW=doc.internal.pageSize.getWidth();
+              var pageH=doc.internal.pageSize.getHeight();
+              var margin=12;
+              var imgW=pageW-(margin*2);
+              var usableH=pageH-(margin*2);
+              // Scale factor: canvas px per mm on the PDF
+              var pxPerMm=canvas.width/imgW;
+              var totalImgH=(canvas.height/canvas.width)*imgW;
+              var srcYpx=0;
+              var pageIndex=0;
+              while(srcYpx<canvas.height){
+                var sliceHpx=Math.round(usableH*pxPerMm);
+                if(srcYpx+sliceHpx>canvas.height)sliceHpx=canvas.height-srcYpx;
+                var sliceMm=(sliceHpx/pxPerMm);
+                var sc=document.createElement('canvas');
+                sc.width=canvas.width;sc.height=sliceHpx;
+                var ctx=sc.getContext('2d');
+                ctx.fillStyle='#ffffff';ctx.fillRect(0,0,sc.width,sc.height);
+                ctx.drawImage(canvas,0,srcYpx,canvas.width,sliceHpx,0,0,sc.width,sc.height);
+                if(pageIndex>0)doc.addPage();
+                doc.addImage(sc.toDataURL('image/jpeg',0.95),'JPEG',margin,margin,imgW,sliceMm);
+                srcYpx+=sliceHpx;
+                pageIndex++;
+              }
+              doc.save(pdfName);
+              dlBtn.disabled=false;dlBtn.textContent='Download PDF';
+              toast('PDF downloaded','ok');
+              try{document.body.removeChild(hiddenIframe);}catch(e){}
+            }).catch(function(e){
+              dlBtn.disabled=false;dlBtn.textContent='Download PDF';
+              toast('Render failed: '+e.message,'err');
+            });
+          },150);
+        }
+
+        // If fonts aren't ready yet, wait up to 2s more
+        if(fontsReady){doRender();}
+        else{
+          var waited=0;
+          var poll=setInterval(function(){
+            waited+=100;
+            if(fontsReady||waited>=2000){clearInterval(poll);doRender();}
+          },100);
+        }
       });
-      // Fallback if load already fired
-      setTimeout(function(){
-        if(win&&!win.closed){win.focus();win.print();}
-      },1800);
     };
   },pdfDelay);
 }

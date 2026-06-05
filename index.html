@@ -304,6 +304,7 @@ body.dark .erow{background:var(--bge)}
 .pg-toolbar .btn{font-size:.78rem;padding:5px 12px}
 .pg-toolbar .month-sel-inline{display:flex;align-items:center;gap:6px;background:var(--grns);border:1px solid var(--ln);border-radius:999px;padding:3px 6px 3px 10px;font-size:.78rem}
 .pg-toolbar .month-sel-inline label{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--inkm);white-space:nowrap}
+@media(max-width:599px){.pg-toolbar .month-sel-inline label{display:none}.pg-toolbar .month-sel-inline{padding:3px 6px}}
 .pg-toolbar .month-sel-inline select{background:transparent;border:0;color:var(--ink);font-family:var(--f);font-size:.78rem;padding:2px 4px;cursor:pointer}
 .pg-toolbar .vt-inline{display:flex;align-items:center;background:var(--grns);border:1px solid var(--ln);border-radius:999px;overflow:hidden}
 .pg-toolbar .vt-inline button,.pg-toolbar .vt-inline .tb-vt-btn{background:transparent;border:0;color:var(--inkm);font-family:var(--f);font-size:.66rem;font-weight:500;padding:4px 9px;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;transition:background .15s,color .15s}
@@ -398,13 +399,13 @@ body.dark .erow{background:var(--bge)}
   </div>
   <div class="pdf-preview-frame-wrap" id="pdf-preview-content"></div>
 </div>
-<div class="ver" id="ver-badge">V1.11.0</div>
+<div class="ver" id="ver-badge">V1.11.1</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.11.0';
+const APP_VERSION='V1.11.1';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -565,9 +566,13 @@ function setTab(t){
 async function fetchJSON(p){var r=await fetch(p+'?t='+Date.now());if(!r.ok)throw new Error('Fetch failed: '+p+' ('+r.status+')');return r.json();}
 async function loadIndex(){
   try{S.pubIdx=await fetchJSON('data/index.json');}catch(e){S.pubIdx={fundName:'Gbago Endowment Fund',publishedPeriods:[]};}
+  // Sync fundTarget from the published index (authoritative source for all users)
+  if(S.pubIdx&&S.pubIdx.fundTarget!=null){
+    S.fundTarget=Number(S.pubIdx.fundTarget)||0;
+    localStorage.setItem(LS.FT,S.fundTarget); // cache locally as fallback
+  }
   var ps=((S.pubIdx.publishedPeriods)||[]).slice().sort(function(a,b){return b.id.localeCompare(a.id);});
   S.periods=ps;
-  // Period selectors are now built inline in each page's toolbar — no header <select> to populate
   if(ps.length){loadAndRender(ps[0].id);}else{S.period=null;renderDash();}
 }
 async function loadAndRender(id){
@@ -1090,7 +1095,7 @@ function renderReport(){
   }
   el.querySelectorAll('.stmt tr[data-click]').forEach(function(row){row.addEventListener('click',function(){showBreakdown(row.dataset.click,p,r);});});
   wireToolbar(el);
-  // YTD month-by-month breakdown
+  // YTD month-by-month breakdown — appended via DOM (not innerHTML+=) to preserve toolbar listeners
   if(S.viewMode==='ytd'){
     var ytdPeriods=[];
     var basePeriod=S.previewPeriod||S.period;
@@ -1104,51 +1109,54 @@ function renderReport(){
       });
     }
     if(ytdPeriods.length>0){
-      var mhd='<div class="sec"><div class="ytd-details-toggle" id="ytd-toggle"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Monthly breakdown ('+ytdPeriods.length+' period'+(ytdPeriods.length>1?'s':'')+' — click to expand)</div><div id="ytd-months-body" style="display:none;">';
-      // Build a single columnar table: rows = line items, columns = months
+      // Build markup as a string then parse into a real DOM node — never touch el.innerHTML again
       var cols=ytdPeriods.map(function(mp){return{p:mp,r:GEF.pnl(mp),b:GEF.bs(mp),c:GEF.cf(mp),lbl:GEF.pLabelShort(mp)};});
-      mhd+='<div style="overflow-x:auto;"><table class="stmt" style="min-width:'+(140+cols.length*85)+'px;font-size:.82rem;"><thead><tr>';
-      mhd+='<th style="min-width:140px;white-space:nowrap;padding-right:12px;"></th>';
-      cols.forEach(function(col){mhd+='<th class="r" style="min-width:85px;white-space:nowrap;padding:6px 4px;">'+esc(col.lbl)+'</th>';});
-      mhd+='</tr></thead><tbody>';
       function mrow(label,valFn,cls,indent){
         var tr='<tr class="'+(cls||'')+(indent?' ind':'')+'"><td style="white-space:nowrap;padding-right:12px;">'+(indent?'<span style="padding-left:14px;color:var(--inks);">'+esc(label)+'</span>':esc(label))+'</td>';
-        cols.forEach(function(col){
-          var v=valFn(col);
-          var neg=v<0;
-          tr+='<td class="r'+(neg?' neg':'')+'" style="white-space:nowrap;padding:5px 4px;font-family:var(--fm);font-size:.8rem;">'+GEF.fmtM(v)+'</td>';
-        });
-        tr+='</tr>';
-        return tr;
+        cols.forEach(function(col){var v=valFn(col);var neg=v<0;tr+='<td class="r'+(neg?' neg':'')+'" style="white-space:nowrap;padding:5px 4px;font-family:var(--fm);font-size:.8rem;">'+GEF.fmtM(v)+'</td>';});
+        tr+='</tr>';return tr;
       }
-      // Income Statement
-      mhd+='<tr><th style="padding-top:14px;white-space:nowrap;font-size:.72rem;letter-spacing:.08em;" colspan="'+(cols.length+1)+'">INCOME</th></tr>';
-      mhd+=mrow('Donations',function(col){return col.r.donations;},null,true);
-      mhd+=mrow('Investment income',function(col){return col.r.investmentIncome;},null,true);
-      mhd+=mrow('Other income',function(col){return col.r.otherIncome;},null,true);
-      mhd+=mrow('Total revenue',function(col){return col.r.totalRevenue;},'tot');
-      mhd+=mrow('Total expenses',function(col){return-col.r.totalExpenses;},'tot');
-      mhd+=mrow('Net income',function(col){return col.r.netIncome;},'gt');
-      // Balance Sheet
-      mhd+='<tr><th style="padding-top:14px;white-space:nowrap;font-size:.72rem;letter-spacing:.08em;" colspan="'+(cols.length+1)+'">BALANCE SHEET</th></tr>';
-      mhd+=mrow('Cash',function(col){return col.b.cash;},null,true);
-      mhd+=mrow('Money Market',function(col){return col.b.moneyMarket;},null,true);
-      mhd+=mrow('Placements',function(col){return col.b.placements;},null,true);
-      mhd+=mrow('Net assets',function(col){return col.b.netAssets;},'gt');
-      // Cash Flows
-      mhd+='<tr><th style="padding-top:14px;white-space:nowrap;font-size:.72rem;letter-spacing:.08em;" colspan="'+(cols.length+1)+'">CASH FLOWS</th></tr>';
-      mhd+=mrow('Net operating',function(col){return col.c.op.sub;},null,true);
-      mhd+=mrow('Net investing',function(col){return col.c.inv.sub;},null,true);
-      mhd+=mrow('Movement',function(col){return col.c.cashChange;},'tot');
-      mhd+=mrow('Opening cash',function(col){return col.c.openCash;},null,true);
-      mhd+=mrow('Closing cash',function(col){return col.c.booked;},'gt');
-      mhd+='</tbody></table></div>';
-      mhd+='</div></div>';
-      el.innerHTML+=mhd;
-      // Wire up toggle
-      var tog=document.getElementById('ytd-toggle');
-      var body=document.getElementById('ytd-months-body');
-      if(tog&&body){tog.addEventListener('click',function(){var open=body.style.display!=='none';body.style.display=open?'none':'block';tog.classList.toggle('open',!open);});}
+      var tableHtml='<div style="overflow-x:auto;"><table class="stmt" style="min-width:'+(140+cols.length*85)+'px;font-size:.82rem;"><thead><tr>'
+        +'<th style="min-width:140px;white-space:nowrap;padding-right:12px;"></th>';
+      cols.forEach(function(col){tableHtml+='<th class="r" style="min-width:85px;white-space:nowrap;padding:6px 4px;">'+esc(col.lbl)+'</th>';});
+      tableHtml+='</tr></thead><tbody>';
+      tableHtml+='<tr><th style="padding-top:14px;white-space:nowrap;font-size:.72rem;letter-spacing:.08em;" colspan="'+(cols.length+1)+'">INCOME</th></tr>';
+      tableHtml+=mrow('Donations',function(col){return col.r.donations;},null,true);
+      tableHtml+=mrow('Investment income',function(col){return col.r.investmentIncome;},null,true);
+      tableHtml+=mrow('Other income',function(col){return col.r.otherIncome;},null,true);
+      tableHtml+=mrow('Total revenue',function(col){return col.r.totalRevenue;},'tot');
+      tableHtml+=mrow('Total expenses',function(col){return-col.r.totalExpenses;},'tot');
+      tableHtml+=mrow('Net income',function(col){return col.r.netIncome;},'gt');
+      tableHtml+='<tr><th style="padding-top:14px;white-space:nowrap;font-size:.72rem;letter-spacing:.08em;" colspan="'+(cols.length+1)+'">BALANCE SHEET</th></tr>';
+      tableHtml+=mrow('Cash',function(col){return col.b.cash;},null,true);
+      tableHtml+=mrow('Money Market',function(col){return col.b.moneyMarket;},null,true);
+      tableHtml+=mrow('Placements',function(col){return col.b.placements;},null,true);
+      tableHtml+=mrow('Net assets',function(col){return col.b.netAssets;},'gt');
+      tableHtml+='<tr><th style="padding-top:14px;white-space:nowrap;font-size:.72rem;letter-spacing:.08em;" colspan="'+(cols.length+1)+'">CASH FLOWS</th></tr>';
+      tableHtml+=mrow('Net operating',function(col){return col.c.op.sub;},null,true);
+      tableHtml+=mrow('Net investing',function(col){return col.c.inv.sub;},null,true);
+      tableHtml+=mrow('Movement',function(col){return col.c.cashChange;},'tot');
+      tableHtml+=mrow('Opening cash',function(col){return col.c.openCash;},null,true);
+      tableHtml+=mrow('Closing cash',function(col){return col.c.booked;},'gt');
+      tableHtml+='</tbody></table></div>';
+
+      // Create the section node and append — never serialise el.innerHTML again
+      var secNode=document.createElement('div');secNode.className='sec';
+      var togBtn=document.createElement('div');togBtn.className='ytd-details-toggle';togBtn.id='ytd-toggle';
+      togBtn.innerHTML='<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Monthly breakdown ('
+        +ytdPeriods.length+' period'+(ytdPeriods.length>1?'s':'')
+        +' \u2014 click to expand)';
+      var bodyDiv=document.createElement('div');bodyDiv.id='ytd-months-body';
+      bodyDiv.style.display='none';
+      bodyDiv.innerHTML=tableHtml;
+      secNode.appendChild(togBtn);secNode.appendChild(bodyDiv);
+      el.appendChild(secNode);
+      // Wire toggle
+      togBtn.addEventListener('click',function(){
+        var open=bodyDiv.style.display!=='none';
+        bodyDiv.style.display=open?'none':'block';
+        togBtn.classList.toggle('open',!open);
+      });
     }
   }
   requestAnimationFrame(function(){setTimeout(function(){buildRptCharts(r,b,c);},60);});
@@ -1840,9 +1848,9 @@ function renderSettings(){
   if(S.authed){
     html+='<div class="card" style="margin-bottom:20px;border-left:3px solid var(--gld);">'
       +'<h3 style="margin-bottom:6px;color:var(--grnd);">Fundraising Target</h3>'
-      +'<p class="muted" style="font-size:.82rem;margin-bottom:12px;">Annual donation target. The progress bar on the dashboard shows cumulative donations from all published periods against this figure.</p>'
+      +'<p class="muted" style="font-size:.82rem;margin-bottom:12px;">Annual donation target shown on the dashboard. '+(S.repo&&S.pat?'<strong style="color:var(--grn);">Syncs across all devices via GitHub.</strong>':'Set up GitHub in the publishing section below to sync this across all devices.')+'</p>'
       +'<div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;">'
-      +'<div class="fld"><label>Annual target amount (₦)</label><input type="number" id="cfg-ft" step="1000" min="0" value="'+(S.fundTarget||0)+'"/></div>'
+      +'<div class="fld"><label>Annual target amount (\u20A6)</label><input type="number" id="cfg-ft" step="1000" min="0" value="'+(S.fundTarget||0)+'"/></div>'
       +'<button class="btn sm" id="cfg-ft-save" style="margin-bottom:1px;">Save</button>'
       +'</div></div>'
       +'<div class="card" style="margin-bottom:20px;border-left:3px solid var(--gld);">'
@@ -1873,12 +1881,31 @@ function renderSettings(){
   });
 
   if(S.authed){
-    el.querySelector('#cfg-ft-save').addEventListener('click',function(){
+    el.querySelector('#cfg-ft-save').addEventListener('click',async function(){
       var v=Number(el.querySelector('#cfg-ft').value||0);
-      S.fundTarget=v;localStorage.setItem(LS.FT,v);
-      toast(v>0?'Target saved: \u20A6'+GEF.fmtM(v):'Target cleared','ok');
-      // Re-render dashboard if visible so progress bar updates instantly
+      S.fundTarget=v;
+      localStorage.setItem(LS.FT,v);
+      // Re-render dashboard immediately
       if(S.tab==='dashboard')renderDash();
+      // Persist to GitHub index.json so all users see the same target
+      if(S.repo&&S.pat){
+        var btn=el.querySelector('#cfg-ft-save');
+        btn.disabled=true;btn.textContent='Saving\u2026';
+        try{
+          var idxFile=await ghGet('data/index.json');
+          var idx;
+          try{idx=idxFile?JSON.parse(decodeURIComponent(escape(atob(idxFile.content.replace(/\n/g,''))))):S.pubIdx;}catch(e){idx=S.pubIdx;}
+          idx.fundTarget=v;
+          idx.lastUpdated=new Date().toISOString();
+          await ghPut('data/index.json',JSON.stringify(idx,null,2),'Update fundraising target',idxFile&&idxFile.sha);
+          S.pubIdx=idx;
+          toast(v>0?'Target saved & synced: \u20A6'+GEF.fmtM(v):'Target cleared & synced','ok');
+        }catch(e){
+          toast('Saved locally (GitHub sync failed: '+e.message+')','warn');
+        }finally{btn.disabled=false;btn.textContent='Save';}
+      }else{
+        toast(v>0?'Target saved: \u20A6'+GEF.fmtM(v)+' (configure GitHub to sync)':'Target cleared','ok');
+      }
     });
     el.querySelector('#cfg-save').addEventListener('click',function(){
       S.repo=(el.querySelector('#cfg-repo').value||'').trim();
@@ -1997,14 +2024,28 @@ function openPdfPreview(mode){
   // Switch to the correct tab and wait for render
   if(pdfMode==='dashboard'&&S.tab!=='dashboard')setTab('dashboard');
   else if(pdfMode==='report'&&S.tab!=='report')setTab('report');
-  var pdfDelay=S.viewMode==='ytd'?1100:600;
+  var pdfDelay=S.viewMode==='ytd'?1200:600;
   setTimeout(function(){
     var srcId=pdfMode==='dashboard'?'dash-content':'rpt-content';
     var src=document.getElementById(srcId);
     if(!src){toast('Content not found','err');return;}
+
+    // Temporarily expand the YTD monthly breakdown (if collapsed) so it is captured in the PDF
+    var ytdBody=src.querySelector('#ytd-months-body');
+    var ytdWasHidden=ytdBody&&ytdBody.style.display==='none';
+    if(ytdWasHidden)ytdBody.style.display='block';
+
     var clone=src.cloneNode(true);
-    // Remove UI-only elements
-    clone.querySelectorAll('.preview-banner,.pg-toolbar,.fund-progress').forEach(function(el){el.remove();});
+
+    // Re-collapse the live version after cloning
+    if(ytdWasHidden)ytdBody.style.display='none';
+
+    // Remove UI-only elements from clone
+    clone.querySelectorAll('.preview-banner,.pg-toolbar,.fund-progress,.ytd-details-toggle').forEach(function(el){el.remove();});
+    // The ytd body is now always visible in the clone (toggle btn removed above)
+    var cloneYtdBody=clone.querySelector('#ytd-months-body');
+    if(cloneYtdBody)cloneYtdBody.style.display='block';
+
     // Replace live canvases with static images
     var liveCanvases=src.querySelectorAll('canvas');
     clone.querySelectorAll('canvas').forEach(function(c,i){
@@ -2020,6 +2061,7 @@ function openPdfPreview(mode){
     clone.querySelectorAll('.card,.sec,.nxts,.itbl,.stmt,.narr,.metric-card,.hero').forEach(function(el){
       el.style.pageBreakInside='avoid';el.style.breakInside='avoid';
     });
+
     var wrapper=document.createElement('div');wrapper.className='pdf-page';
     var modeLabel=S.viewMode==='ytd'?'Year to Date ('+dp.year+')':GEF.pLabel(dp);
     var pageLbl=pdfMode==='dashboard'?'Dashboard':'Report';
@@ -2031,9 +2073,12 @@ function openPdfPreview(mode){
       +'<div style="text-align:right;font-size:8pt;color:#7A8C7E;">'+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})+'</div>'
       +'</div>';
     wrapper.appendChild(titleBar);wrapper.appendChild(clone);
-    // Inject minimal PDF-specific styles into the wrapper
+
+    // Inject PDF-specific styles
     var styleEl=document.createElement('style');
-    styleEl.textContent='.pdf-page .pg-toolbar,.pdf-page .preview-banner{display:none!important}'
+    styleEl.textContent=
+      '.pdf-page .pg-toolbar,.pdf-page .preview-banner,.pdf-page .fund-progress,.pdf-page .ytd-details-toggle{display:none!important}'
+      +'.pdf-page #ytd-months-body{display:block!important}'
       +'.pdf-page .hero{background:#004D37!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#fff!important;border-radius:8px;}'
       +'.pdf-page .stmt th{font-size:8pt;letter-spacing:.06em;text-transform:uppercase;color:#7A8C7E;border-bottom:1px solid #D9E4DC;}'
       +'.pdf-page .stmt tr.gt td{border-top:2px solid #0D1F15;font-family:Fraunces,serif;}'
@@ -2051,23 +2096,49 @@ function openPdfPreview(mode){
       +'.pdf-page .mc-val.pos{color:#006145;}'
       +'.pdf-page .mc-val.neg{color:#A33A2E;}';
     wrapper.insertBefore(styleEl,wrapper.firstChild);
+
     var previewWrap=document.getElementById('pdf-preview-content');
     previewWrap.innerHTML='';previewWrap.appendChild(wrapper);
     var modal=document.getElementById('pdf-preview-modal');
     modal.classList.remove('hidden');
+
     var pdfNameBase=pdfMode==='dashboard'?'GEF-Dashboard-':'GEF-Report-';
     var pdfName=pdfNameBase+(S.viewMode==='ytd'?dp.year+'-YTD':dp.id)+'.pdf';
+
     document.getElementById('pdf-close-btn').onclick=function(){modal.classList.add('hidden');previewWrap.innerHTML='';};
     document.getElementById('pdf-download-btn').onclick=function(){
       var btn=document.getElementById('pdf-download-btn');
-      btn.disabled=true;btn.textContent='Loading…';
+      btn.disabled=true;btn.textContent='Loading\u2026';
       loadHtml2Pdf(function(err){
         if(err){btn.disabled=false;btn.textContent='Download PDF';toast(err.message,'err');return;}
-        btn.textContent='Generating…';
-        // Use the PREVIEW wrapper as-is — this guarantees the download matches the preview exactly.
-        // Fixed 900px width, scale:1 so html2canvas renders at exactly the same viewport as the preview pane.
-        var opt={margin:[12,14,12,14],filename:pdfName,image:{type:'jpeg',quality:0.97},html2canvas:{scale:1.5,useCORS:true,logging:false,windowWidth:900,scrollX:0,scrollY:0},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['avoid-all','css','legacy']}};
-        html2pdf().set(opt).from(wrapper).save().then(function(){btn.disabled=false;btn.textContent='Download PDF';toast('PDF downloaded','ok');}).catch(function(e){btn.disabled=false;btn.textContent='Download PDF';toast('PDF failed: '+e.message,'err');});
+        btn.textContent='Generating\u2026';
+        // Render directly from the wrapper that is already displaying in the preview —
+        // this is the only reliable way to guarantee download = preview on all devices.
+        var opt={
+          margin:[12,14,12,14],
+          filename:pdfName,
+          image:{type:'jpeg',quality:0.97},
+          html2canvas:{
+            scale:2,
+            useCORS:true,
+            logging:false,
+            windowWidth:900,
+            scrollX:0,
+            scrollY:0,
+            onclone:function(doc){
+              // Ensure YTD monthly body is visible in the cloned document html2canvas uses
+              var b=doc.getElementById('ytd-months-body');
+              if(b)b.style.display='block';
+              var t=doc.getElementById('ytd-toggle');
+              if(t)t.style.display='none';
+            }
+          },
+          jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+          pagebreak:{mode:['avoid-all','css','legacy']}
+        };
+        html2pdf().set(opt).from(wrapper).save()
+          .then(function(){btn.disabled=false;btn.textContent='Download PDF';toast('PDF downloaded','ok');})
+          .catch(function(e){btn.disabled=false;btn.textContent='Download PDF';toast('PDF failed: '+e.message,'err');});
       });
     };
   },pdfDelay);
@@ -2131,6 +2202,7 @@ async function boot(){
     // When SW takes control, do a hard reload to get fresh content
     navigator.serviceWorker.addEventListener('controllerchange',function(){window.location.reload(true);});
   });}
+  // Load fundTarget from localStorage as initial value; loadIndex() will overwrite from GitHub
   S.fundTarget=Number(localStorage.getItem(LS.FT)||0);
   await loadIndex();
   // Deep-link: read hash #periodId:mode

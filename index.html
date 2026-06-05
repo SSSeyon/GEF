@@ -62,15 +62,22 @@ p{margin:0 0 .8em}a{color:var(--grn)}
 .sec-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:wrap}
 .sec-hd h2{color:var(--grnd)}
 .sec-meta{font-size:.8rem;color:var(--inkm)}
-.stmt{width:100%;border-collapse:collapse;font-size:.93rem}
+.stmt{width:100%;border-collapse:collapse;font-size:.93rem;table-layout:auto}
 .stmt th,.stmt td{padding:9px 0;text-align:left;white-space:nowrap}
+.stmt th:first-child,.stmt td:first-child{white-space:normal;padding-right:8px}
+@media(max-width:599px){
+  .stmt{font-size:.82rem}
+  .stmt th,.stmt td{padding:7px 0}
+  .stmt tr.ind td:first-child{padding-left:10px}
+  .stmt tr.tot td,.stmt tr.gt td{padding-top:9px}
+}
 .stmt th{font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--inkm);border-bottom:1px solid var(--ln)}
 .stmt td.r,.stmt th.r{text-align:right;font-family:var(--fm);font-variant-numeric:tabular-nums}
 .stmt tr.ind td:first-child{padding-left:14px;color:var(--inks)}
 .stmt tr.ind td.r{color:var(--inks)}
 .stmt tr.tot td{border-top:1px solid var(--ln);padding-top:12px;font-weight:600}
 .stmt tr.gt td{border-top:2px solid var(--ink);padding-top:12px;font-family:var(--fs);font-size:1.05rem}
-.stmt .neg{color:var(--red)}
+.stmt .neg{color:var(--ink)}
 .stmt .dash{color:var(--inkm);font-style:italic}
 .stmt tr.clickable{cursor:pointer;transition:background .12s}
 .stmt tr.clickable:hover td{background:var(--grns)}
@@ -400,23 +407,13 @@ body.dark .erow{background:var(--bge)}
     <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
-<div id="pdf-preview-modal" class="pdf-preview-bg hidden">
-  <div class="pdf-preview-toolbar">
-    <h3 id="pdf-preview-title">PDF Preview</h3>
-    <div class="fb">
-      <button class="btn sm gld" id="pdf-download-btn">Print / Save PDF</button>
-      <button class="btn sm gh" id="pdf-close-btn" style="color:#fff;border-color:rgba(255,255,255,.3);">Close</button>
-    </div>
-  </div>
-  <div class="pdf-preview-frame-wrap" id="pdf-preview-content"></div>
-</div>
-<div class="ver" id="ver-badge">V1.11.4</div>
+<div class="ver" id="ver-badge">V1.11.5</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.11.4';
+const APP_VERSION='V1.11.5';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -424,7 +421,7 @@ const GEF=(function(){
     var n=Number(v||0),a=Math.abs(n);
     var f=a.toLocaleString('en-GB',{minimumFractionDigits:0,maximumFractionDigits:0});
     if(n===0)return plain?'\u2013':'\u2013';
-    if(n<0)return plain?'('+f+')':'\u20A6('+f+')';
+    if(n<0)return plain?'('+f+')':'(\u20A6'+f+')';
     return plain?f:'\u20A6'+f;
   }
   function fmtPct(v,d){return(Number(v||0)*100).toFixed(d==null?2:d)+'%';}
@@ -726,13 +723,13 @@ function renderDash(){
   if(S.previewPeriod)html+='<div class="preview-banner"><span>&#128065; Previewing draft: <strong>'+GEF.pLabel(p)+'</strong> &mdash; not yet published.</span><button class="btn sm" onclick="exitPreview()">Exit Preview</button></div>';
   html+='<div class="hero">'
     +'<div class="hero-ey">'+esc(modeLabel)+' &middot; Dashboard</div>'
-    +'<h1 class="hero-val num">\u20A6'+GEF.fmtM(b.netAssets,true)+'</h1>'
+    +'<h1 class="hero-val num">'+GEF.fmtM(b.netAssets)+'</h1>'
     +'<p class="hero-sub">Net Fund Assets</p>'
     +'<div class="hero-stats">'
-    +'<div><div class="hs-lbl">Net Income</div><div class="hs-val num">\u20A6'+GEF.fmtM(r.netIncome,true)+'</div></div>'
-    +'<div><div class="hs-lbl">Donations</div><div class="hs-val num">\u20A6'+GEF.fmtM(r.donations,true)+'</div></div>'
-    +'<div><div class="hs-lbl">Inv. Income</div><div class="hs-val num">\u20A6'+GEF.fmtM(r.investmentIncome,true)+'</div></div>'
-    +'<div><div class="hs-lbl">Total Deployed</div><div class="hs-val num">\u20A6'+GEF.fmtM(r.totalUof,true)+'</div></div>'
+    +'<div><div class="hs-lbl">Net Income</div><div class="hs-val num">'+GEF.fmtM(r.netIncome)+'</div></div>'
+    +'<div><div class="hs-lbl">Donations</div><div class="hs-val num">'+GEF.fmtM(r.donations)+'</div></div>'
+    +'<div><div class="hs-lbl">Inv. Income</div><div class="hs-val num">'+GEF.fmtM(r.investmentIncome)+'</div></div>'
+    +'<div><div class="hs-lbl">Total Deployed</div><div class="hs-val num">'+GEF.fmtM(r.totalUof)+'</div></div>'
     +'</div></div>';
   // ── Fundraising progress bar ──
   if(S.fundTarget>0){
@@ -743,7 +740,7 @@ function renderDash(){
     html+='<div class="fund-progress card" style="margin-bottom:20px;">'
       +'<div class="fp-header"><span class="fp-title">Fundraising target '+p.year+'</span><span class="fp-pct">'+pctDisp+'% reached</span></div>'
       +'<div class="fp-bar-bg"><div class="fp-bar-fill'+(over?' over':'')+'" style="width:'+Math.min(pct*100,100)+'%"></div></div>'
-      +'<div class="fp-stats"><span>\u20A6'+GEF.fmtM(cumDon)+' raised (all time)</span><span>Target: \u20A6'+GEF.fmtM(S.fundTarget)+'</span><span>'+(over?'\u20A6'+GEF.fmtM(cumDon-S.fundTarget)+' over target':'\u20A6'+GEF.fmtM(S.fundTarget-cumDon)+' remaining')+'</span></div>'
+      +'<div class="fp-stats"><span>'+GEF.fmtM(cumDon)+' raised (all time)</span><span>Target: '+GEF.fmtM(S.fundTarget)+'</span><span>'+(over?GEF.fmtM(cumDon-S.fundTarget)+' over target':GEF.fmtM(S.fundTarget-cumDon)+' remaining')+'</span></div>'
       +'</div>';
   }
   // ── Metric cards ──
@@ -781,8 +778,8 @@ function renderDash(){
   }
   if((p.donations||[]).length){
     html+='<div class="sec"><div class="sec-hd"><h2>Donations</h2><div class="sec-meta">'+p.donations.length+' received</div></div><div class="card"><table class="itbl"><thead><tr><th>Date</th><th>Donor</th><th class="r">Amount</th></tr></thead><tbody>';
-    p.donations.slice().sort(function(a,b){return(a.date||'').localeCompare(b.date||'');}).forEach(function(d){html+='<tr><td>'+esc(d.date)+'</td><td>'+esc(d.donor)+'</td><td class="r">\u20A6'+GEF.fmtM(d.amount,true)+'</td></tr>';});
-    html+='<tr class="tot"><td colspan="2">Total</td><td class="r">\u20A6'+GEF.fmtM(r.donations,true)+'</td></tr></tbody></table></div></div>';
+    p.donations.slice().sort(function(a,b){return(a.date||'').localeCompare(b.date||'');}).forEach(function(d){html+='<tr><td>'+esc(d.date)+'</td><td>'+esc(d.donor)+'</td><td class="r">'+GEF.fmtM(d.amount)+'</td></tr>';});
+    html+='<tr class="tot"><td colspan="2">Total</td><td class="r">'+GEF.fmtM(r.donations)+'</td></tr></tbody></table></div></div>';
   }
   if((p.useOfFunds||[]).length){
     html+='<div class="sec"><div class="sec-hd"><h2>Use of Funds</h2><div class="sec-meta">'+GEF.fmtM(r.totalUof)+' deployed</div></div><div class="card">';
@@ -1071,11 +1068,11 @@ function renderReport(){
     {l:'Net operating',v:c.op.sub,tot:true},
     {h:'Investing Cash Flows'},
     {l:'Investment income',v:c.inv.inc,ind:true,click:'investmentIncome'},
-    {l:'Net money market movement',v:c.inv.netMM,ind:true,dz:true,click:'moneyMarketAccounts'},
-    {l:'Net placements movement',v:c.inv.netFD,ind:true,dz:true,click:'placements'},
+    {l:'Net MM mov\u2019t',v:c.inv.netMM,ind:true,dz:true,click:'moneyMarketAccounts'},
+    {l:'Net placements mov\u2019t',v:c.inv.netFD,ind:true,dz:true,click:'placements'},
     {l:'Bank charges paid',v:c.inv.fees,ind:true,dz:true,click:'fees'},
     {l:'Net investing',v:c.inv.sub,tot:true},
-    {l:'Movement in cash',v:c.cashChange,tot:true},
+    {l:'Mov\u2019t in cash',v:c.cashChange,tot:true},
     {l:'Opening cash',v:c.openCash,ind:true},
     {l:'Closing cash',v:c.booked,gt:true}
   ],p);
@@ -1099,10 +1096,10 @@ function renderReport(){
       var avgBal=(Number(a.openingBalance||0)+GEF.acctBal(a))/2;
       var yld=(inc&&avgBal)?(inc/avgBal*12*100).toFixed(1)+'%':'';
       var tr=document.createElement('tr');
-      tr.innerHTML='<td>'+esc(a.name)+'</td><td>'+esc(a.platform)+'</td><td class="r">\u20A6'+GEF.fmtM(GEF.acctBal(a),true)+'</td>';
+      tr.innerHTML='<td>'+esc(a.name)+'</td><td>'+esc(a.platform)+'</td><td class="r">'+GEF.fmtM(GEF.acctBal(a))+'</td>';
       hb.appendChild(tr);
     });
-    var tot=document.createElement('tr');tot.className='tot';tot.innerHTML='<td colspan="2">Total</td><td class="r">\u20A6'+GEF.fmtM(b.totalAssets,true)+'</td>';hb.appendChild(tot);
+    var tot=document.createElement('tr');tot.className='tot';tot.innerHTML='<td colspan="2">Total</td><td class="r">'+GEF.fmtM(b.totalAssets)+'</td>';hb.appendChild(tot);
   }
   el.querySelectorAll('.stmt tr[data-click]').forEach(function(row){row.addEventListener('click',function(){showBreakdown(row.dataset.click,p,r);});});
   wireToolbar(el);
@@ -1146,7 +1143,7 @@ function renderReport(){
       tableHtml+='<tr><th style="padding-top:14px;white-space:nowrap;font-size:.72rem;letter-spacing:.08em;" colspan="'+(cols.length+1)+'">CASH FLOWS</th></tr>';
       tableHtml+=mrow('Net operating',function(col){return col.c.op.sub;},null,true);
       tableHtml+=mrow('Net investing',function(col){return col.c.inv.sub;},null,true);
-      tableHtml+=mrow('Movement',function(col){return col.c.cashChange;},'tot');
+      tableHtml+=mrow('Mov\u2019t in cash',function(col){return col.c.cashChange;},'tot');
       tableHtml+=mrow('Opening cash',function(col){return col.c.openCash;},null,true);
       tableHtml+=mrow('Closing cash',function(col){return col.c.booked;},'gt');
       tableHtml+='</tbody></table></div>';
@@ -1178,17 +1175,17 @@ function showBreakdown(key,p,r){
     if(!data||!data.length)return'<p style="color:var(--inkm);font-style:italic;">No entries.</p>';
     var sorted=sortKey?data.slice().sort(function(a,b){return(a[sortKey]||'').localeCompare(b[sortKey]||'')}):data;
     var h='<table class="itbl"><thead><tr>'+cols.map(function(c){return'<th'+(c.r?' class="r"':'')+'>'+c.l+'</th>';}).join('')+'</tr></thead><tbody>';
-    sorted.forEach(function(item){h+='<tr>'+cols.map(function(c){var v=item[c.k];if(c.fmt==='money')return'<td class="r">\u20A6'+GEF.fmtM(v,true)+'</td>';return'<td>'+esc(v||'')+'</td>';}).join('')+'</tr>';});
+    sorted.forEach(function(item){h+='<tr>'+cols.map(function(c){var v=item[c.k];if(c.fmt==='money')return'<td class="r">'+GEF.fmtM(v)+'</td>';return'<td>'+esc(v||'')+'</td>';}).join('')+'</tr>';});
     var amtKey=cols[cols.length-1].k;
     var tot=data.reduce(function(s,i){return s+Number(i[amtKey]||0);},0);
-    h+='<tr class="tot"><td colspan="'+(cols.length-1)+'">Total</td><td class="r">\u20A6'+GEF.fmtM(tot,true)+'</td></tr>';
+    h+='<tr class="tot"><td colspan="'+(cols.length-1)+'">Total</td><td class="r">'+GEF.fmtM(tot)+'</td></tr>';
     return h+'</tbody></table>';
   }
   function acctDetail(accounts){
     if(!accounts||!accounts.length)return'<p style="color:var(--inkm);font-style:italic;">No accounts.</p>';
     var h='';
     accounts.forEach(function(a){
-      h+='<div style="margin-bottom:16px;"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;"><strong>'+esc(a.name)+'</strong><span style="font-family:var(--fm);font-size:.9rem;">\u20A6'+GEF.fmtM(GEF.acctBal(a),true)+'</span></div>';
+      h+='<div style="margin-bottom:16px;"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;"><strong>'+esc(a.name)+'</strong><span style="font-family:var(--fm);font-size:.9rem;">'+GEF.fmtM(GEF.acctBal(a))+'</span></div>';
       if((a.transactions||[]).length){
         h+='<table class="itbl"><thead><tr><th>Date</th><th>Type</th><th>Note</th><th class="r">Amount</th></tr></thead><tbody>';
         a.transactions.slice().sort(function(x,y){return(x.date||'').localeCompare(y.date||'');}).forEach(function(t){
@@ -1424,7 +1421,7 @@ function renderAdmDonations(el){
   // DONATIONS
   var donCard=document.createElement('div');donCard.className='card';donCard.style.marginBottom='16px';
   var donTotal=GEF.sum(p.donations||[],'amount');
-  donCard.innerHTML='<div class="fbw" style="margin-bottom:6px;"><h3>Donations</h3><div class="muted num" style="font-size:.9rem;">\u20A6'+GEF.fmtM(donTotal,true)+'</div></div>'
+  donCard.innerHTML='<div class="fbw" style="margin-bottom:6px;"><h3>Donations</h3><div class="muted num" style="font-size:.9rem;">'+GEF.fmtM(donTotal)+'</div></div>'
     +'<p class="muted" style="font-size:.82rem;margin-bottom:6px;">Individual contributions received</p>';
   var donList=document.createElement('div');donList.className='rlist';
   if(!(p.donations||[]).length){donList.innerHTML='<div class="muted" style="font-size:.84rem;font-style:italic;padding:6px 0;">No entries.</div>';}
@@ -1443,7 +1440,7 @@ function renderAdmDonations(el){
     var inputs=row.querySelectorAll('input');
     inputs[0].addEventListener('input',function(e){item.date=e.target.value;autoSave();});
     inputs[1].addEventListener('input',function(e){item.donor=e.target.value;autoSave();});
-    inputs[2].addEventListener('input',function(e){item.amount=Number(e.target.value||0);autoSave();donCard.querySelector('.muted.num').textContent='\u20A6'+GEF.fmtM(GEF.sum(p.donations,'amount'),true);});
+    inputs[2].addEventListener('input',function(e){item.amount=Number(e.target.value||0);autoSave();donCard.querySelector('.muted.num').textContent=GEF.fmtM(GEF.sum(p.donations,'amount'));});
     inputs[3].addEventListener('input',function(e){item.note=e.target.value;autoSave();});
     if(hasCash){var casel=row.querySelector('[data-ca]');casel.addEventListener('change',function(e){item._cashAcct=e.target.value;autoSave();});}
     row.querySelector('button').addEventListener('click',function(){p.donations=p.donations.filter(function(x){return x.id!==item.id;});autoSave();renderAdmPeriodEditor();});
@@ -1494,7 +1491,7 @@ function buildCashLsec(spec){
   var card=document.createElement('div');card.className='card';card.style.marginBottom='16px';
   var p=S.aperiod;var items=(p&&p[spec.cat])||[];var total=GEF.sum(items,'amount');
   var hasCash=(p.cashAccounts||[]).length>0;
-  card.innerHTML='<div class="fbw" style="margin-bottom:6px;"><h3>'+spec.title+'</h3><div class="muted num" style="font-size:.9rem;">\u20A6'+GEF.fmtM(total,true)+'</div></div>'
+  card.innerHTML='<div class="fbw" style="margin-bottom:6px;"><h3>'+spec.title+'</h3><div class="muted num" style="font-size:.9rem;">'+GEF.fmtM(total)+'</div></div>'
     +'<p class="muted" style="font-size:.82rem;margin-bottom:6px;">'+spec.sub+'</p>';
   var rl=document.createElement('div');rl.className='rlist';
   if(!items.length){var em=document.createElement('div');em.className='muted';em.style.cssText='font-size:.84rem;font-style:italic;padding:6px 0;';em.textContent='No entries.';rl.appendChild(em);}
@@ -1507,7 +1504,7 @@ function buildCashLsec(spec){
     spec.cols.forEach(function(col){
       var fld=document.createElement('div');fld.className='fld';fld.innerHTML='<label>'+col.l+'</label>';
       var inp=document.createElement('input');inp.type=col.t;if(col.t==='number')inp.step='0.01';inp.value=item[col.k]!=null?item[col.k]:'';
-      inp.addEventListener('input',function(e){item[col.k]=col.t==='number'?Number(e.target.value||0):e.target.value;autoSave();if(col.k==='amount')card.querySelector('.muted.num').textContent='\u20A6'+GEF.fmtM(GEF.sum(p[spec.cat],'amount'),true);});
+      inp.addEventListener('input',function(e){item[col.k]=col.t==='number'?Number(e.target.value||0):e.target.value;autoSave();if(col.k==='amount')card.querySelector('.muted.num').textContent=GEF.fmtM(GEF.sum(p[spec.cat],'amount'));});
       fld.appendChild(inp);row.appendChild(fld);
     });
     if(hasCash){
@@ -1553,7 +1550,7 @@ function renderAdmUoF(el){
   var card=document.createElement('div');card.className='card';card.style.marginBottom='16px';
   var total=GEF.sum(p.useOfFunds,'amount');
   var hasCash=(p.cashAccounts||[]).length>0;
-  card.innerHTML='<div class="fbw" style="margin-bottom:6px;"><h3>Use of Funds</h3><div class="muted num" style="font-size:.92rem;">\u20A6'+GEF.fmtM(total,true)+'</div></div>'
+  card.innerHTML='<div class="fbw" style="margin-bottom:6px;"><h3>Use of Funds</h3><div class="muted num" style="font-size:.92rem;">'+GEF.fmtM(total)+'</div></div>'
     +'<p class="muted" style="font-size:.82rem;margin-bottom:8px;">JAMB/WAEC forms, lessons, stipends, scholarships, gifts and other deployments.</p>';
   var rl=document.createElement('div');rl.className='rlist';
   if(!(p.useOfFunds||[]).length){var em=document.createElement('div');em.className='muted';em.style.cssText='font-size:.84rem;font-style:italic;padding:6px 0;';em.textContent='No entries yet.';rl.appendChild(em);}
@@ -1573,7 +1570,7 @@ function renderAdmUoF(el){
     inputs[1].addEventListener('change',function(e){item.category=e.target.value;autoSave();});
     inputs[2].addEventListener('input',function(e){item.beneficiary=e.target.value;autoSave();});
     inputs[3].addEventListener('input',function(e){item.description=e.target.value;autoSave();});
-    inputs[4].addEventListener('input',function(e){item.amount=Number(e.target.value||0);autoSave();card.querySelector('.muted.num').textContent='\u20A6'+GEF.fmtM(GEF.sum(p.useOfFunds,'amount'),true);});
+    inputs[4].addEventListener('input',function(e){item.amount=Number(e.target.value||0);autoSave();card.querySelector('.muted.num').textContent=GEF.fmtM(GEF.sum(p.useOfFunds,'amount'));});
     if(hasCash){var casel=row.querySelector('[data-ca]');casel.addEventListener('change',function(e){item._cashAcct=e.target.value;autoSave();});}
     row.querySelector('button').addEventListener('click',function(){p.useOfFunds=p.useOfFunds.filter(function(x){return x.id!==item.id;});autoSave();renderAdmPeriodEditor();});
     rl.appendChild(row);
@@ -1643,7 +1640,7 @@ function renderAcctList(catKey,containerId,types,typeLabels){
     var card=document.createElement('div');card.className='acct-card';
     var bal=GEF.acctBal(acct);
     card.innerHTML='<div class="acct-hdr"><div class="fb"><strong>'+esc(acct.name||'(unnamed)')+'</strong><span class="muted" style="font-size:.8rem;">'+esc(acct.platform||'')+'</span></div>'
-      +'<div class="fb"><span class="num" style="font-size:.9rem;">\u20A6'+GEF.fmtM(bal,true)+'</span>'
+      +'<div class="fb"><span class="num" style="font-size:.9rem;">'+GEF.fmtM(bal)+'</span>'
       +'<button class="btn sm dng" data-remove>Remove account</button></div></div>'
       +'<div class="acct-body"><div class="frow" style="margin-bottom:10px;">'
       +'<div class="fld"><label>Account name</label><input type="text" data-f="name" value="'+esc(acct.name||'')+'"/></div>'
@@ -1741,7 +1738,7 @@ function renderPlacementList(containerId){
     var card=document.createElement('div');card.className='acct-card';
     var bal=GEF.acctBal(pl);
     card.innerHTML='<div class="acct-hdr"><div class="fb"><strong>'+esc(pl.name||'(unnamed)')+'</strong><span class="muted" style="font-size:.8rem;">'+esc(pl.platform||'')+'</span></div>'
-      +'<div class="fb"><span class="num" style="font-size:.9rem;">\u20A6'+GEF.fmtM(bal,true)+'</span>'
+      +'<div class="fb"><span class="num" style="font-size:.9rem;">'+GEF.fmtM(bal)+'</span>'
       +(pl.rate?'<span class="pill nvy">'+GEF.fmtPct(pl.rate)+' p.a.</span>':'')
       +'<button class="btn sm dng" data-remove>Remove</button></div></div>'
       +'<div class="acct-body"><div class="frow" style="margin-bottom:10px;">'
@@ -1910,12 +1907,12 @@ function renderSettings(){
           idx.lastUpdated=new Date().toISOString();
           await ghPut('data/index.json',JSON.stringify(idx,null,2),'Update fundraising target',idxFile&&idxFile.sha);
           S.pubIdx=idx;
-          toast(v>0?'Target saved & synced: \u20A6'+GEF.fmtM(v):'Target cleared & synced','ok');
+          toast(v>0?'Target saved & synced: '+GEF.fmtM(v):'Target cleared & synced','ok');
         }catch(e){
           toast('Saved locally (GitHub sync failed: '+e.message+')','warn');
         }finally{btn.disabled=false;btn.textContent='Save';}
       }else{
-        toast(v>0?'Target saved: \u20A6'+GEF.fmtM(v)+' (configure GitHub to sync)':'Target cleared','ok');
+        toast(v>0?'Target saved: '+GEF.fmtM(v)+' (configure GitHub to sync)':'Target cleared','ok');
       }
     });
     el.querySelector('#cfg-save').addEventListener('click',function(){
@@ -2107,7 +2104,7 @@ function buildPdfHtml(pdfMode,dp){
 +'.stmt tr.ind td.r{color:#3A5040;}'
 +'.stmt tr.tot td{border-top:1px solid #D9E4DC;padding-top:10px;font-weight:600;}'
 +'.stmt tr.gt td{border-top:2px solid #0D1F15;padding-top:10px;font-family:"Fraunces","Times New Roman",serif;font-size:1rem;}'
-+'.stmt .neg{color:#A33A2E;}'
++'.stmt .neg{color:#0D1F15;}'
 +'.stmt .dash{color:#7A8C7E;font-style:italic;}'
 +'.stmt-hd-row td,.stmt-hd-row th{background:#004D37!important;color:#fff!important;font-weight:700;padding:8px 10px;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
 +'.stmt-hd-row td.r,.stmt-hd-row th.r{color:#F8C01C!important;}'
@@ -2205,51 +2202,37 @@ function loadPdfLibs(cb){
 }
 
 function openPdfPreview(mode){
+  // Despite the legacy name, this now generates and downloads the PDF directly.
+  // No preview modal — just a brief progress toast while rendering.
   var pdfMode=mode||'report';
   var dp=getDisplayPeriod();
-  if(!dp){toast('No report to preview','err');return;}
+  if(!dp){toast('No report to download','err');return;}
   if(pdfMode==='dashboard'&&S.tab!=='dashboard')setTab('dashboard');
   else if(pdfMode==='report'&&S.tab!=='report')setTab('report');
-  var pdfDelay=S.viewMode==='ytd'?1200:700;
+  var pdfDelay=S.viewMode==='ytd'?1100:600;
+
+  toast('Preparing PDF\u2026','info');
+
   setTimeout(function(){
     var html=buildPdfHtml(pdfMode,dp);
     if(!html){toast('Content not found','err');return;}
 
-    var modeLabel=S.viewMode==='ytd'?'Year to Date ('+dp.year+')':GEF.pLabel(dp);
-    var pageLbl=pdfMode==='dashboard'?'Dashboard':'Report';
     var pdfName='GEF-'+(pdfMode==='dashboard'?'Dashboard':'Report')+'-'+(S.viewMode==='ytd'?dp.year+'-YTD':dp.id)+'.pdf';
 
-    var previewWrap=document.getElementById('pdf-preview-content');
-    previewWrap.innerHTML='';
-
-    // Hidden off-screen iframe — rendered at exactly 960px so layout is always
-    // desktop-width regardless of the device. html2canvas reads from THIS document,
-    // which has all CSS variables already resolved to real hex values.
+    // Off-screen render iframe — fixed 960px so layout is always desktop width
     var hiddenIframe=document.createElement('iframe');
     hiddenIframe.style.cssText='position:fixed;left:-9999px;top:0;width:960px;height:1px;border:none;visibility:hidden;pointer-events:none;';
     document.body.appendChild(hiddenIframe);
 
-    // Visible preview iframe shown inside the modal
-    var visIframe=document.createElement('iframe');
-    visIframe.style.cssText='width:100%;flex:1;min-height:80vh;border:none;background:#fff;';
-    previewWrap.appendChild(visIframe);
-
-    function writeHtml(ifr,onLoaded){
-      if(onLoaded)ifr.onload=onLoaded;
-      try{
-        ifr.contentDocument.open();
-        ifr.contentDocument.write(html);
-        ifr.contentDocument.close();
-      }catch(e){}
-    }
-
-    // Write to visible preview — user sees this immediately
-    writeHtml(visIframe);
-
-    // Write to hidden render iframe; wait for fonts before allowing download
     var fontsReady=false;
-    writeHtml(hiddenIframe,function(){
-      // Give Google Fonts ~900ms inside the iframe to load
+    try{
+      hiddenIframe.contentDocument.open();
+      hiddenIframe.contentDocument.write(html);
+      hiddenIframe.contentDocument.close();
+    }catch(e){}
+
+    hiddenIframe.onload=function(){
+      // Allow fonts ~900ms to load inside the iframe
       setTimeout(function(){
         try{
           var ch=hiddenIframe.contentDocument.documentElement.scrollHeight;
@@ -2257,100 +2240,75 @@ function openPdfPreview(mode){
         }catch(e){}
         fontsReady=true;
       },900);
-    });
-
-    var modal=document.getElementById('pdf-preview-modal');
-    var titleEl=document.getElementById('pdf-preview-title');
-    if(titleEl)titleEl.textContent=pageLbl+' \u2014 '+modeLabel;
-    modal.classList.remove('hidden');
+    };
 
     function cleanup(){
-      modal.classList.add('hidden');
-      previewWrap.innerHTML='';
       try{document.body.removeChild(hiddenIframe);}catch(e){}
     }
 
-    document.getElementById('pdf-close-btn').onclick=cleanup;
+    function renderAndSave(){
+      var renderDoc=hiddenIframe.contentDocument||hiddenIframe.contentWindow.document;
+      var renderEl=renderDoc.documentElement;
+      var fullH=renderEl.scrollHeight;
+      hiddenIframe.style.height=fullH+'px';
 
-    // Download button — wired here as a direct user-gesture handler (no extra setTimeout)
-    // so it is never blocked by mobile browsers
-    var dlBtn=document.getElementById('pdf-download-btn');
-    dlBtn.disabled=false;
-    dlBtn.textContent='Download PDF';
-    dlBtn.onclick=function(){
-      dlBtn.disabled=true;
-      dlBtn.textContent='Loading\u2026';
-      loadPdfLibs(function(err){
-        if(err){dlBtn.disabled=false;dlBtn.textContent='Download PDF';toast(err.message,'err');return;}
+      setTimeout(function(){
+        html2canvas(renderEl,{
+          scale:2,
+          useCORS:true,
+          allowTaint:false,
+          logging:false,
+          windowWidth:960,
+          windowHeight:fullH,
+          scrollX:0,
+          scrollY:0,
+          backgroundColor:'#ffffff'
+        }).then(function(canvas){
+          var JsPDF=window.jspdf?window.jspdf.jsPDF:(window.jsPDF);
+          var doc=new JsPDF({unit:'mm',format:'a4',orientation:'portrait'});
+          var pageW=doc.internal.pageSize.getWidth();
+          var pageH=doc.internal.pageSize.getHeight();
+          var margin=12;
+          var imgW=pageW-(margin*2);
+          var usableH=pageH-(margin*2);
+          var pxPerMm=canvas.width/imgW;
+          var srcYpx=0;
+          var pageIndex=0;
+          while(srcYpx<canvas.height){
+            var sliceHpx=Math.round(usableH*pxPerMm);
+            if(srcYpx+sliceHpx>canvas.height)sliceHpx=canvas.height-srcYpx;
+            var sliceMm=(sliceHpx/pxPerMm);
+            var sc=document.createElement('canvas');
+            sc.width=canvas.width;sc.height=sliceHpx;
+            var ctx=sc.getContext('2d');
+            ctx.fillStyle='#ffffff';ctx.fillRect(0,0,sc.width,sc.height);
+            ctx.drawImage(canvas,0,srcYpx,canvas.width,sliceHpx,0,0,sc.width,sc.height);
+            if(pageIndex>0)doc.addPage();
+            doc.addImage(sc.toDataURL('image/jpeg',0.95),'JPEG',margin,margin,imgW,sliceMm);
+            srcYpx+=sliceHpx;
+            pageIndex++;
+          }
+          doc.save(pdfName);
+          toast('PDF downloaded','ok');
+          cleanup();
+        }).catch(function(e){
+          toast('Render failed: '+e.message,'err');
+          cleanup();
+        });
+      },150);
+    }
 
-        function doRender(){
-          dlBtn.textContent='Rendering\u2026';
-          var renderDoc=hiddenIframe.contentDocument||hiddenIframe.contentWindow.document;
-          var renderEl=renderDoc.documentElement;
-          // Expand to full content height before capture
-          var fullH=renderEl.scrollHeight;
-          hiddenIframe.style.height=fullH+'px';
-
-          setTimeout(function(){
-            html2canvas(renderEl,{
-              scale:2,
-              useCORS:true,
-              allowTaint:false,
-              logging:false,
-              windowWidth:960,
-              windowHeight:fullH,
-              scrollX:0,
-              scrollY:0,
-              backgroundColor:'#ffffff'
-            }).then(function(canvas){
-              var JsPDF=window.jspdf?window.jspdf.jsPDF:(window.jsPDF);
-              var doc=new JsPDF({unit:'mm',format:'a4',orientation:'portrait'});
-              var pageW=doc.internal.pageSize.getWidth();
-              var pageH=doc.internal.pageSize.getHeight();
-              var margin=12;
-              var imgW=pageW-(margin*2);
-              var usableH=pageH-(margin*2);
-              // Scale factor: canvas px per mm on the PDF
-              var pxPerMm=canvas.width/imgW;
-              var totalImgH=(canvas.height/canvas.width)*imgW;
-              var srcYpx=0;
-              var pageIndex=0;
-              while(srcYpx<canvas.height){
-                var sliceHpx=Math.round(usableH*pxPerMm);
-                if(srcYpx+sliceHpx>canvas.height)sliceHpx=canvas.height-srcYpx;
-                var sliceMm=(sliceHpx/pxPerMm);
-                var sc=document.createElement('canvas');
-                sc.width=canvas.width;sc.height=sliceHpx;
-                var ctx=sc.getContext('2d');
-                ctx.fillStyle='#ffffff';ctx.fillRect(0,0,sc.width,sc.height);
-                ctx.drawImage(canvas,0,srcYpx,canvas.width,sliceHpx,0,0,sc.width,sc.height);
-                if(pageIndex>0)doc.addPage();
-                doc.addImage(sc.toDataURL('image/jpeg',0.95),'JPEG',margin,margin,imgW,sliceMm);
-                srcYpx+=sliceHpx;
-                pageIndex++;
-              }
-              doc.save(pdfName);
-              dlBtn.disabled=false;dlBtn.textContent='Download PDF';
-              toast('PDF downloaded','ok');
-              try{document.body.removeChild(hiddenIframe);}catch(e){}
-            }).catch(function(e){
-              dlBtn.disabled=false;dlBtn.textContent='Download PDF';
-              toast('Render failed: '+e.message,'err');
-            });
-          },150);
-        }
-
-        // If fonts aren't ready yet, wait up to 2s more
-        if(fontsReady){doRender();}
-        else{
-          var waited=0;
-          var poll=setInterval(function(){
-            waited+=100;
-            if(fontsReady||waited>=2000){clearInterval(poll);doRender();}
-          },100);
-        }
-      });
-    };
+    loadPdfLibs(function(err){
+      if(err){toast(err.message,'err');cleanup();return;}
+      if(fontsReady){renderAndSave();}
+      else{
+        var waited=0;
+        var poll=setInterval(function(){
+          waited+=100;
+          if(fontsReady||waited>=2500){clearInterval(poll);renderAndSave();}
+        },100);
+      }
+    });
   },pdfDelay);
 }
 

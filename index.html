@@ -211,9 +211,8 @@ body.dark .erow{background:var(--bge)}
 .pdf-preview-toolbar{width:100%;background:var(--grnd);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 20px;gap:12px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .pdf-preview-toolbar h3{margin:0;font-family:var(--fs);font-size:1rem;font-weight:500}
 .pdf-preview-toolbar .fb{gap:8px}
-.pdf-preview-frame-wrap{flex:1;width:100%;overflow-y:auto;background:#666;padding:20px;display:flex;flex-direction:column;align-items:center;gap:16px}
-.pdf-page{background:#fff;width:900px;max-width:900px;box-shadow:0 4px 20px rgba(0,0,0,.4);position:relative;padding:52px 48px;box-sizing:border-box;color:#0D1F15;font-family:'Geist','Inter',system-ui,sans-serif;font-size:10pt;line-height:1.45}
-.pdf-preview-frame-wrap .pdf-page{transform-origin:top center;}
+.pdf-preview-frame-wrap{flex:1;width:100%;overflow-y:auto;background:#888;padding:0;display:flex;flex-direction:column;}
+.pdf-preview-frame-wrap iframe{flex:1;width:100%;border:none;min-height:85vh;}
 @media print{
   .app-header,.tab-nav,.ver,.toast,.ptr-indicator,.sw-banner,.pdf-preview-bg{display:none!important}
   .app-main{padding:0!important;max-width:none!important}
@@ -391,21 +390,21 @@ body.dark .erow{background:var(--bge)}
 </div>
 <div id="pdf-preview-modal" class="pdf-preview-bg hidden">
   <div class="pdf-preview-toolbar">
-    <h3>PDF Preview</h3>
+    <h3 id="pdf-preview-title">PDF Preview</h3>
     <div class="fb">
-      <button class="btn sm gld" id="pdf-download-btn">Download PDF</button>
+      <button class="btn sm gld" id="pdf-download-btn">Print / Save PDF</button>
       <button class="btn sm gh" id="pdf-close-btn" style="color:#fff;border-color:rgba(255,255,255,.3);">Close</button>
     </div>
   </div>
   <div class="pdf-preview-frame-wrap" id="pdf-preview-content"></div>
 </div>
-<div class="ver" id="ver-badge">V1.11.1</div>
+<div class="ver" id="ver-badge">V1.11.2</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.11.1';
+const APP_VERSION='V1.11.2';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -2007,139 +2006,223 @@ function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'
 
 
 // ---- PDF Preview & Download ----
-var html2pdfLoaded=false;
-function loadHtml2Pdf(cb){
-  if(html2pdfLoaded||window.html2pdf){html2pdfLoaded=true;cb(null);return;}
-  var s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js';
-  s.onload=function(){html2pdfLoaded=true;cb(null);};
-  s.onerror=function(){cb(new Error('Could not load PDF library. Use the Print button instead.'));};
-  document.head.appendChild(s);
+// Build a fully self-contained HTML string for the report/dashboard.
+// All CSS custom-property references are resolved to literal hex values so
+// the output looks identical whether shown as a preview iframe or printed.
+function buildPdfHtml(pdfMode,dp){
+  var srcId=pdfMode==='dashboard'?'dash-content':'rpt-content';
+  var src=document.getElementById(srcId);
+  if(!src)return null;
+
+  // Temporarily expand the YTD monthly breakdown so it is captured
+  var ytdBody=src.querySelector('#ytd-months-body');
+  var ytdWasHidden=ytdBody&&ytdBody.style.display==='none';
+  if(ytdWasHidden)ytdBody.style.display='block';
+  var ytdToggle=src.querySelector('#ytd-toggle');
+  if(ytdToggle)ytdToggle.style.display='none';
+
+  var clone=src.cloneNode(true);
+
+  // Re-hide the live version
+  if(ytdWasHidden)ytdBody.style.display='none';
+  if(ytdToggle)ytdToggle.style.display='';
+
+  // Strip UI chrome from clone
+  clone.querySelectorAll('.preview-banner,.pg-toolbar,.fund-progress,.ytd-details-toggle').forEach(function(el){el.remove();});
+  // Keep YTD body always visible
+  var cloneYtd=clone.querySelector('#ytd-months-body');
+  if(cloneYtd)cloneYtd.style.display='block';
+
+  // Replace canvases with data-URL images
+  var liveCanvases=src.querySelectorAll('canvas');
+  clone.querySelectorAll('canvas').forEach(function(c,i){
+    var live=liveCanvases[i];
+    if(live&&live.width>0){
+      var img=document.createElement('img');
+      try{img.src=live.toDataURL('image/png');}catch(e){c.remove();return;}
+      img.style.cssText='width:100%;height:auto;display:block;max-width:100%;';
+      c.parentNode.replaceChild(img,c);
+    }else{c.remove();}
+  });
+
+  var modeLabel=S.viewMode==='ytd'?'Year to Date ('+dp.year+')':GEF.pLabel(dp);
+  var pageLbl=pdfMode==='dashboard'?'Dashboard':'Report';
+  var dateStr=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+
+  // All CSS vars resolved to literals so they work in a detached document
+  var css=
+'*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff}'
++'body{font-family:"Geist","Inter",system-ui,sans-serif;color:#0D1F15;line-height:1.5;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
++'h1,h2,h3{font-family:"Fraunces","Times New Roman",serif;font-weight:500;letter-spacing:-.01em;margin:0}'
++'h2{font-size:1.55rem;font-weight:700;color:#004D37;letter-spacing:-.01em}'
++'h3{font-size:1.05rem;font-family:"Geist","Inter",system-ui,sans-serif;font-weight:600;letter-spacing:0}'
++'p{margin:0 0 .8em}'
++'.num{font-family:"Geist Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}'
++'.pdf-wrap{padding:40px 48px;max-width:960px;margin:0 auto;}'
++'.pdf-header{border-bottom:3px solid #006145;padding-bottom:12px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;}'
++'.pdf-header-left{display:flex;align-items:center;gap:12px;}'
++'.pdf-header-logo{width:40px;height:40px;border-radius:50%;object-fit:cover;}'
++'.pdf-header-title{font-family:"Fraunces","Times New Roman",serif;font-size:15pt;font-weight:600;color:#004D37;line-height:1.1;}'
++'.pdf-header-sub{font-size:8pt;color:#7A8C7E;letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}'
++'.pdf-header-date{font-size:8pt;color:#7A8C7E;text-align:right;}'
++'.pg-toolbar{display:none!important}'
++'.preview-banner{display:none!important}'
++'.fund-progress{display:none!important}'
++'.ytd-details-toggle{display:none!important}'
++'#ytd-months-body{display:block!important}'
++'.sec{margin-bottom:32px;page-break-inside:avoid;}'
++'.sec-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap;}'
++'.sec-meta{font-size:.8rem;color:#7A8C7E;}'
++'.card{background:#fff;border:1px solid #D9E4DC;border-radius:12px;padding:20px 24px;margin-bottom:16px;page-break-inside:avoid;}'
++'.hero{background:#004D37!important;border-radius:12px;padding:28px 32px;position:relative;overflow:hidden;margin-bottom:24px;color:#F2F5F0;page-break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
++'.hero-ey{font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:#FEF3C0;margin-bottom:6px;}'
++'.hero-val{font-family:"Fraunces","Times New Roman",serif;font-size:2.4rem;color:#fff;line-height:1;margin:6px 0;}'
++'.hero-sub{font-family:"Fraunces","Times New Roman",serif;font-style:italic;font-size:.9rem;color:rgba(255,254,251,.72);}'
++'.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,254,251,.18);}'
++'.hs-lbl{font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,254,251,.6);margin-bottom:3px;white-space:nowrap;}'
++'.hs-val{font-family:"Fraunces","Times New Roman",serif;font-size:1.3rem;line-height:1;}'
++'.grid2{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;}'
++'.metric-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px;}'
++'.metric-card{background:#fff;border:1px solid #D9E4DC;border-radius:10px;padding:12px 14px;}'
++'.mc-lbl{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#7A8C7E;margin-bottom:3px;}'
++'.mc-val{font-family:"Fraunces","Times New Roman",serif;font-size:1.15rem;font-weight:500;line-height:1.1;color:#0D1F15;}'
++'.mc-sub{font-size:.7rem;color:#7A8C7E;margin-top:2px;}'
++'.mc-val.pos{color:#006145;}.mc-val.neg{color:#A33A2E;}'
++'.stmt{width:100%;border-collapse:collapse;font-size:.88rem;}'
++'.stmt th,.stmt td{padding:8px 0;text-align:left;white-space:nowrap;}'
++'.stmt td.r,.stmt th.r{text-align:right;font-family:"Geist Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;}'
++'.stmt tr.ind td:first-child{padding-left:14px;color:#3A5040;}'
++'.stmt tr.ind td.r{color:#3A5040;}'
++'.stmt tr.tot td{border-top:1px solid #D9E4DC;padding-top:10px;font-weight:600;}'
++'.stmt tr.gt td{border-top:2px solid #0D1F15;padding-top:10px;font-family:"Fraunces","Times New Roman",serif;font-size:1rem;}'
++'.stmt .neg{color:#A33A2E;}'
++'.stmt .dash{color:#7A8C7E;font-style:italic;}'
++'.stmt-hd-row td,.stmt-hd-row th{background:#004D37!important;color:#fff!important;font-weight:700;padding:8px 10px;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
++'.stmt-hd-row td.r,.stmt-hd-row th.r{color:#F8C01C!important;}'
++'.itbl{width:100%;border-collapse:collapse;font-size:.85rem;}'
++'.itbl th{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:#7A8C7E;border-bottom:1px solid #D9E4DC;padding:7px 6px;text-align:left;white-space:nowrap;}'
++'.itbl td{padding:9px 6px;border-bottom:1px solid #D9E4DC;white-space:nowrap;}'
++'.itbl tr:last-child td{border-bottom:0;}'
++'.itbl td.r,.itbl th.r{text-align:right;font-family:"Geist Mono",ui-monospace,monospace;}'
++'.itbl tr.tot td{font-weight:600;border-top:2px solid #0D1F15;border-bottom:0;padding-top:10px;}'
++'.narr{background:#FAFCF9;border:1px solid #D9E4DC;border-left:3px solid #F8C01C;padding:14px 18px;border-radius:8px;font-size:.93rem;line-height:1.55;color:#0D1F15;margin-top:12px;}'
++'.narr.g{border-left-color:#006145;}'
++'.narr p{margin:0;}'
++'.narr-md p{margin:0 0 .6em;}.narr-md ul{padding-left:1.2em;margin:.3em 0;}.narr-md li{margin-bottom:.25em;}'
++'.nxts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}'
++'.nxt{padding:16px;border:1px solid #D9E4DC;border-radius:8px;border-top:3px solid #004D37;background:#fff;}'
++'.nxt-n{font-family:"Fraunces","Times New Roman",serif;font-size:2rem;color:#F8C01C;line-height:1;margin-bottom:4px;font-weight:700;}'
++'.nxt h4{font-size:.88rem;margin:0 0 4px;color:#004D37;font-weight:700;}'
++'.nxt p{font-size:.82rem;color:#3A5040;margin:0;}'
++'.ka-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:4px;}'
++'.ka-item{background:#fff;border:1px solid #D9E4DC;border-radius:8px;padding:12px 14px;border-left:4px solid #006145;}'
++'.ka-item h4{font-size:.88rem;font-weight:700;color:#004D37;margin:0 0 3px;}'
++'.ka-item p{font-size:.82rem;color:#3A5040;margin:0;}'
++'.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:.7rem;font-weight:500;background:#E0EDE6;color:#004D37;}'
++'.pill.gld{background:#FEF3C0;color:#6B4F0E;}.pill.nvy{background:#DDE5F0;color:#0F2F70;}'
++'.spacer{height:16px;}'
++'.uof-chart-bars{margin-top:10px;}'
++'.uof-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;}'
++'.uof-bar-label{font-size:.75rem;color:#3A5040;width:120px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
++'.uof-bar-track{flex:1;height:7px;background:#D9E4DC;border-radius:999px;overflow:hidden;}'
++'.uof-bar-fill{height:100%;border-radius:999px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
++'.uof-bar-amt{font-family:"Geist Mono",ui-monospace,monospace;font-size:.72rem;color:#7A8C7E;white-space:nowrap;min-width:65px;text-align:right;}'
++'.fp-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}'
++'.fp-title{font-family:"Fraunces","Times New Roman",serif;font-size:.95rem;font-weight:500;color:#004D37;}'
++'.fp-pct{font-family:"Geist Mono",ui-monospace,monospace;font-size:.82rem;color:#7A8C7E;}'
++'.fp-bar-bg{height:9px;background:#D9E4DC;border-radius:999px;overflow:hidden;}'
++'.fp-bar-fill{height:100%;background:linear-gradient(90deg,#006145,#00A06F);border-radius:999px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
++'.fp-stats{display:flex;justify-content:space-between;margin-top:5px;font-size:.76rem;color:#7A8C7E;}'
++'@media print{'
++'.pdf-wrap{padding:0;max-width:none;}'
++'.pdf-header{border-bottom:3px solid #006145 !important;margin-bottom:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
++'.hero{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}'
++'.stmt-hd-row td,.stmt-hd-row th{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}'
++'.card{page-break-inside:avoid;box-shadow:none;}'
++'.sec{page-break-inside:avoid;}'
++'.nxts,.grid2,.metric-grid{page-break-inside:avoid;}'
++'@page{margin:15mm 18mm;size:A4;}'
++'}';
+
+  var bodyHtml=clone.outerHTML;
+
+  return '<!DOCTYPE html><html lang="en-GB"><head>'
+    +'<meta charset="UTF-8"/>'
+    +'<meta name="viewport" content="width=device-width,initial-scale=1.0"/>'
+    +'<link rel="preconnect" href="https://fonts.googleapis.com"/>'
+    +'<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>'
+    +'<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,30..100&family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet"/>'
+    +'<title>GEF '+esc(pageLbl)+' \u2014 '+esc(modeLabel)+'</title>'
+    +'<style>'+css+'</style>'
+    +'</head><body>'
+    +'<div class="pdf-wrap">'
+    +'<div class="pdf-header">'
+    +'<div class="pdf-header-left">'
+    +'<img src="https://ssseyon.github.io/GEF/icon-192.png" class="pdf-header-logo" alt="GEF"/>'
+    +'<div><div class="pdf-header-title">Gbago Endowment Fund</div>'
+    +'<div class="pdf-header-sub">'+esc(pageLbl)+' \u00b7 '+esc(modeLabel)+'</div></div>'
+    +'</div>'
+    +'<div class="pdf-header-date">'+esc(dateStr)+'</div>'
+    +'</div>'
+    +bodyHtml
+    +'</div>'
+    +'</body></html>';
 }
+
 function openPdfPreview(mode){
-  // mode: 'dashboard' or 'report' (defaults to 'report')
   var pdfMode=mode||'report';
   var dp=getDisplayPeriod();
   if(!dp){toast('No report to preview','err');return;}
-  // Switch to the correct tab and wait for render
   if(pdfMode==='dashboard'&&S.tab!=='dashboard')setTab('dashboard');
   else if(pdfMode==='report'&&S.tab!=='report')setTab('report');
-  var pdfDelay=S.viewMode==='ytd'?1200:600;
+  var pdfDelay=S.viewMode==='ytd'?1200:700;
   setTimeout(function(){
-    var srcId=pdfMode==='dashboard'?'dash-content':'rpt-content';
-    var src=document.getElementById(srcId);
-    if(!src){toast('Content not found','err');return;}
+    var html=buildPdfHtml(pdfMode,dp);
+    if(!html){toast('Content not found','err');return;}
 
-    // Temporarily expand the YTD monthly breakdown (if collapsed) so it is captured in the PDF
-    var ytdBody=src.querySelector('#ytd-months-body');
-    var ytdWasHidden=ytdBody&&ytdBody.style.display==='none';
-    if(ytdWasHidden)ytdBody.style.display='block';
-
-    var clone=src.cloneNode(true);
-
-    // Re-collapse the live version after cloning
-    if(ytdWasHidden)ytdBody.style.display='none';
-
-    // Remove UI-only elements from clone
-    clone.querySelectorAll('.preview-banner,.pg-toolbar,.fund-progress,.ytd-details-toggle').forEach(function(el){el.remove();});
-    // The ytd body is now always visible in the clone (toggle btn removed above)
-    var cloneYtdBody=clone.querySelector('#ytd-months-body');
-    if(cloneYtdBody)cloneYtdBody.style.display='block';
-
-    // Replace live canvases with static images
-    var liveCanvases=src.querySelectorAll('canvas');
-    clone.querySelectorAll('canvas').forEach(function(c,i){
-      var live=liveCanvases[i];
-      var img=document.createElement('img');
-      try{
-        img.src=(live&&live.width>0)?live.toDataURL('image/png'):'';
-        img.style.cssText='width:100%;height:auto;display:block;';
-        if(img.src)c.parentNode.replaceChild(img,c);
-        else c.remove();
-      }catch(e){c.remove();}
-    });
-    clone.querySelectorAll('.card,.sec,.nxts,.itbl,.stmt,.narr,.metric-card,.hero').forEach(function(el){
-      el.style.pageBreakInside='avoid';el.style.breakInside='avoid';
-    });
-
-    var wrapper=document.createElement('div');wrapper.className='pdf-page';
     var modeLabel=S.viewMode==='ytd'?'Year to Date ('+dp.year+')':GEF.pLabel(dp);
     var pageLbl=pdfMode==='dashboard'?'Dashboard':'Report';
-    var titleBar=document.createElement('div');
-    titleBar.innerHTML='<div style="border-bottom:3px solid #006145;padding-bottom:10px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">'
-      +'<div style="display:flex;align-items:center;gap:10px;"><img src="icon-192.png" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" alt="GEF"/>'
-      +'<div><div style="font-family:Fraunces,serif;font-size:14pt;font-weight:600;color:#004D37;line-height:1.1;">Gbago Endowment Fund</div>'
-      +'<div style="font-size:8pt;color:#7A8C7E;letter-spacing:.08em;text-transform:uppercase;margin-top:1px;">'+esc(pageLbl)+' &middot; '+esc(modeLabel)+'</div></div></div>'
-      +'<div style="text-align:right;font-size:8pt;color:#7A8C7E;">'+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})+'</div>'
-      +'</div>';
-    wrapper.appendChild(titleBar);wrapper.appendChild(clone);
 
-    // Inject PDF-specific styles
-    var styleEl=document.createElement('style');
-    styleEl.textContent=
-      '.pdf-page .pg-toolbar,.pdf-page .preview-banner,.pdf-page .fund-progress,.pdf-page .ytd-details-toggle{display:none!important}'
-      +'.pdf-page #ytd-months-body{display:block!important}'
-      +'.pdf-page .hero{background:#004D37!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#fff!important;border-radius:8px;}'
-      +'.pdf-page .stmt th{font-size:8pt;letter-spacing:.06em;text-transform:uppercase;color:#7A8C7E;border-bottom:1px solid #D9E4DC;}'
-      +'.pdf-page .stmt tr.gt td{border-top:2px solid #0D1F15;font-family:Fraunces,serif;}'
-      +'.pdf-page .stmt tr.tot td{border-top:1px solid #D9E4DC;font-weight:600;}'
-      +'.pdf-page .stmt .neg{color:#A33A2E;}'
-      +'.pdf-page .sec-hd h2{color:#004D37;}'
-      +'.pdf-page .narr{border-left:3px solid #F8C01C;padding:14px 18px;background:#FAFCF9;}'
-      +'.pdf-page .narr.g{border-left-color:#006145;}'
-      +'.pdf-page .nxt-n{color:#F8C01C;}'
-      +'.pdf-page .nxt h4{color:#004D37;}'
-      +'.pdf-page .ka-item{border-left:3px solid #006145;}'
-      +'.pdf-page .ka-item h4{color:#004D37;}'
-      +'.pdf-page .metric-card{border:1px solid #D9E4DC;border-radius:10px;padding:12px 14px;}'
-      +'.pdf-page .mc-val{color:#0D1F15;font-family:Fraunces,serif;}'
-      +'.pdf-page .mc-val.pos{color:#006145;}'
-      +'.pdf-page .mc-val.neg{color:#A33A2E;}';
-    wrapper.insertBefore(styleEl,wrapper.firstChild);
-
+    // Show preview in iframe inside the modal
     var previewWrap=document.getElementById('pdf-preview-content');
-    previewWrap.innerHTML='';previewWrap.appendChild(wrapper);
+    previewWrap.innerHTML='';
+    var iframe=document.createElement('iframe');
+    iframe.style.cssText='width:100%;min-height:80vh;border:none;background:#fff;';
+    previewWrap.appendChild(iframe);
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(html);
+    iframe.contentDocument.close();
+
     var modal=document.getElementById('pdf-preview-modal');
+    // Update toolbar label
+    // Update toolbar label
+    var toolbarH3=document.getElementById('pdf-preview-title');
+    if(toolbarH3)toolbarH3.textContent=pageLbl+' \u2014 '+modeLabel;
     modal.classList.remove('hidden');
 
-    var pdfNameBase=pdfMode==='dashboard'?'GEF-Dashboard-':'GEF-Report-';
-    var pdfName=pdfNameBase+(S.viewMode==='ytd'?dp.year+'-YTD':dp.id)+'.pdf';
-
-    document.getElementById('pdf-close-btn').onclick=function(){modal.classList.add('hidden');previewWrap.innerHTML='';};
+    document.getElementById('pdf-close-btn').onclick=function(){
+      modal.classList.add('hidden');previewWrap.innerHTML='';
+    };
     document.getElementById('pdf-download-btn').onclick=function(){
-      var btn=document.getElementById('pdf-download-btn');
-      btn.disabled=true;btn.textContent='Loading\u2026';
-      loadHtml2Pdf(function(err){
-        if(err){btn.disabled=false;btn.textContent='Download PDF';toast(err.message,'err');return;}
-        btn.textContent='Generating\u2026';
-        // Render directly from the wrapper that is already displaying in the preview —
-        // this is the only reliable way to guarantee download = preview on all devices.
-        var opt={
-          margin:[12,14,12,14],
-          filename:pdfName,
-          image:{type:'jpeg',quality:0.97},
-          html2canvas:{
-            scale:2,
-            useCORS:true,
-            logging:false,
-            windowWidth:900,
-            scrollX:0,
-            scrollY:0,
-            onclone:function(doc){
-              // Ensure YTD monthly body is visible in the cloned document html2canvas uses
-              var b=doc.getElementById('ytd-months-body');
-              if(b)b.style.display='block';
-              var t=doc.getElementById('ytd-toggle');
-              if(t)t.style.display='none';
-            }
-          },
-          jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-          pagebreak:{mode:['avoid-all','css','legacy']}
-        };
-        html2pdf().set(opt).from(wrapper).save()
-          .then(function(){btn.disabled=false;btn.textContent='Download PDF';toast('PDF downloaded','ok');})
-          .catch(function(e){btn.disabled=false;btn.textContent='Download PDF';toast('PDF failed: '+e.message,'err');});
+      // Open a new popup window with the same HTML and call print()
+      var win=window.open('','_blank','width=960,height=800,scrollbars=yes');
+      if(!win){toast('Allow popups to download PDF','err');return;}
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+      // Wait for fonts then print
+      win.addEventListener('load',function(){
+        setTimeout(function(){
+          win.focus();
+          win.print();
+          // Close the window after print dialog is handled
+          setTimeout(function(){win.close();},1000);
+        },600);
       });
+      // Fallback if load already fired
+      setTimeout(function(){
+        if(win&&!win.closed){win.focus();win.print();}
+      },1800);
     };
   },pdfDelay);
 }

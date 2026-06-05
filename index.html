@@ -65,7 +65,7 @@ p{margin:0 0 .8em}a{color:var(--grn)}
 .stmt{width:100%;border-collapse:collapse;font-size:.93rem}
 .stmt th,.stmt td{padding:9px 0;text-align:left;white-space:nowrap}
 .stmt th{font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--inkm);border-bottom:1px solid var(--ln)}
-.stmt td.r{text-align:right;font-family:var(--fm);font-variant-numeric:tabular-nums}
+.stmt td.r,.stmt th.r{text-align:right;font-family:var(--fm);font-variant-numeric:tabular-nums}
 .stmt tr.ind td:first-child{padding-left:14px;color:var(--inks)}
 .stmt tr.ind td.r{color:var(--inks)}
 .stmt tr.tot td{border-top:1px solid var(--ln);padding-top:12px;font-weight:600}
@@ -79,7 +79,7 @@ p{margin:0 0 .8em}a{color:var(--grn)}
 .itbl th{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--inkm);border-bottom:1px solid var(--ln);padding:8px 6px;text-align:left;white-space:nowrap}
 .itbl td{padding:10px 6px;border-bottom:1px solid var(--ln);white-space:nowrap}
 .itbl tr:last-child td{border-bottom:0}
-.itbl td.r{text-align:right;font-family:var(--fm);font-variant-numeric:tabular-nums}
+.itbl td.r,.itbl th.r{text-align:right;font-family:var(--fm);font-variant-numeric:tabular-nums}
 .itbl tr.tot td{font-weight:600;border-top:2px solid var(--ink);border-bottom:0;padding-top:12px}
 .pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:500;letter-spacing:.04em;background:var(--grns);color:var(--grnd);white-space:nowrap}
 .pill.gld{background:var(--glds);color:#6B4F0E}.pill.nvy{background:#DDE5F0;color:var(--nvy)}.pill.red{background:var(--reds);color:var(--red)}
@@ -268,13 +268,13 @@ body.dark .erow{background:var(--bge)}
   </div>
   <div class="pdf-preview-frame-wrap" id="pdf-preview-content"></div>
 </div>
-<div class="ver" id="ver-badge">V1.06.0</div>
+<div class="ver" id="ver-badge">V1.07.0</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.06.0';
+const APP_VERSION='V1.07.0';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};

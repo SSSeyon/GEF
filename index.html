@@ -284,6 +284,9 @@ body.dark .erow{background:var(--bge)}
 .fp-bar-bg{height:10px;background:var(--ln);border-radius:999px;overflow:hidden}
 .fp-bar-fill{height:100%;background:linear-gradient(90deg,var(--grn),#00A06F);border-radius:999px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .fp-bar-fill.over{background:linear-gradient(90deg,var(--gld),#FFD740)}
+.sync-status{font-size:.8rem;padding:5px 10px;border-radius:6px;margin-bottom:10px;font-weight:500;display:inline-block;}
+.sync-status.ok{background:var(--grns);color:var(--grnd);}
+.sync-status.warn{background:var(--glds);color:#6B4F0E;}
 .fp-stats{display:flex;justify-content:space-between;margin-top:6px;font-size:.78rem;color:var(--inkm);flex-wrap:wrap;gap:4px}
 /* ── UoF bar chart ── */
 .uof-chart-bars{margin-top:10px}
@@ -336,7 +339,7 @@ body.dark .erow{background:var(--bge)}
   .app-main{padding-bottom:72px!important}
 }
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--grnd);border-top:1px solid rgba(255,255,255,.12);z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.25);overflow:hidden}
-.bnav-btn{flex:1;height:56px;min-height:56px;max-height:56px;background:transparent;border:0;color:rgba(255,255,255,.55);font-family:var(--f);font-size:.68rem;font-weight:500;padding:0 4px;cursor:pointer;border-top:2px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;letter-spacing:.01em;-webkit-tap-highlight-color:transparent;transition:color .15s;flex-shrink:0}
+.bnav-btn{flex:1;height:56px;min-height:56px;max-height:56px;background:transparent;border:0;color:rgba(255,255,255,.55);font-family:var(--f);font-size:.68rem;font-weight:500;padding:0 4px;cursor:pointer;border-top:2px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;letter-spacing:.01em;-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;transition:color .15s;flex-shrink:0}
 .bnav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .bnav-btn.active{color:#fff;border-top-color:var(--gld)}
 .bnav-btn:hover{color:rgba(255,255,255,.9)}
@@ -435,13 +438,13 @@ body.dark .erow{background:var(--bge)}
     <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.13.0</div>
+<div class="ver" id="ver-badge">V1.14.0</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.13.0';
+const APP_VERSION='V1.14.0';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -590,25 +593,40 @@ const GEF=(function(){
   // Generate executive summary text from data (if no admin override exists)
   function generateExecutiveSummary(p,allLoaded){
     var r=pnl(p),b=bs(p);
-    var monthName=pLabel(p);
+    var isYtd=!!p._isMerged;
+    var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    // Build a context phrase like "In January 2026" or "In the five months to May 2026"
+    var periodPhrase='';
+    if(isYtd){
+      // Count how many distinct months are merged
+      var monthCount=(p.donations||[]).concat(p.useOfFunds||[])
+        .map(function(x){return(x.date||'').substring(0,7);})
+        .filter(function(d,i,arr){return d&&arr.indexOf(d)===i;}).length;
+      var nums=['one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve'];
+      var nStr=monthCount>0&&monthCount<=12?nums[monthCount-1]:(monthCount>0?String(monthCount):'');
+      var endMon=p.month?months[p.month-1]:'';
+      periodPhrase='In the '+(nStr?nStr+' months':'year')+' to '+endMon+' '+p.year;
+    }else{
+      periodPhrase='In '+(p.month?months[p.month-1]+' ':'')+p.year;
+    }
     var donorCount=(p.donations||[]).length;
     var benefSet={};(p.useOfFunds||[]).forEach(function(u){if(u.beneficiary)benefSet[u.beneficiary.toLowerCase().trim()]=true;});
     var benefCount=Object.keys(benefSet).length;
-    var prev=priorPeriodOf(p,allLoaded||{});
+    var prev=!isYtd?priorPeriodOf(p,allLoaded||{}):null;
     var s=[];
     // Sentence 1: donations
     if(donorCount>0){
-      s.push('In '+monthName+', GEF received '+fmtM(r.donations)+' in donations from '+donorCount+' contributor'+(donorCount===1?'':'s')+'.');
+      s.push(periodPhrase+', GEF received '+fmtM(r.donations)+' in donations from '+donorCount+' contributor'+(donorCount===1?'':'s')+'.');
     }else{
-      s.push('In '+monthName+', GEF received no donations.');
+      s.push(periodPhrase+', GEF received no donations.');
     }
     // Sentence 2: deployments
     if(r.totalUof>0){
       var benefStr=benefCount>0?' across '+benefCount+' beneficiar'+(benefCount===1?'y':'ies'):'';
       s.push('A total of '+fmtM(r.totalUof)+' was deployed'+benefStr+'.');
     }
-    // Sentence 3: net position with delta
-    var netSent='The fund ended the period with '+fmtM(b.netAssets)+' in net assets';
+    // Sentence 3: net position with delta (month mode only)
+    var netSent=(isYtd?'The fund stood':'The fund ended the period')+' at '+fmtM(b.netAssets)+' in net assets';
     if(prev){
       var prevB=bs(prev);
       var d=delta(b.netAssets,prevB.netAssets);
@@ -624,7 +642,7 @@ const GEF=(function(){
       var mmPct=Math.round((b.moneyMarket+b.placements)/b.totalAssets*100);
       if(mmPct>0){
         var wy=weightedYield(p);
-        s.push('Interest-bearing instruments now represent '+mmPct+'% of the portfolio'+(wy>0?', earning a weighted '+wy.toFixed(2)+'% per annum':'')+'.');
+        s.push('Interest-bearing instruments '+(isYtd?'represent':'now represent')+' '+mmPct+'% of the portfolio'+(wy>0?', earning a weighted '+wy.toFixed(2)+'% per annum':'')+'.');
       }
     }
     return s.join(' ');
@@ -701,14 +719,17 @@ document.getElementById('breakdown-modal').addEventListener('click',function(e){
 window.exitPreview=function(){S.previewPeriod=null;if(S.tab==='dashboard')renderDash();else if(S.tab==='report')renderReport();};
 
 function setTab(t){
+  if(S.tab===t&&t!=='dashboard')return;// no-op unless forced or dashboard (needs refresh)
   S.tab=t;
-  document.querySelectorAll('.tab-btn,.bnav-btn').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t);});
-  document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.toggle('active',p.id==='tab-'+t);});
-
+  // Update active indicators — use requestAnimationFrame to flush before re-render
+  requestAnimationFrame(function(){
+    document.querySelectorAll('.tab-btn,.bnav-btn').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t);});
+    document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.toggle('active',p.id==='tab-'+t);});
+  });
   if(t==='dashboard')renderDash();
-  if(t==='report')renderReport();
-  if(t==='admin')renderAdmin();
-  if(t==='settings')renderSettings();
+  else if(t==='report')renderReport();
+  else if(t==='admin')renderAdmin();
+  else if(t==='settings')renderSettings();
 }
 
 async function fetchJSON(p){var r=await fetch(p+'?t='+Date.now());if(!r.ok)throw new Error('Fetch failed: '+p+' ('+r.status+')');return r.json();}
@@ -1334,6 +1355,8 @@ function renderReport(){
   html+='</div></div>';
   if(narr.cashFlows)html+='<div class="spacer"></div><div class="narr narr-md">'+renderMd(narr.cashFlows)+'</div>';
   html+='</div>';
+  // ── Cash Flow Sankey ──
+  html+='<div class="sec"><div class="sec-hd"><h2>Fund Flow</h2><div class="sec-meta">Where money came from and where it went</div></div><div class="card"><div id="c-sankey" style="width:100%;min-height:240px;"></div></div></div>';
   if((p.nextSteps||[]).length){
     html+='<div class="sec"><div class="sec-hd"><h2>Priorities Ahead</h2></div><div class="nxts">';
     p.nextSteps.forEach(function(ns,i){html+='<div class="nxt"><div class="nxt-n">0'+(i+1)+'</div><h4>'+esc(ns.title)+'</h4><p>'+esc(ns.detail)+'</p></div>';});
@@ -1524,9 +1547,87 @@ function buildRptCharts(r,b,c,p){
       });
     }
   }
+  // ── Cash Flow Sankey — pure SVG, no library needed ──
+  buildSankey(r,b,c,p);
 }
 
-// ---- Statement builder ----
+function buildSankey(r,b,c,p){
+  var wrap=document.getElementById('c-sankey');if(!wrap)return;
+  // Build Sankey data
+  var inflows=[],outflows=[];
+  if(r.donations>0)inflows.push({label:'Donations',v:r.donations,c:CLR.grn});
+  if(r.investmentIncome>0)inflows.push({label:'Inv. income',v:r.investmentIncome,c:CLR.gld});
+  if(r.otherIncome>0)inflows.push({label:'Other income',v:r.otherIncome,c:CLR.nvy});
+  if(c.op.sub>0)inflows.push({label:'Op. cash flow',v:c.op.sub,c:CLR.teal});
+  Object.keys(GEF.UOF_CATS).forEach(function(cat){
+    if(r.uofByC[cat]>0)outflows.push({label:GEF.UOF_CATS[cat],v:r.uofByC[cat],c:CLR.brn});
+  });
+  if(r.fees>0)outflows.push({label:'Bank fees',v:r.fees,c:CLR.red});
+  if(b.moneyMarket>0)outflows.push({label:'Money Market',v:b.moneyMarket,c:CLR.grn});
+  if(b.placements>0)outflows.push({label:'Placements',v:b.placements,c:CLR.nvy});
+  if(b.cash>0)outflows.push({label:'Cash held',v:b.cash,c:CLR.gld});
+  if(!inflows.length||!outflows.length){wrap.style.display='none';return;}
+  var W=wrap.clientWidth||600;var H=260;
+  var nW=130,nH=24,gap=6;// node width, height, gap
+  var cx=W/2;// centre line x
+  var lx=12,rx=W-nW-12;// left/right node x
+  function nodeY(items,i,totalH){
+    var total=items.reduce(function(s,x){return s+x.v;},0);
+    var y=20;
+    for(var j=0;j<i;j++)y+=(items[j].v/total)*totalH+gap;
+    return y;
+  }
+  var totalH=H-40;
+  var totalIn=inflows.reduce(function(s,x){return s+x.v;},0);
+  var totalOut=outflows.reduce(function(s,x){return s+x.v;},0);
+  var maxV=Math.max(totalIn,totalOut);
+  function scaleV(v){return(v/maxV)*totalH;}
+  var svg='<svg width="'+W+'" height="'+H+'" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">';
+  svg+='<defs>';
+  inflows.forEach(function(n,i){
+    svg+='<linearGradient id="sg'+i+'" x1="0" x2="1"><stop offset="0%" stop-color="'+n.c+'" stop-opacity=".7"/><stop offset="100%" stop-color="'+n.c+'" stop-opacity=".25"/></linearGradient>';
+  });
+  svg+='</defs>';
+  // Draw flows from each inflow to each outflow (proportional)
+  var inCurY=[];var outCurY=[];
+  inflows.forEach(function(n,i){inCurY[i]=nodeY(inflows,i,totalH*totalIn/maxV)+scaleV(n.v);});
+  outflows.forEach(function(n,i){outCurY[i]=nodeY(outflows,i,totalH*totalOut/maxV)+scaleV(n.v);});
+  // Reset cursor to top of each node
+  var inCurTop=inflows.map(function(n,i){return nodeY(inflows,i,totalH*totalIn/maxV);});
+  var outCurTop=outflows.map(function(n,i){return nodeY(outflows,i,totalH*totalOut/maxV);});
+  inflows.forEach(function(nIn,ii){
+    var flowShare=nIn.v/totalIn;
+    outflows.forEach(function(nOut,oi){
+      var flowH=scaleV(nIn.v)*((nOut.v/totalOut));
+      if(flowH<1)return;
+      var y1=inCurTop[ii];var y2=outCurTop[oi];
+      var x1=lx+nW,x2=rx,cx1=cx-40,cx2=cx+40;
+      svg+='<path d="M'+x1+' '+y1+' C'+cx1+' '+y1+' '+cx2+' '+y2+' '+x2+' '+y2
+        +' L'+x2+' '+(y2+flowH)+' C'+cx2+' '+(y2+flowH)+' '+cx1+' '+(y1+flowH)+' '+x1+' '+(y1+flowH)+' Z"'
+        +' fill="url(#sg'+ii+')" opacity="0.55"/>';
+      inCurTop[ii]+=flowH;
+      outCurTop[oi]+=flowH;
+    });
+  });
+  // Draw input nodes
+  inflows.forEach(function(n,i){
+    var y=nodeY(inflows,i,totalH*totalIn/maxV);
+    var h=Math.max(scaleV(n.v)-gap,4);
+    svg+='<rect x="'+lx+'" y="'+y+'" width="'+nW+'" height="'+h+'" rx="4" fill="'+n.c+'"/>';
+    svg+='<text x="'+(lx+nW/2)+'" y="'+(y+h/2)+'" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-family="Geist,sans-serif" font-size="9" font-weight="600">'+n.label+'</text>';
+    svg+='<text x="'+(lx+nW/2)+'" y="'+(y+h/2+11)+'" text-anchor="middle" dominant-baseline="middle" fill="rgba(255,255,255,.8)" font-family="Geist Mono,monospace" font-size="8">'+GEF.fmtM(n.v)+'</text>';
+  });
+  // Draw output nodes
+  outflows.forEach(function(n,i){
+    var y=nodeY(outflows,i,totalH*totalOut/maxV);
+    var h=Math.max(scaleV(n.v)-gap,4);
+    svg+='<rect x="'+rx+'" y="'+y+'" width="'+nW+'" height="'+h+'" rx="4" fill="'+n.c+'"/>';
+    svg+='<text x="'+(rx+nW/2)+'" y="'+(y+h/2)+'" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-family="Geist,sans-serif" font-size="9" font-weight="600">'+n.label+'</text>';
+    svg+='<text x="'+(rx+nW/2)+'" y="'+(y+h/2+11)+'" text-anchor="middle" dominant-baseline="middle" fill="rgba(255,255,255,.8)" font-family="Geist Mono,monospace" font-size="8">'+GEF.fmtM(n.v)+'</text>';
+  });
+  svg+='</svg>';
+  wrap.innerHTML=svg;
+}
 function buildStmt(rows,period,withPrev){
   var html='<table class="stmt"><tbody>';
   var firstHeader=true;
@@ -1711,7 +1812,8 @@ function renderAdmPeriodEditor(){
   wrap.querySelector('#af-lbl').addEventListener('input',function(e){p.label=e.target.value;autoSave();});
   wrap.querySelector('#ahdr-save').addEventListener('click',saveDraft);
   wrap.querySelector('#ahdr-dl').addEventListener('click',dlJSON);
-  wrap.querySelectorAll('.itab').forEach(function(b){b.addEventListener('click',function(){S.atab=b.dataset.atab;renderAdmPeriodEditor();});});
+  // Admin inner tabs — delegation so listeners survive re-renders
+  if(!wrap._itabDelegated){wrap._itabDelegated=true;wrap.addEventListener('click',function(e){var btn=e.target.closest('.itab');if(btn&&btn.dataset.atab){S.atab=btn.dataset.atab;renderAdmPeriodEditor();}});}
   renderAdmTabContent();
 }
 function renderAdmTabContent(){
@@ -2264,10 +2366,27 @@ function renderSettings(){
   if(S.authed){
     html+='<div class="card" style="margin-bottom:20px;border-left:3px solid var(--gld);">'
       +'<h3 style="margin-bottom:6px;color:var(--grnd);">Fundraising Target</h3>'
-      +'<p class="muted" style="font-size:.82rem;margin-bottom:12px;">Annual donation target shown on the dashboard. '+(S.repo&&S.pat?'<strong style="color:var(--grn);">Syncs across all devices via GitHub.</strong>':'Set up GitHub in the publishing section below to sync this across all devices.')+'</p>'
+      +(function(){
+        // Sync status indicator
+        var syncHtml='';
+        var pubTarget=S.pubIdx&&S.pubIdx.fundTarget!=null?Number(S.pubIdx.fundTarget):null;
+        var localTarget=S.fundTarget||0;
+        if(!S.repo||!S.pat){
+          syncHtml='<div class="sync-status warn">\u26A0\uFE0F Local only \u2014 configure GitHub to sync across all devices</div>';
+        }else if(pubTarget===null){
+          syncHtml='<div class="sync-status warn">\u26A0\uFE0F Not yet synced to GitHub</div>';
+        }else if(pubTarget===localTarget){
+          var syncTime=S.pubIdx&&S.pubIdx.lastUpdated?new Date(S.pubIdx.lastUpdated).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'}):'';
+          syncHtml='<div class="sync-status ok">\u2714 Synced'+(syncTime?' \u00b7 '+syncTime:'')+'</div>';
+        }else{
+          syncHtml='<div class="sync-status warn">\u26A0\uFE0F Local value differs from GitHub \u2014 save to sync</div>';
+        }
+        return syncHtml;
+      })()
+      +'<p class="muted" style="font-size:.82rem;margin:8px 0 12px;">Annual donation target shown on the dashboard. The amount raised is calculated from all published periods.</p>'
       +'<div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;">'
       +'<div class="fld"><label>Annual target amount (\u20A6)</label><input type="number" id="cfg-ft" step="1000" min="0" value="'+(S.fundTarget||0)+'"/></div>'
-      +'<button class="btn sm" id="cfg-ft-save" style="margin-bottom:1px;">Save</button>'
+      +'<button class="btn sm" id="cfg-ft-save" style="margin-bottom:1px;">Save &amp; Sync</button>'
       +'</div></div>'
       +'<div class="card" style="margin-bottom:20px;border-left:3px solid var(--teal);">'
       +'<h3 style="margin-bottom:6px;color:var(--grnd);">Benchmark Rate</h3>'
@@ -2841,26 +2960,26 @@ function openPdfPreview(mode){
       var fullH=renderEl.scrollHeight;
       hiddenIframe.style.height=fullH+'px';
 
-      // Collect page-break sentinel positions (in iframe CSS pixels, then converted to canvas pixels later)
-      var breaks=[];
-      var bks=renderDoc.querySelectorAll('[data-pdf-break]');
-      bks.forEach(function(el){
+      // ── Smart page-break: collect element boundaries so we never cut mid-element ──
+      // Explicit sentinel breaks (covers, final slide, glossary)
+      var explicitBreaks=[];
+      renderDoc.querySelectorAll('[data-pdf-break]').forEach(function(el){
+        var r=el.getBoundingClientRect();explicitBreaks.push(Math.round(r.top));
+      });
+      // Atomic blocks that must never be split: cards, statements, charts, narrations, etc.
+      var atomicSel='.card,.hero,.metric-grid,.nxts,.narr,.exec-summary,.invest-perf,.ka-grid,.cover-slide,.final-slide,.glossary-slide,.chart-w,.itbl,.stmt';
+      var atomicEls=renderDoc.querySelectorAll(atomicSel);
+      var forbidden=[];// [{from,to}] in CSS pixels
+      atomicEls.forEach(function(el){
         var r=el.getBoundingClientRect();
-        // r.top is relative to the viewport; the iframe scrollY is 0 so it equals document offset
-        breaks.push(Math.round(r.top));
+        if(r.height>20)forbidden.push({from:Math.round(r.top),to:Math.round(r.top+r.height)});
       });
 
       setTimeout(function(){
         html2canvas(renderEl,{
-          scale:2,
-          useCORS:true,
-          allowTaint:false,
-          logging:false,
-          windowWidth:1280,
-          windowHeight:fullH,
-          scrollX:0,
-          scrollY:0,
-          backgroundColor:'#ffffff'
+          scale:2,useCORS:true,allowTaint:false,logging:false,
+          windowWidth:1280,windowHeight:fullH,
+          scrollX:0,scrollY:0,backgroundColor:'#ffffff'
         }).then(function(canvas){
           var JsPDF=window.jspdf?window.jspdf.jsPDF:(window.jsPDF);
           var doc=new JsPDF({unit:'mm',format:'a4',orientation:'landscape'});
@@ -2870,30 +2989,54 @@ function openPdfPreview(mode){
           var imgW=pageW-(margin*2);
           var usableH=pageH-(margin*2);
           var pxPerMm=canvas.width/imgW;
-          // Convert CSS break positions to canvas-pixel positions (canvas.width / 960 = scale ratio)
-          var scaleRatio=canvas.width/960;
-          var brkPx=breaks.map(function(b){return Math.round(b*scaleRatio);}).filter(function(b){return b>10&&b<canvas.height-10;});
-          brkPx.sort(function(a,b){return a-b;});
-          var srcYpx=0;
-          var pageIndex=0;
+          // Convert CSS pixel positions to canvas pixels (canvas renders at scale:2)
+          var cssToCvs=canvas.width/1280;
+          var brkCvs=explicitBreaks.map(function(b){return Math.round(b*cssToCvs);})
+            .filter(function(b){return b>10&&b<canvas.height-10;});
+          brkCvs.sort(function(a,b){return a-b;});
+          // Convert forbidden zones to canvas pixels
+          var forbCvs=forbidden.map(function(f){
+            return{from:Math.round(f.from*cssToCvs),to:Math.round(f.to*cssToCvs)};
+          });
+          // Given a proposed cut Y (canvas px), find the safest cut ≤ proposedY
+          // that doesn't bisect any atomic element
+          function safeCutY(proposedY,minY){
+            // Check whether proposedY lands inside a forbidden zone
+            for(var i=0;i<forbCvs.length;i++){
+              var f=forbCvs[i];
+              if(proposedY>f.from+4&&proposedY<f.to-4){
+                // Inside an element — back up to the element's top edge
+                var backed=f.from;
+                if(backed<=minY+20){
+                  // Element is taller than a full page — no choice but to cut
+                  return proposedY;
+                }
+                return backed;
+              }
+            }
+            return proposedY;// already safe
+          }
+          var srcYpx=0,pageIndex=0;
           var maxSliceHpx=Math.round(usableH*pxPerMm);
           while(srcYpx<canvas.height){
-            // Determine end of this slice: either the next page-break or the natural page limit
-            var nextBreak=null;
-            for(var bi=0;bi<brkPx.length;bi++){
-              if(brkPx[bi]>srcYpx+5){nextBreak=brkPx[bi];break;}
+            // Check for an explicit break coming up within this page's range
+            var nextBrk=null;
+            for(var bi=0;bi<brkCvs.length;bi++){
+              if(brkCvs[bi]>srcYpx+5){nextBrk=brkCvs[bi];break;}
             }
             var naturalEnd=srcYpx+maxSliceHpx;
-            var sliceEnd;
-            if(nextBreak!==null&&nextBreak<=naturalEnd){
-              // Break falls inside this page — end the slice at the break
-              sliceEnd=nextBreak;
+            var proposed;
+            if(nextBrk!==null&&nextBrk<=naturalEnd){
+              proposed=nextBrk;// forced break before natural limit
             }else{
-              sliceEnd=Math.min(naturalEnd,canvas.height);
+              proposed=Math.min(naturalEnd,canvas.height);
             }
+            // Avoid cutting through atomic elements
+            var sliceEnd=safeCutY(proposed,srcYpx);
+            if(sliceEnd<=srcYpx)sliceEnd=proposed;// fallback
             var sliceHpx=sliceEnd-srcYpx;
             if(sliceHpx<=0)break;
-            var sliceMm=(sliceHpx/pxPerMm);
+            var sliceMm=sliceHpx/pxPerMm;
             var sc=document.createElement('canvas');
             sc.width=canvas.width;sc.height=sliceHpx;
             var ctx=sc.getContext('2d');
@@ -2907,10 +3050,7 @@ function openPdfPreview(mode){
           doc.save(pdfName);
           toast('PDF downloaded','ok');
           cleanup();
-        }).catch(function(e){
-          toast('Render failed: '+e.message,'err');
-          cleanup();
-        });
+        }).catch(function(e){toast('Render failed: '+e.message,'err');cleanup();});
       },150);
     }
 

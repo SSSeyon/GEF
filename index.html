@@ -438,13 +438,13 @@ body.dark .erow{background:var(--bge)}
     <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.14.1</div>
+<div class="ver" id="ver-badge">V1.15.0</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.14.1';
+const APP_VERSION='V1.15.0';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -598,12 +598,18 @@ const GEF=(function(){
     // Build a context phrase like "In January 2026" or "In the five months to May 2026"
     var periodPhrase='';
     if(isYtd){
-      // Count how many distinct months are merged
-      var monthCount=(p.donations||[]).concat(p.useOfFunds||[])
-        .map(function(x){return(x.date||'').substring(0,7);})
-        .filter(function(d,i,arr){return d&&arr.indexOf(d)===i;}).length;
+      // Count periods loaded for this year up to and including this month.
+      // Transaction-date sniffing under-counts months with no donations or deployments.
+      var ytdMonthCount=0;
+      if(allLoaded){
+        Object.keys(allLoaded).forEach(function(id){
+          var lp=allLoaded[id];
+          if(lp&&lp.year===p.year&&lp.month<=p.month)ytdMonthCount++;
+        });
+      }
+      if(ytdMonthCount===0)ytdMonthCount=p.month||1;
       var nums=['one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve'];
-      var nStr=monthCount>0&&monthCount<=12?nums[monthCount-1]:(monthCount>0?String(monthCount):'');
+      var nStr=ytdMonthCount>0&&ytdMonthCount<=12?nums[ytdMonthCount-1]:(ytdMonthCount>0?String(ytdMonthCount):'');
       var endMon=p.month?months[p.month-1]:'';
       periodPhrase='In the '+(nStr?nStr+' months':'year')+' to '+endMon+' '+p.year;
     }else{
@@ -1076,101 +1082,6 @@ function getTrendPeriods(year){
   return Object.keys(S.loadedPeriods).filter(function(id){return S.loadedPeriods[id].year===year;}).sort().map(function(id){return S.loadedPeriods[id];});
 }
 
-function buildSankeyDiagram(wrapperId,c){
-  var wrap=document.getElementById(wrapperId);if(!wrap)return;
-  var isDark=document.body.classList.contains('dark');
-  var W=Math.min(wrap.offsetWidth||600,700),H=320;
-  var PAD={l:10,r:10,t:30,b:10},nW=110,nH=34,gap=12;
-  var ink=isDark?'#E8E3DA':'#14201A',muted=isDark?'#6B7A68':'#8A8E89',bg=isDark?'#141F17':'#FFFEFB';
-  var grn='#0F5132',gld='#C99A2E',red='#A33A2E',nvy='#1B3B6F';
-  var fmt=function(v){return'₦'+(Math.abs(Number(v))/1000).toFixed(0)+'k';};
-
-  // Nodes: sources -> operating -> net cash -> closing
-  var ops=[
-    {id:'don',l:'Donations',v:c.op.don,c:grn},
-    {id:'oi',l:'Other Income',v:c.op.oi,c:gld},
-    {id:'ii',l:'Inv. Income',v:c.inv.inc,c:gld},
-  ].filter(function(n){return n.v>0;});
-  var outs=[
-    {id:'uof',l:'Deployments',v:Math.abs(c.op.uof),c:red},
-    {id:'mm',l:'MM Movement',v:Math.abs(c.inv.netMM),c:nvy,pos:c.inv.netMM>=0},
-    {id:'fd',l:'FD Movement',v:Math.abs(c.inv.netFD),c:nvy,pos:c.inv.netFD>=0},
-    {id:'fees',l:'Fees',v:Math.abs(c.inv.fees),c:red},
-  ].filter(function(n){return n.v>0;});
-
-  if(!ops.length&&!outs.length){wrap.innerHTML='<p style="color:var(--inkm);font-size:.85rem;padding:12px 0;text-align:center;">No cash flow data for this period.</p>';return;}
-  var totalIn=ops.reduce(function(s,n){return s+n.v;},0);
-  var netCash=c.cashChange;
-  var opening=c.openCash;
-  var closing=c.booked;
-
-  // Layout: 4 columns
-  var col0x=PAD.l, col1x=PAD.l+nW+60, col2x=col1x+nW+60, col3x=col2x+nW+60;
-  var totalW=col3x+nW+PAD.r;
-  if(totalW>W){var scale=W/totalW;col0x*=scale;col1x*=scale;col2x*=scale;col3x*=scale;nW*=scale;}
-
-  // Y positions for source nodes
-  var srcTotal=Math.max(totalIn,1);
-  var srcY=PAD.t,srcNodes=ops.map(function(n){var h=Math.max(20,(n.v/srcTotal)*(H-PAD.t-PAD.b-ops.length*gap));var node=Object.assign({x:col0x,y:srcY,h:h},n);srcY+=h+gap;return node;});
-  // Central node
-  var ctrH=Math.min(H-PAD.t-PAD.b,Math.max(30,(totalIn/srcTotal)*(H-PAD.t-PAD.b)));
-  var ctrY=PAD.t+(H-PAD.t-PAD.b-ctrH)/2;
-  // Out nodes
-  var outTotal=Math.max(outs.reduce(function(s,n){return s+n.v;},1),1);
-  var outY=PAD.t,outNodes=outs.map(function(n){var h=Math.max(20,(n.v/outTotal)*(H-PAD.t-PAD.b-outs.length*gap));var node=Object.assign({x:col2x,y:outY,h:h},n);outY+=h+gap;return node;});
-  // Closing node
-  var closeH=Math.max(24,ctrH*0.5);
-  var closeY=ctrY+(ctrH-closeH)/2;
-
-  function bezier(x1,y1,x2,y2,color,alpha,strokeW){
-    var mx=(x1+x2)/2;
-    return '<path d="M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2+'" fill="none" stroke="'+color+'" stroke-opacity="'+(alpha||0.28)+'" stroke-width="'+(strokeW||8)+'"/>';
-  }
-
-  var svg='<svg viewBox="0 0 '+totalW+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:'+totalW+'px;height:'+H+'px;display:block;">';
-  
-  // Flow lines: sources -> central
-  var srcFlowY=ctrY;
-  srcNodes.forEach(function(n){
-    var flowH=Math.max(4,(n.v/Math.max(totalIn,1))*ctrH);
-    svg+=bezier(n.x+nW,n.y+n.h/2,col1x,srcFlowY+flowH/2,n.c,0.22,Math.max(4,flowH));
-    srcFlowY+=flowH;
-  });
-
-  // Flow lines: central -> outs
-  var outFlowY=ctrY;
-  outNodes.forEach(function(n){
-    var flowH=Math.max(4,(n.v/Math.max(outTotal,1))*ctrH);
-    svg+=bezier(col1x+nW,outFlowY+flowH/2,n.x,n.y+n.h/2,n.c,0.22,Math.max(4,flowH));
-    outFlowY+=flowH;
-  });
-
-  // Flow: central -> closing (net)
-  if(Math.abs(netCash)>0){
-    svg+=bezier(col1x+nW,ctrY+ctrH/2,col3x,closeY+closeH/2,netCash>=0?grn:red,0.3,Math.max(6,closeH));
-  }
-
-  // Draw nodes
-  function drawNode(x,y,w,h,color,label,value,light){
-    var r=6;
-    svg+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+r+'" fill="'+color+'" opacity="0.15"/>';
-    svg+='<rect x="'+x+'" y="'+y+'" width="4" height="'+h+'" rx="2" fill="'+color+'"/>';
-    var midY=y+h/2;
-    svg+='<text x="'+(x+10)+'" y="'+(midY-5)+'" font-family="Geist,sans-serif" font-size="9" fill="'+muted+'" dominant-baseline="auto">'+label+'</text>';
-    svg+='<text x="'+(x+10)+'" y="'+(midY+9)+'" font-family="Geist Mono,monospace" font-size="11" font-weight="600" fill="'+ink+'" dominant-baseline="auto">'+value+'</text>';
-  }
-
-  srcNodes.forEach(function(n){drawNode(n.x,n.y,nW,n.h,n.c,n.l,fmt(n.v));});
-  drawNode(col1x,ctrY,nW,ctrH,grn,'Total Inflows',fmt(totalIn));
-  outNodes.forEach(function(n){drawNode(n.x,n.y,nW,n.h,n.c,n.l,fmt(n.v));});
-  drawNode(col3x,closeY,nW,closeH,netCash>=0?grn:red,'Closing Cash',fmt(closing));
-
-  // Opening label
-  svg+='<text x="'+col3x+'" y="'+(closeY-6)+'" font-family="Geist,sans-serif" font-size="9" fill="'+muted+'">Opening: '+fmt(opening)+'</text>';
-
-  svg+='</svg>';
-  wrap.innerHTML=svg;
-}
 
 var DL_PLUGIN={id:'dataLabels',afterDatasetsDraw:function(chart){
   var ctx=chart.ctx;
@@ -1280,7 +1191,8 @@ function renderReport(){
     p.keyActivities.forEach(function(ka){html+='<div class="ka-item"><h4>'+esc(ka.title)+'</h4><p>'+esc(ka.detail)+'</p></div>';});
     html+='</div></div>';
   }
-  html+='<div class="sec"><div class="sec-hd"><h2>Income Statement</h2><div class="sec-meta">'+esc(modeLabel)+(prev?' vs '+esc(prevLabel):'')+'</div></div>';
+  // ── SLIDE: Income Statement + income breakdown chart ──
+  html+='<div class="sec" data-pdf-break="1"><div class="sec-hd"><h2>Income Statement</h2><div class="sec-meta">'+esc(modeLabel)+(prev?' vs '+esc(prevLabel):'')+'</div></div>';
   html+='<div class="grid2"><div class="card">'+buildStmt([
     {h:'Revenue',col:modeLabel,col2:prevLabel},
     row('Donations',r.donations,prevR?prevR.donations:null,{ind:true,click:'donations'}),
@@ -1295,11 +1207,15 @@ function renderReport(){
     row('Net Income',r.netIncome,prevR?prevR.netIncome:null,{gt:true})
   ].filter(Boolean),p,!!prev)+'</div>'
   +'<div class="card"><h3 style="margin-bottom:8px;">Income breakdown</h3><div class="chart-w dn"><canvas id="c-ri"></canvas></div></div></div>';
-  // ── Net Income Bridge waterfall ──
-  html+='<div class="sec" style="margin-top:20px;"><div class="sec-hd"><h2>Net Income Bridge</h2><div class="sec-meta">Revenue → Expenses → Net</div></div><div class="card"><div class="chart-w lg"><canvas id="c-bridge"></canvas></div></div></div>';
-  if(narr.incomeStatement)html+='<div class="spacer"></div><div class="narr narr-md">'+renderMd(narr.incomeStatement)+'</div>';
   html+='</div>';
-  html+='<div class="sec"><div class="sec-hd"><h2>Balance Sheet</h2><div class="sec-meta">As of period end'+(prev?' vs '+esc(prevLabel):'')+'</div></div>';
+  // ── SLIDE: Narration (income statement) ──
+  if(narr.incomeStatement){
+    html+='<div class="sec" data-pdf-break="1"><div class="narr narr-md">'+renderMd(narr.incomeStatement)+'</div></div>';
+  }
+  // ── SLIDE: Net Income Bridge ──
+  html+='<div class="sec" data-pdf-break="1"><div class="sec-hd"><h2>Net Income Bridge</h2><div class="sec-meta">Revenue \u2192 Expenses \u2192 Net</div></div><div class="card"><div class="chart-w lg"><canvas id="c-bridge"></canvas></div></div></div>';
+  // ── SLIDE: Balance Sheet + asset allocation ──
+  html+='<div class="sec" data-pdf-break="1"><div class="sec-hd"><h2>Balance Sheet</h2><div class="sec-meta">As of period end'+(prev?' vs '+esc(prevLabel):'')+'</div></div>';
   html+='<div class="grid2"><div class="card">'+buildStmt([
     {h:'Assets',col:'As of period end',col2:prevLabel},
     row('Cash & savings',b.cash,prevB?prevB.cash:null,{ind:true,dz:true,click:'cashAccounts'}),
@@ -1314,7 +1230,7 @@ function renderReport(){
   +'<div class="card"><h3 style="margin-bottom:8px;">Asset allocation</h3><div class="chart-w dn"><canvas id="c-ra"></canvas></div><div class="spacer"></div>'
   +'<h3 style="margin-bottom:8px;">Holdings</h3><table class="itbl"><thead><tr><th>Account</th><th>Platform</th><th class="r">Balance</th></tr></thead><tbody id="rpt-hld"></tbody></table>'
   +'</div></div>';
-  // ── Investment performance card ──
+  // ── Investment performance card (stays on same slide as balance sheet) ──
   var wY=GEF.weightedYield(p);
   if(wY>0){
     var infl=S.benchmarkRate;
@@ -1334,7 +1250,8 @@ function renderReport(){
   }
   if(narr.balanceSheet)html+='<div class="spacer"></div><div class="narr g narr-md">'+renderMd(narr.balanceSheet)+'</div>';
   html+='</div>';
-  html+='<div class="sec"><div class="sec-hd"><h2>Cash Flow Statement</h2><div class="sec-meta">'+esc(modeLabel)+(prev?' vs '+esc(prevLabel):'')+'</div></div><div class="card">';
+  // ── SLIDE: Cash Flow Statement ──
+  html+='<div class="sec" data-pdf-break="1"><div class="sec-hd"><h2>Cash Flow Statement</h2><div class="sec-meta">'+esc(modeLabel)+(prev?' vs '+esc(prevLabel):'')+'</div></div><div class="card">';
   html+=buildStmt([
     {h:'Operating Cash Flows',col:modeLabel,col2:prevLabel},
     row('Donations received',c.op.don,prevC?prevC.op.don:null,{ind:true,click:'donations'}),
@@ -1352,11 +1269,9 @@ function renderReport(){
     row('Closing cash',c.booked,prevC?prevC.booked:null,{gt:true})
   ],p,!!prev);
   if(!c.ok)html+='<div class="banner warn" style="margin-top:12px;">Cash gap: computed '+GEF.fmtM(c.computed)+' vs booked '+GEF.fmtM(c.booked)+'</div>';
-  html+='</div></div>';
+  html+='</div>';
   if(narr.cashFlows)html+='<div class="spacer"></div><div class="narr narr-md">'+renderMd(narr.cashFlows)+'</div>';
   html+='</div>';
-  // ── Cash Flow Sankey ──
-  html+='<div class="sec"><div class="sec-hd"><h2>Fund Flow</h2><div class="sec-meta">Where money came from and where it went</div></div><div class="card"><div id="c-sankey" style="width:100%;min-height:240px;"></div></div></div>';
   if((p.nextSteps||[]).length){
     html+='<div class="sec"><div class="sec-hd"><h2>Priorities Ahead</h2></div><div class="nxts">';
     p.nextSteps.forEach(function(ns,i){html+='<div class="nxt"><div class="nxt-n">0'+(i+1)+'</div><h4>'+esc(ns.title)+'</h4><p>'+esc(ns.detail)+'</p></div>';});
@@ -1427,10 +1342,17 @@ function renderReport(){
 
       // Create the section node and append — never serialise el.innerHTML again
       var secNode=document.createElement('div');secNode.className='sec';
+      // data-pdf-break forces a new PDF page so the breakdown always starts on its own slide
+      secNode.setAttribute('data-pdf-break','1');
+      // Heading (visible in app and in PDF)
+      var secHd=document.createElement('div');secHd.className='sec-hd';
+      var secH2=document.createElement('h2');secH2.textContent='Monthly Breakdown';
+      var secMeta=document.createElement('div');secMeta.className='sec-meta';
+      secMeta.textContent=ytdPeriods.length+' period'+(ytdPeriods.length>1?'s':'')+' \u2014 Year to Date';
+      secHd.appendChild(secH2);secHd.appendChild(secMeta);
+      secNode.appendChild(secHd);
       var togBtn=document.createElement('div');togBtn.className='ytd-details-toggle';togBtn.id='ytd-toggle';
-      togBtn.innerHTML='<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Monthly breakdown ('
-        +ytdPeriods.length+' period'+(ytdPeriods.length>1?'s':'')
-        +' \u2014 click to expand)';
+      togBtn.innerHTML='<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Click to expand';
       var bodyDiv=document.createElement('div');bodyDiv.id='ytd-months-body';
       bodyDiv.style.display='none';
       bodyDiv.innerHTML=tableHtml;
@@ -1547,87 +1469,9 @@ function buildRptCharts(r,b,c,p){
       });
     }
   }
-  // ── Cash Flow Sankey — pure SVG, no library needed ──
-  buildSankey(r,b,c,p);
 }
 
-function buildSankey(r,b,c,p){
-  var wrap=document.getElementById('c-sankey');if(!wrap)return;
-  // Build Sankey data
-  var inflows=[],outflows=[];
-  if(r.donations>0)inflows.push({label:'Donations',v:r.donations,c:CLR.grn});
-  if(r.investmentIncome>0)inflows.push({label:'Inv. income',v:r.investmentIncome,c:CLR.gld});
-  if(r.otherIncome>0)inflows.push({label:'Other income',v:r.otherIncome,c:CLR.nvy});
-  if(c.op.sub>0)inflows.push({label:'Op. cash flow',v:c.op.sub,c:CLR.teal});
-  Object.keys(GEF.UOF_CATS).forEach(function(cat){
-    if(r.uofByC[cat]>0)outflows.push({label:GEF.UOF_CATS[cat],v:r.uofByC[cat],c:CLR.brn});
-  });
-  if(r.fees>0)outflows.push({label:'Bank fees',v:r.fees,c:CLR.red});
-  if(b.moneyMarket>0)outflows.push({label:'Money Market',v:b.moneyMarket,c:CLR.grn});
-  if(b.placements>0)outflows.push({label:'Placements',v:b.placements,c:CLR.nvy});
-  if(b.cash>0)outflows.push({label:'Cash held',v:b.cash,c:CLR.gld});
-  if(!inflows.length||!outflows.length){wrap.style.display='none';return;}
-  var W=wrap.clientWidth||600;var H=260;
-  var nW=130,nH=24,gap=6;// node width, height, gap
-  var cx=W/2;// centre line x
-  var lx=12,rx=W-nW-12;// left/right node x
-  function nodeY(items,i,totalH){
-    var total=items.reduce(function(s,x){return s+x.v;},0);
-    var y=20;
-    for(var j=0;j<i;j++)y+=(items[j].v/total)*totalH+gap;
-    return y;
-  }
-  var totalH=H-40;
-  var totalIn=inflows.reduce(function(s,x){return s+x.v;},0);
-  var totalOut=outflows.reduce(function(s,x){return s+x.v;},0);
-  var maxV=Math.max(totalIn,totalOut);
-  function scaleV(v){return(v/maxV)*totalH;}
-  var svg='<svg width="'+W+'" height="'+H+'" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">';
-  svg+='<defs>';
-  inflows.forEach(function(n,i){
-    svg+='<linearGradient id="sg'+i+'" x1="0" x2="1"><stop offset="0%" stop-color="'+n.c+'" stop-opacity=".7"/><stop offset="100%" stop-color="'+n.c+'" stop-opacity=".25"/></linearGradient>';
-  });
-  svg+='</defs>';
-  // Draw flows from each inflow to each outflow (proportional)
-  var inCurY=[];var outCurY=[];
-  inflows.forEach(function(n,i){inCurY[i]=nodeY(inflows,i,totalH*totalIn/maxV)+scaleV(n.v);});
-  outflows.forEach(function(n,i){outCurY[i]=nodeY(outflows,i,totalH*totalOut/maxV)+scaleV(n.v);});
-  // Reset cursor to top of each node
-  var inCurTop=inflows.map(function(n,i){return nodeY(inflows,i,totalH*totalIn/maxV);});
-  var outCurTop=outflows.map(function(n,i){return nodeY(outflows,i,totalH*totalOut/maxV);});
-  inflows.forEach(function(nIn,ii){
-    var flowShare=nIn.v/totalIn;
-    outflows.forEach(function(nOut,oi){
-      var flowH=scaleV(nIn.v)*((nOut.v/totalOut));
-      if(flowH<1)return;
-      var y1=inCurTop[ii];var y2=outCurTop[oi];
-      var x1=lx+nW,x2=rx,cx1=cx-40,cx2=cx+40;
-      svg+='<path d="M'+x1+' '+y1+' C'+cx1+' '+y1+' '+cx2+' '+y2+' '+x2+' '+y2
-        +' L'+x2+' '+(y2+flowH)+' C'+cx2+' '+(y2+flowH)+' '+cx1+' '+(y1+flowH)+' '+x1+' '+(y1+flowH)+' Z"'
-        +' fill="url(#sg'+ii+')" opacity="0.55"/>';
-      inCurTop[ii]+=flowH;
-      outCurTop[oi]+=flowH;
-    });
-  });
-  // Draw input nodes
-  inflows.forEach(function(n,i){
-    var y=nodeY(inflows,i,totalH*totalIn/maxV);
-    var h=Math.max(scaleV(n.v)-gap,4);
-    svg+='<rect x="'+lx+'" y="'+y+'" width="'+nW+'" height="'+h+'" rx="4" fill="'+n.c+'"/>';
-    svg+='<text x="'+(lx+nW/2)+'" y="'+(y+h/2)+'" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-family="Geist,sans-serif" font-size="9" font-weight="600">'+n.label+'</text>';
-    svg+='<text x="'+(lx+nW/2)+'" y="'+(y+h/2+11)+'" text-anchor="middle" dominant-baseline="middle" fill="rgba(255,255,255,.8)" font-family="Geist Mono,monospace" font-size="8">'+GEF.fmtM(n.v)+'</text>';
-  });
-  // Draw output nodes
-  outflows.forEach(function(n,i){
-    var y=nodeY(outflows,i,totalH*totalOut/maxV);
-    var h=Math.max(scaleV(n.v)-gap,4);
-    svg+='<rect x="'+rx+'" y="'+y+'" width="'+nW+'" height="'+h+'" rx="4" fill="'+n.c+'"/>';
-    svg+='<text x="'+(rx+nW/2)+'" y="'+(y+h/2)+'" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-family="Geist,sans-serif" font-size="9" font-weight="600">'+n.label+'</text>';
-    svg+='<text x="'+(rx+nW/2)+'" y="'+(y+h/2+11)+'" text-anchor="middle" dominant-baseline="middle" fill="rgba(255,255,255,.8)" font-family="Geist Mono,monospace" font-size="8">'+GEF.fmtM(n.v)+'</text>';
-  });
-  svg+='</svg>';
-  wrap.innerHTML=svg;
-}
+
 function buildStmt(rows,period,withPrev){
   var html='<table class="stmt"><tbody>';
   var firstHeader=true;

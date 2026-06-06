@@ -248,13 +248,26 @@ body.dark .erow{background:var(--bge)}
 .dm-toggle:hover{background:rgba(255,255,255,.12)}
 .dm-toggle svg{width:15px;height:15px;flex-shrink:0}
 
-/* ---- PDF preview modal ---- */
+/* ---- PDF preview modal (legacy, unused) ---- */
 .pdf-preview-bg{position:fixed;inset:0;background:rgba(10,20,15,.7);z-index:400;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:0;backdrop-filter:blur(3px)}
 .pdf-preview-toolbar{width:100%;background:var(--grnd);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 20px;gap:12px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .pdf-preview-toolbar h3{margin:0;font-family:var(--fs);font-size:1rem;font-weight:500}
 .pdf-preview-toolbar .fb{gap:8px}
 .pdf-preview-frame-wrap{flex:1;width:100%;overflow-y:auto;background:#888;padding:0;display:flex;flex-direction:column;}
 .pdf-preview-frame-wrap iframe{flex:1;width:100%;border:none;min-height:85vh;}
+/* ---- Admin PDF proof preview ---- */
+.aprv-bg{position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;background:#1a1a1a;}
+.aprv-bar{background:var(--grnd);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.35);gap:12px;}
+.aprv-bar h3{margin:0;font-family:var(--fs);font-size:.95rem;font-weight:600;white-space:nowrap;}
+.aprv-bar .fb{gap:8px;flex-shrink:0;}
+.aprv-edit-panel{background:var(--grnd);border-bottom:2px solid var(--gld);padding:10px 16px;display:flex;align-items:flex-start;gap:10px;flex-shrink:0;transition:max-height .2s,opacity .2s;overflow:hidden;}
+.aprv-edit-panel.hidden{max-height:0;padding-top:0;padding-bottom:0;opacity:0;pointer-events:none;}
+.aprv-edit-panel.visible{max-height:240px;opacity:1;}
+.aprv-edit-panel textarea{flex:1;min-height:80px;max-height:160px;font-family:var(--f);font-size:.88rem;line-height:1.5;color:#0D1F15;background:#F5FAF7;border:1px solid #D9E4DC;border-radius:6px;padding:8px 10px;resize:vertical;}
+.aprv-edit-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.aprv-frame-wrap{flex:1;overflow-y:auto;background:#444;display:flex;flex-direction:column;align-items:center;padding:24px 0 40px;}
+.aprv-frame-wrap iframe{width:1320px;transform-origin:top center;border:none;background:#fff;box-shadow:0 4px 32px rgba(0,0,0,.4);display:block;flex-shrink:0;}
+.aprv-hint{color:rgba(255,255,255,.45);font-size:.72rem;text-align:center;margin-top:8px;letter-spacing:.03em;}
 @media print{
   .app-header,.tab-nav,.ver,.toast,.ptr-indicator,.sw-banner,.pdf-preview-bg{display:none!important}
   .app-main{padding:0!important;max-width:none!important}
@@ -438,13 +451,35 @@ body.dark .erow{background:var(--bge)}
     <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.15.0</div>
+<!-- Admin PDF proof-preview overlay -->
+<div id="aprv-modal" class="aprv-bg" style="display:none;">
+  <div class="aprv-bar">
+    <h3 id="aprv-title">PDF Preview</h3>
+    <div class="fb">
+      <button class="btn gh sm" id="aprv-dl-btn">&#8595; Download PDF</button>
+      <button class="btn gh sm" id="aprv-close-btn">&times; Close</button>
+    </div>
+  </div>
+  <!-- Edit panel: slides open when an editable region is clicked -->
+  <div class="aprv-edit-panel hidden" id="aprv-edit-panel">
+    <textarea id="aprv-edit-ta" rows="4" placeholder="Edit this section…"></textarea>
+    <div class="aprv-edit-actions">
+      <button class="btn sm" id="aprv-save-btn">Save</button>
+      <button class="btn gh sm" id="aprv-cancel-btn">Cancel</button>
+    </div>
+  </div>
+  <div class="aprv-frame-wrap" id="aprv-frame-wrap">
+    <iframe id="aprv-iframe" scrolling="no"></iframe>
+    <div class="aprv-hint">Click any highlighted text to edit &middot; changes are saved to this draft</div>
+  </div>
+</div>
+<div class="ver" id="ver-badge">V1.15.1</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.15.0';
+const APP_VERSION='V1.15.1';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -1539,9 +1574,7 @@ function renderAdminEditor(el){
   el.querySelector('#adm-import').addEventListener('click',importJSON);
   el.querySelector('#adm-preview-btn').addEventListener('click',function(){
     if(!S.aperiod){toast('No draft selected','err');return;}
-    S.previewPeriod=S.aperiod;
-    setTab('report');
-    toast('Previewing draft: '+GEF.pLabel(S.aperiod),'ok');
+    openAdminPdfPreview();
   });
   var last=sessionStorage.getItem(LS.CUR);
   if(last&&(S.drafts[last]||isPub(last))){selectAdmPeriod(last);}
@@ -2752,6 +2785,174 @@ function loadPdfLibs(cb){
   }
   done();
 }
+
+// ---- Admin PDF Proof Preview ----
+// Opens a full-screen overlay showing the PDF exactly as it will download,
+// with highlighted editable regions (exec summary + narrations) that admin
+// can click, edit in a panel above the iframe, and save back to the draft.
+(function(){
+  var _currentField=null;// key into S.aperiod.narrative being edited
+  var _iframeEl=null,_panelEl=null,_taEl=null;
+
+  function renderIframe(dp){
+    // buildPdfHtml clones the live #rpt-content DOM, so we need the report tab
+    // to be rendered with the draft period before calling it.
+    // We set previewPeriod temporarily, force a sync render, then restore.
+    var savedPreview=S.previewPeriod;
+    var savedTab=S.tab;
+    S.previewPeriod=dp;
+    // Ensure #rpt-content exists and is rendered with the draft data
+    var rptEl=document.getElementById('rpt-content');
+    if(rptEl){
+      renderReport();// synchronous DOM build
+    }
+    var html=buildPdfHtml('report',dp);
+    // Restore state — don't leave the UI on the report tab
+    S.previewPeriod=savedPreview;
+    if(savedTab!==S.tab){
+      // Re-render current tab silently so charts are rebuilt
+      if(savedTab==='admin'){}// admin tab doesn't need re-render
+      else if(savedTab==='dashboard')renderDash();
+    }
+    if(!html)return;
+    // Inject editable-region styles and click-message bridge into the iframe HTML
+    var editCss=
+      '.gef-editable{outline:2px dashed #F8C01C;outline-offset:3px;cursor:pointer;border-radius:4px;transition:background .15s;}'
+      +'.gef-editable:hover{background:rgba(248,192,28,.10);}';
+    var bridgeScript=
+      '<script>(function(){'
+      +'document.querySelectorAll("[data-editkey]").forEach(function(el){'
+      +'el.classList.add("gef-editable");'
+      +'el.addEventListener("click",function(e){'
+      +'e.stopPropagation();'
+      +'window.parent.postMessage({type:"gef-edit",key:el.dataset.editkey,text:el.dataset.edittext||el.textContent},"*");'
+      +'});'
+      +'});'
+      +'})();<\/script>';
+    // Inject data-editkey attributes into the narr and exec-summary elements
+    // We do this in the HTML string before writing to the iframe.
+    // exec-summary <p>
+    html=html.replace(
+      /(<div class="exec-summary"><div class="exec-summary-hd">Executive Summary<\/div><p>)(.*?)(<\/p><\/div>)/s,
+      function(m,pre,txt,post){
+        return pre.replace('<p>','<p data-editkey="executiveSummary" data-edittext="'+txt.replace(/"/g,'&quot;')+'">')+txt+post;
+      }
+    );
+    // Income statement narr
+    html=html.replace(
+      /(<div class="narr narr-md"[^>]*data-editkey[^>]*>)/,'$1'  // skip already-tagged
+    );
+    // Tag narr elements by their position (exec, incomeStatement, balanceSheet, cashFlows)
+    var narrKeys=['incomeStatement','balanceSheet','cashFlows'];
+    var narrIdx=0;
+    html=html.replace(/<div class="narr([^"]*)">/g,function(m,cls){
+      var key=narrKeys[narrIdx]||null;narrIdx++;
+      if(!key)return m;
+      return '<div class="narr'+cls+'" data-editkey="'+key+'">';
+    });
+    // Inject the edit CSS and bridge into <head>
+    html=html.replace('</style>','</style><style>'+editCss+'</style>'+bridgeScript);
+    // Set iframe height to full viewport minus toolbar
+    _iframeEl.style.height='';
+    _iframeEl.contentDocument.open();
+    _iframeEl.contentDocument.write(html);
+    _iframeEl.contentDocument.close();
+    // After fonts load, resize iframe to its scroll height then re-apply scale
+    setTimeout(function(){
+      try{
+        var h=_iframeEl.contentDocument.documentElement.scrollHeight;
+        _iframeEl.style.height=Math.max(h,600)+'px';
+        applyScale();
+      }catch(e){}
+    },1200);
+  }
+
+  function openPanel(key,text){
+    _currentField=key;
+    var labels={executiveSummary:'Executive Summary',incomeStatement:'Income Statement narration',balanceSheet:'Balance Sheet narration',cashFlows:'Cash Flow narration'};
+    document.getElementById('aprv-edit-panel').className='aprv-edit-panel visible';
+    _taEl.value=text||'';
+    _taEl.placeholder='Enter '+( labels[key]||key)+'\u2026';
+    _taEl.focus();
+  }
+
+  function closePanel(){
+    _currentField=null;
+    document.getElementById('aprv-edit-panel').className='aprv-edit-panel hidden';
+  }
+
+  function saveField(){
+    if(!_currentField||!S.aperiod)return;
+    var narr=S.aperiod.narrative||(S.aperiod.narrative={});
+    if(_currentField==='executiveSummary'){
+      narr.executiveSummary=_taEl.value;
+    }else{
+      narr[_currentField]=_taEl.value;
+    }
+    autoSave();
+    closePanel();
+    // Re-render iframe with the draft (always use aperiod for the preview)
+    renderIframe(S.aperiod);
+    toast('Saved','ok');
+  }
+
+  window.openAdminPdfPreview=function(){
+    if(!S.aperiod){toast('No draft selected','err');return;}
+    var dp=S.aperiod;// always preview the currently selected draft
+    _iframeEl=document.getElementById('aprv-iframe');
+    _panelEl=document.getElementById('aprv-edit-panel');
+    _taEl=document.getElementById('aprv-edit-ta');
+    // Set title
+    document.getElementById('aprv-title').textContent='PDF Preview \u2014 '+(dp.label||GEF.pLabel(dp));
+    // Show modal
+    var modal=document.getElementById('aprv-modal');
+    modal.style.display='flex';
+    document.body.style.overflow='hidden';
+    // Scale iframe to fit viewport width (transform-origin is top center via CSS)
+    var wrap=document.getElementById('aprv-frame-wrap');
+    function applyScale(){
+      var avail=wrap.clientWidth-40;
+      var s=Math.min(1,avail/1320);
+      _iframeEl.style.transform='scale('+s+')';
+      _iframeEl.style.transformOrigin='top center';
+      // After scale, the iframe occupies s*naturalHeight px vertically but still
+      // reserves naturalHeight px. We collapse the surplus with a negative margin.
+      try{
+        var natH=_iframeEl.contentDocument.documentElement.scrollHeight||600;
+        _iframeEl.style.marginBottom=(natH*(s-1))+'px';
+      }catch(e){_iframeEl.style.marginBottom='0';}
+    }
+    applyScale();
+    // Render
+    renderIframe(dp);
+    // Listen for edit clicks from iframe
+    window._aprvListener=function(e){
+      if(e.data&&e.data.type==='gef-edit'){openPanel(e.data.key,e.data.text);}
+    };
+    window.addEventListener('message',window._aprvListener);
+    // Wire buttons
+    document.getElementById('aprv-close-btn').onclick=function(){closeAdminPdfPreview();};
+    document.getElementById('aprv-save-btn').onclick=saveField;
+    document.getElementById('aprv-cancel-btn').onclick=closePanel;
+    document.getElementById('aprv-dl-btn').onclick=function(){openPdfPreview('report');};
+    // Re-scale on resize
+    window._aprvResize=function(){applyScale();};
+    window.addEventListener('resize',window._aprvResize);
+    // Escape key to close
+    window._aprvKeydown=function(e){if(e.key==='Escape')closeAdminPdfPreview();};
+    window.addEventListener('keydown',window._aprvKeydown);
+  };
+
+  window.closeAdminPdfPreview=function(){
+    var modal=document.getElementById('aprv-modal');
+    modal.style.display='none';
+    document.body.style.overflow='';
+    if(window._aprvListener)window.removeEventListener('message',window._aprvListener);
+    if(window._aprvResize)window.removeEventListener('resize',window._aprvResize);
+    if(window._aprvKeydown)window.removeEventListener('keydown',window._aprvKeydown);
+    closePanel();
+  };
+})();
 
 function openPdfPreview(mode){
   // Despite the legacy name, this now generates and downloads the PDF directly.

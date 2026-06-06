@@ -438,13 +438,13 @@ body.dark .erow{background:var(--bge)}
     <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.14.0</div>
+<div class="ver" id="ver-badge">V1.14.1</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.14.0';
+const APP_VERSION='V1.14.1';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -2683,7 +2683,7 @@ function buildPdfHtml(pdfMode,dp){
 +'.ytd-details-toggle{display:none!important}'
 +'#ytd-months-body{display:block!important}'
 +'.sec{margin-bottom:32px;page-break-inside:avoid;}'
-+'.sec-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap;}'
++'.sec-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap;break-after:avoid;page-break-after:avoid;}'
 +'.sec-meta{font-size:.8rem;color:#7A8C7E;}'
 +'.card{background:#fff;border:1px solid #D9E4DC;border-radius:12px;padding:20px 24px;margin-bottom:16px;page-break-inside:avoid;}'
 +'.hero{background:#004D37!important;border-radius:12px;padding:28px 32px;position:relative;overflow:hidden;margin-bottom:24px;color:#F2F5F0;page-break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
@@ -2960,19 +2960,33 @@ function openPdfPreview(mode){
       var fullH=renderEl.scrollHeight;
       hiddenIframe.style.height=fullH+'px';
 
+      // ── Helper: get element top relative to the iframe document root ──
+      // getBoundingClientRect() on a cross-origin or off-screen iframe returns coords
+      // relative to the OUTER viewport (at x=-9999px), not the iframe document.
+      // Walking offsetParent gives the correct document-relative top.
+      function absTop(el){
+        var top=0;
+        var node=el;
+        while(node&&node!==renderEl){top+=node.offsetTop||0;node=node.offsetParent;}
+        return top;
+      }
+
       // ── Smart page-break: collect element boundaries so we never cut mid-element ──
       // Explicit sentinel breaks (covers, final slide, glossary)
       var explicitBreaks=[];
       renderDoc.querySelectorAll('[data-pdf-break]').forEach(function(el){
-        var r=el.getBoundingClientRect();explicitBreaks.push(Math.round(r.top));
+        explicitBreaks.push(absTop(el));
       });
-      // Atomic blocks that must never be split: cards, statements, charts, narrations, etc.
-      var atomicSel='.card,.hero,.metric-grid,.nxts,.narr,.exec-summary,.invest-perf,.ka-grid,.cover-slide,.final-slide,.glossary-slide,.chart-w,.itbl,.stmt';
+      // Atomic blocks that must never be split.
+      // .sec-hd is the section title row — adding it prevents the heading being
+      // stranded alone at the bottom of a page with the card content on the next.
+      var atomicSel='.card,.hero,.metric-grid,.nxts,.narr,.exec-summary,.invest-perf,.ka-grid,.cover-slide,.final-slide,.glossary-slide,.chart-w,.itbl,.stmt,.sec-hd';
       var atomicEls=renderDoc.querySelectorAll(atomicSel);
       var forbidden=[];// [{from,to}] in CSS pixels
       atomicEls.forEach(function(el){
-        var r=el.getBoundingClientRect();
-        if(r.height>20)forbidden.push({from:Math.round(r.top),to:Math.round(r.top+r.height)});
+        var top=absTop(el);
+        var h=el.offsetHeight||0;
+        if(h>20)forbidden.push({from:Math.round(top),to:Math.round(top+h)});
       });
 
       setTimeout(function(){
@@ -2999,22 +3013,31 @@ function openPdfPreview(mode){
             return{from:Math.round(f.from*cssToCvs),to:Math.round(f.to*cssToCvs)};
           });
           // Given a proposed cut Y (canvas px), find the safest cut ≤ proposedY
-          // that doesn't bisect any atomic element
+          // that doesn't bisect any atomic element.
+          // Iterates so that backing up from one forbidden zone doesn't land inside
+          // an adjacent one (e.g. a .sec-hd immediately above a .card).
           function safeCutY(proposedY,minY){
-            // Check whether proposedY lands inside a forbidden zone
-            for(var i=0;i<forbCvs.length;i++){
-              var f=forbCvs[i];
-              if(proposedY>f.from+4&&proposedY<f.to-4){
-                // Inside an element — back up to the element's top edge
-                var backed=f.from;
-                if(backed<=minY+20){
-                  // Element is taller than a full page — no choice but to cut
-                  return proposedY;
+            var candidate=proposedY;
+            var maxIter=forbCvs.length+2;// guard against infinite loop
+            for(var iter=0;iter<maxIter;iter++){
+              var moved=false;
+              for(var i=0;i<forbCvs.length;i++){
+                var f=forbCvs[i];
+                if(candidate>f.from+4&&candidate<f.to-4){
+                  // Inside a forbidden zone — back up to its top edge
+                  var backed=f.from;
+                  if(backed<=minY+20){
+                    // Element spans more than a full page; no choice but to cut
+                    return proposedY;
+                  }
+                  candidate=backed;
+                  moved=true;
+                  break;// re-check all zones from new candidate
                 }
-                return backed;
               }
+              if(!moved)return candidate;// stable — no zone hit
             }
-            return proposedY;// already safe
+            return candidate;
           }
           var srcYpx=0,pageIndex=0;
           var maxSliceHpx=Math.round(usableH*pxPerMm);

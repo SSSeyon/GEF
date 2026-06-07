@@ -474,13 +474,13 @@ body.dark .erow{background:var(--bge)}
     <div class="aprv-hint">Click any highlighted text to edit &middot; changes are saved to this draft</div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.16.1</div>
+<div class="ver" id="ver-badge">V1.16.2</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.16.1';
+const APP_VERSION='V1.16.2';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -774,7 +774,7 @@ function setTab(t){
   else if(t==='settings')renderSettings();
 }
 
-async function fetchJSON(p){var r=await fetch(p+'?t='+Date.now());if(!r.ok)throw new Error('Fetch failed: '+p+' ('+r.status+')');return r.json();}
+async function fetchJSON(p){var r=await fetch(p+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('Fetch failed: '+p+' ('+r.status+')');return r.json();}
 async function loadIndex(){
   try{S.pubIdx=await fetchJSON('data/index.json');}catch(e){S.pubIdx={fundName:'Gbago Endowment Fund',publishedPeriods:[]};}
   // Sync fundTarget from the published index (authoritative source for all users)
@@ -2855,7 +2855,7 @@ function buildPdfHtml(pdfMode,dp){
 
   return '<!DOCTYPE html><html lang="en-GB"><head>'
     +'<meta charset="UTF-8"/>'
-    +'<meta name="viewport" content="width=device-width,initial-scale=1.0"/>'
+    +'<meta name="viewport" content="width=1280"/>'
     +'<link rel="preconnect" href="https://fonts.googleapis.com"/>'
     +'<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>'
     +'<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,30..100&family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet"/>'

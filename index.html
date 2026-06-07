@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,30..100&family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.0/dist/chartjs-chart-sankey.min.js"></script>
 <style>
 :root{--bg:#F2F5F0;--bgc:#FAFCF9;--bge:#FFF;--ink:#0D1F15;--inks:#3A5040;--inkm:#7A8C7E;--ln:#D9E4DC;--lnk:#BECEBC;--grn:#006145;--grnd:#004D37;--grns:#E0EDE6;--gld:#F8C01C;--glds:#FEF3C0;--nvy:#0F2F70;--teal:#007AA3;--brn:#AD7436;--brnl:#F5E9D6;--red:#A33A2E;--reds:#F4E1DD;--r:10px;--rl:16px;--sh:0 4px 16px rgba(0,50,30,.08);--f:'Geist','Inter',system-ui,sans-serif;--fs:'Fraunces','Times New Roman',serif;--fm:'Geist Mono',ui-monospace,monospace;--hh:56px}
 *{box-sizing:border-box}html,body{margin:0;padding:0}
@@ -159,7 +160,7 @@ p{margin:0 0 .8em}a{color:var(--grn)}
 .login-logo{width:54px;height:54px;border-radius:50%;overflow:hidden;margin:0 auto 14px;border:2px solid var(--grns)}
 .login-logo img{width:100%;height:100%;object-fit:cover}
 .etxt{color:var(--red);font-size:.82rem;margin-top:6px}
-.chart-w{position:relative}.chart-w.dn{height:230px}.chart-w.wf{height:260px}.chart-w.lg{height:300px}
+.chart-w{position:relative}.chart-w.dn{height:230px}.chart-w.wf{height:260px}.chart-w.lg{height:300px}.chart-w.xl{height:420px}
 .spacer{height:20px}
 .fb{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .fbw{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
@@ -473,13 +474,13 @@ body.dark .erow{background:var(--bge)}
     <div class="aprv-hint">Click any highlighted text to edit &middot; changes are saved to this draft</div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.15.1</div>
+<div class="ver" id="ver-badge">V1.16.0</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.15.1';
+const APP_VERSION='V1.16.0';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -1307,6 +1308,8 @@ function renderReport(){
   html+='</div>';
   if(narr.cashFlows)html+='<div class="spacer"></div><div class="narr narr-md">'+renderMd(narr.cashFlows)+'</div>';
   html+='</div>';
+  // ── SLIDE: Fund Flow (Sankey) ──
+  html+='<div class="sec" data-pdf-break="1"><div class="sec-hd"><h2>Fund Flow</h2><div class="sec-meta">Cash sources and uses for '+esc(modeLabel)+'</div></div><div class="card"><div class="chart-w xl"><canvas id="c-sankey"></canvas></div></div></div>';
   if((p.nextSteps||[]).length){
     html+='<div class="sec"><div class="sec-hd"><h2>Priorities Ahead</h2></div><div class="nxts">';
     p.nextSteps.forEach(function(ns,i){html+='<div class="nxt"><div class="nxt-n">0'+(i+1)+'</div><h4>'+esc(ns.title)+'</h4><p>'+esc(ns.detail)+'</p></div>';});
@@ -1459,7 +1462,7 @@ function showBreakdown(key,p,r){
 }
 
 function buildRptCharts(r,b,c,p){
-  destroyCharts(['c-ri','c-ra','c-bridge']);
+  destroyCharts(['c-ri','c-ra','c-bridge','c-sankey']);
   var c1=document.getElementById('c-ri');
   if(c1){var d1=[{l:'Donations',v:r.donations,c:CLR.grn},{l:'Investment income',v:r.investmentIncome,c:CLR.gld},{l:'Other',v:r.otherIncome,c:CLR.nvy}].filter(function(x){return x.v>0;});if(d1.length)S.charts['c-ri']=mkDonut(c1,d1);}
   var c2=document.getElementById('c-ra');
@@ -1504,6 +1507,120 @@ function buildRptCharts(r,b,c,p){
       });
     }
   }
+  // Fund Flow Sankey
+  buildSankey(r,b,c,p);
+}
+
+// ── Fund Flow Sankey ──
+// Builds a left-to-right Sankey via Chart.js + chartjs-chart-sankey.
+// Model: sources of cash for the period flow into a central "Cash Pool", which
+// then splits into the period's uses. Investing moves are split by direction
+// so we never net positives against negatives in a single flow.
+function buildSankey(r,b,c,p){
+  var canvas=document.getElementById('c-sankey');
+  if(!canvas)return;
+  // Guard: plugin might fail to load on a flaky network. Show a soft fallback.
+  if(!window.Chart||!(Chart.controllers&&Chart.controllers.sankey)&&!window.SankeyController){
+    // The plugin registers itself; if it is missing we cannot render.
+    var parent=canvas.parentNode;
+    if(parent)parent.innerHTML='<p style="color:var(--inkm);font-size:.85rem;padding:24px 0;text-align:center;">Sankey plugin failed to load. Refresh to try again.</p>';
+    return;
+  }
+  if(S.charts['c-sankey']){try{S.charts['c-sankey'].destroy();}catch(e){}delete S.charts['c-sankey'];}
+
+  // Build the flow list. All values are absolute, positive numbers in Naira.
+  var flows=[];
+  var POOL='Cash Pool';
+  // ── Inflows into the cash pool ──
+  if(c.openCash>0)flows.push({from:'Opening Cash',to:POOL,flow:c.openCash});
+  if(c.op.don>0)flows.push({from:'Donations',to:POOL,flow:c.op.don});
+  if(c.op.oi>0)flows.push({from:'Other Income',to:POOL,flow:c.op.oi});
+  if(c.inv.inc>0)flows.push({from:'Investment Income',to:POOL,flow:c.inv.inc});
+  // Investing reversals: positive net means cash came back into the pool
+  if(c.inv.netMM>0)flows.push({from:'MM Redemptions',to:POOL,flow:c.inv.netMM});
+  if(c.inv.netFD>0)flows.push({from:'Placement Redemptions',to:POOL,flow:c.inv.netFD});
+
+  // ── Outflows from the cash pool ──
+  // Use of funds split by category (only categories with spend)
+  Object.keys(GEF.UOF_CATS).forEach(function(cat){
+    var v=r.uofByC[cat];
+    if(v>0)flows.push({from:POOL,to:GEF.UOF_CATS[cat],flow:v});
+  });
+  if(r.fees>0)flows.push({from:POOL,to:'Bank Fees',flow:r.fees});
+  if(r.otherExpenses>0)flows.push({from:POOL,to:'Other Expenses',flow:r.otherExpenses});
+  // Investing deployments: negative net means cash left the pool
+  if(c.inv.netMM<0)flows.push({from:POOL,to:'MM Deposits',flow:-c.inv.netMM});
+  if(c.inv.netFD<0)flows.push({from:POOL,to:'New Placements',flow:-c.inv.netFD});
+  // Whatever cash is left at period-end exits as Closing Cash
+  if(c.booked>0)flows.push({from:POOL,to:'Closing Cash',flow:c.booked});
+
+  // If there is essentially nothing to show, render a soft placeholder
+  if(flows.length<2){
+    var par=canvas.parentNode;
+    if(par)par.innerHTML='<p style="color:var(--inkm);font-size:.85rem;padding:24px 0;text-align:center;">Not enough cash activity in this period to draw a Fund Flow chart.</p>';
+    return;
+  }
+
+  // Node colours: greens for sources, teal for pool, gold/red/navy for uses
+  var nodeColors={};
+  nodeColors['Opening Cash']=CLR.inks;
+  nodeColors['Donations']=CLR.grn;
+  nodeColors['Other Income']=CLR.grn;
+  nodeColors['Investment Income']=CLR.gld;
+  nodeColors['MM Redemptions']=CLR.nvy;
+  nodeColors['Placement Redemptions']=CLR.nvy;
+  nodeColors[POOL]=CLR.teal;
+  nodeColors['Bank Fees']=CLR.red;
+  nodeColors['Other Expenses']=CLR.red;
+  nodeColors['MM Deposits']=CLR.nvy;
+  nodeColors['New Placements']=CLR.nvy;
+  nodeColors['Closing Cash']=CLR.grnD;
+  // Category outflows all share the gold/brown tone for spending
+  Object.values(GEF.UOF_CATS).forEach(function(lbl){if(!nodeColors[lbl])nodeColors[lbl]=CLR.brn;});
+
+  // Build column pin map so the chart reads opening to closing left to right
+  var columns={
+    'Opening Cash':0,'Donations':0,'Other Income':0,'Investment Income':0,
+    'MM Redemptions':0,'Placement Redemptions':0,
+    'Cash Pool':1,
+    'Bank Fees':2,'Other Expenses':2,'MM Deposits':2,'New Placements':2,'Closing Cash':2
+  };
+  Object.values(GEF.UOF_CATS).forEach(function(l){if(columns[l]==null)columns[l]=2;});
+
+  S.charts['c-sankey']=new Chart(canvas,{
+    type:'sankey',
+    data:{
+      datasets:[{
+        label:'Fund Flow',
+        data:flows,
+        colorFrom:function(ctx){return nodeColors[ctx.dataset.data[ctx.dataIndex].from]||CLR.inks;},
+        colorTo:function(ctx){return nodeColors[ctx.dataset.data[ctx.dataIndex].to]||CLR.inks;},
+        colorMode:'gradient',
+        column:columns,
+        font:{family:'Geist, sans-serif',size:11,weight:'500'},
+        borderWidth:0,
+        nodeWidth:14,
+        size:'max'
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          titleFont:{family:'Geist, sans-serif',weight:'600'},
+          bodyFont:{family:'Geist, sans-serif'},
+          callbacks:{
+            label:function(ct){
+              var d=ct.dataset.data[ct.dataIndex];
+              return d.from+' to '+d.to+': '+GEF.fmtM(d.flow);
+            }
+          }
+        }
+      }
+    }
+  });
 }
 
 

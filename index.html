@@ -384,7 +384,7 @@ body.dark .erow{background:var(--bge)}
 <body>
 <div id="offline-banner" class="offline-banner">You're offline &mdash; showing cached data</div>
 <div id="ptr-indicator" class="ptr-indicator"><svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Refreshing&hellip;</div>
-<div id="sw-banner" class="sw-banner hidden">New version available. <a href="" onclick="location.reload()">Refresh</a> to update.</div>
+<div id="sw-banner" class="sw-banner hidden">New version available. <a href="" onclick="event.preventDefault();(('caches' in window)?caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k);}))}).then(function(){location.reload(true)}).catch(function(){location.reload(true)}):location.reload(true))">Refresh</a> to update.</div>
 <div id="update-banner" class="update-banner hidden">
   <span id="update-banner-msg"></span>
   <button id="update-banner-btn" class="update-banner-btn">Update now</button>
@@ -474,13 +474,13 @@ body.dark .erow{background:var(--bge)}
     <div class="aprv-hint">Click any highlighted text to edit &middot; changes are saved to this draft</div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.16.2</div>
+<div class="ver" id="ver-badge">V1.16.3</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.16.2';
+const APP_VERSION='V1.16.3';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -2658,7 +2658,8 @@ function buildPdfHtml(pdfMode,dp){
   // All CSS vars resolved to literals so they work in a detached document
   var css=
 '*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff}'
-+'body{font-family:"Geist","Inter",system-ui,sans-serif;color:#0D1F15;line-height:1.5;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
++'html{width:1280px;min-width:1280px;}'
++'body{font-family:"Geist","Inter",system-ui,sans-serif;color:#0D1F15;line-height:1.5;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;width:1280px;min-width:1280px;overflow-x:hidden;}'
 +'h1,h2,h3{font-family:"Fraunces","Times New Roman",serif;font-weight:500;letter-spacing:-.01em;margin:0}'
 +'h2{font-size:1.55rem;font-weight:700;color:#004D37;letter-spacing:-.01em}'
 +'h3{font-size:1.05rem;font-family:"Geist","Inter",system-ui,sans-serif;font-weight:600;letter-spacing:0}'
@@ -3078,19 +3079,61 @@ function openPdfPreview(mode){
   if(!dp){toast('No report to download','err');return;}
   if(pdfMode==='dashboard'&&S.tab!=='dashboard')setTab('dashboard');
   else if(pdfMode==='report'&&S.tab!=='report')setTab('report');
-  var pdfDelay=S.viewMode==='ytd'?1100:600;
+
+  // ── Mobile rendering fix ──
+  // Chart.js draws canvases at their parent container's width. On mobile, that
+  // width is ~360px. When buildPdfHtml clones those canvases as PNG images and
+  // places them in the 1280px PDF iframe, they upscale and overflow, causing
+  // charts to be sliced across pages. Force the live containers to 1280px,
+  // let Chart.js resize and redraw, then capture.
+  var needsWiden=window.innerWidth<1280;
+  var srcId=pdfMode==='dashboard'?'dash-content':'rpt-content';
+  var srcEl=document.getElementById(srcId);
+  var appMain=document.querySelector('.app-main');
+  var savedSrc='',savedMain='',savedBodyOv='';
+  if(needsWiden&&srcEl&&appMain){
+    savedSrc=srcEl.getAttribute('style')||'';
+    savedMain=appMain.getAttribute('style')||'';
+    savedBodyOv=document.body.style.overflow||'';
+    document.body.style.overflow='hidden';
+    appMain.style.cssText=(savedMain?savedMain+';':'')+'width:1320px!important;max-width:1320px!important;padding:24px 20px!important;';
+    srcEl.style.cssText=(savedSrc?savedSrc+';':'')+'width:1280px!important;max-width:1280px!important;';
+    // Force every active Chart.js instance to recompute its size
+    Object.keys(S.charts).forEach(function(id){
+      var ch=S.charts[id];
+      if(ch&&typeof ch.resize==='function'){try{ch.resize();}catch(e){}}
+    });
+  }
+  // Charts need a moment to redraw at the new width; mobile gets extra delay.
+  var pdfDelay=(S.viewMode==='ytd'?1100:600)+(needsWiden?900:0);
 
   toast('Preparing PDF\u2026','info');
 
+  function restoreLiveLayout(){
+    if(!needsWiden||!srcEl||!appMain)return;
+    srcEl.setAttribute('style',savedSrc);
+    appMain.setAttribute('style',savedMain);
+    document.body.style.overflow=savedBodyOv;
+    if(!savedSrc)srcEl.removeAttribute('style');
+    if(!savedMain)appMain.removeAttribute('style');
+    Object.keys(S.charts).forEach(function(id){
+      var ch=S.charts[id];
+      if(ch&&typeof ch.resize==='function'){try{ch.resize();}catch(e){}}
+    });
+  }
+
   setTimeout(function(){
     var html=buildPdfHtml(pdfMode,dp);
+    // The canvases have now been captured into the html string; restore the live page.
+    restoreLiveLayout();
     if(!html){toast('Content not found','err');return;}
 
     var pdfName='GEF-'+(pdfMode==='dashboard'?'Dashboard':'Report')+'-'+(S.viewMode==='ytd'?dp.year+'-YTD':dp.id)+'.pdf';
 
-    // Off-screen render iframe — fixed 960px so layout is always desktop width
+    // Off-screen render iframe — absolute (not fixed) so mobile viewport cannot
+    // clip the 1280px width; fixed elements are constrained to the visual viewport.
     var hiddenIframe=document.createElement('iframe');
-    hiddenIframe.style.cssText='position:fixed;left:-9999px;top:0;width:1280px;height:1px;border:none;visibility:hidden;pointer-events:none;';
+    hiddenIframe.style.cssText='position:absolute;left:-9999px;top:0;width:1280px;height:1px;border:none;visibility:hidden;pointer-events:none;';
     document.body.appendChild(hiddenIframe);
 
     var fontsReady=false;
@@ -3374,8 +3417,28 @@ async function boot(){
     });});
     // If a waiting SW exists on load, prompt immediately
     if(reg.waiting){reg.waiting.postMessage({type:'SKIP_WAITING'});document.getElementById('sw-banner').classList.remove('hidden');}
-    // When SW takes control, do a hard reload to get fresh content
-    navigator.serviceWorker.addEventListener('controllerchange',function(){window.location.reload(true);});
+    // When new SW takes control: wipe all caches first so it cannot serve
+    // stale content, then hard-reload to pick up the fresh files.
+    navigator.serviceWorker.addEventListener('controllerchange',function(){
+      var doReload=function(){window.location.reload(true);};
+      if('caches' in window){
+        caches.keys().then(function(keys){
+          return Promise.all(keys.map(function(k){return caches.delete(k);}));
+        }).then(doReload).catch(doReload);
+      }else{doReload();}
+    });
+    // ── Force the browser to check for SW updates on every app open ──
+    // By default the browser only re-checks every 24 hours (or on hard navigation).
+    // Installed PWAs rarely trigger that, so we probe manually.
+    function probeUpdate(){try{reg.update();}catch(e){}}
+    probeUpdate();
+    // Re-probe when the app comes back to the foreground (most reliable trigger
+    // for installed PWAs, which rarely reload).
+    document.addEventListener('visibilitychange',function(){
+      if(document.visibilityState==='visible')probeUpdate();
+    });
+    // Belt-and-braces: probe every 60 seconds while the tab is open.
+    setInterval(probeUpdate,60*1000);
   });}
   // Load fundTarget from localStorage as initial value; loadIndex() will overwrite from GitHub
   S.fundTarget=Number(localStorage.getItem(LS.FT)||0);

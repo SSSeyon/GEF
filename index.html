@@ -474,13 +474,13 @@ body.dark .erow{background:var(--bge)}
     <div class="aprv-hint">Click any highlighted text to edit &middot; changes are saved to this draft</div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.16.0</div>
+<div class="ver" id="ver-badge">V1.16.1</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.16.0';
+const APP_VERSION='V1.16.1';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -2803,8 +2803,7 @@ function buildPdfHtml(pdfMode,dp){
     +'<h1 class="cs-title">Gbago Endowment Fund</h1>'
     +'<div class="cs-sub">'+esc(modeLabel)+(pdfMode==='dashboard'?' Dashboard':' Report')+'</div>'
     +'</div>'
-    +'</section>'
-    +'<div class="pdf-page-break" data-pdf-break="1"></div>';
+    +'</section>';
 
   // ── Final next-steps slide (slide 5 style) — only if data exists ──
   var finalSlide='';

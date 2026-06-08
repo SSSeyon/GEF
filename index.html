@@ -247,7 +247,7 @@ body.dark .login-card,body.dark .modal{background:var(--bgc);border-color:var(--
 body.dark .erow{background:var(--bge)}
 .dm-toggle{background:transparent;border:1px solid rgba(255,255,255,.2);border-radius:999px;color:rgba(255,255,255,.8);padding:5px 9px;cursor:pointer;font-size:.78rem;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:background .15s}
 .dm-toggle:hover{background:rgba(255,255,255,.12)}
-.dm-toggle svg{width:15px;height:15px;flex-shrink:0}
+.dm-toggle{font-size:1rem}
 
 /* ---- PDF preview modal (legacy, unused) ---- */
 .pdf-preview-bg{position:fixed;inset:0;background:rgba(10,20,15,.7);z-index:400;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:0;backdrop-filter:blur(3px)}
@@ -480,7 +480,7 @@ body.dark .erow{background:var(--bge)}
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.17.0';
+const APP_VERSION='V1.17.1';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -3539,11 +3539,7 @@ function openPdfPreview(mode){
 
 // ---- Dark mode ----
 (function(){
-  // Moon: filled crescent (shows in LIGHT mode = click to go dark)
-  var MOON_ICON='<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M21.752 15.002A9.718 9.718 0 0 1 18 15.75 9.75 9.75 0 0 1 8.25 6a9.718 9.718 0 0 1 .248-2.252A9.756 9.756 0 0 0 2.25 12c0 5.385 4.365 9.75 9.75 9.75 4.184 0 7.766-2.631 9.252-6.348z"/></svg>';
-  // Sun: filled circle with rays (shows in DARK mode = click to go light)
-  var SUN_ICON='<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75zM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0zM18.894 6.166a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.591-1.59zM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75zM17.834 18.894a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 1 0-1.061 1.06l1.59 1.591zM12 18a.75.75 0 0 1 .75.75V21a.75.75 0 0 1-1.5 0v-2.25A.75.75 0 0 1 12 18zM7.758 17.303a.75.75 0 0 0-1.061-1.06l-1.591 1.59a.75.75 0 0 0 1.06 1.061l1.591-1.59zM6 12a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h2.25A.75.75 0 0 1 6 12zM6.697 7.757a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 0 0-1.061 1.06l1.59 1.591z"/></svg>';
-  function updateDmIcon(dark){var btn=document.getElementById('dm-toggle');if(btn){btn.innerHTML=(dark?SUN_ICON:MOON_ICON);}}
+  function updateDmIcon(dark){var btn=document.getElementById('dm-toggle');if(btn){btn.textContent=(dark?'☀️':'🌙');}}
   var dm=document.getElementById('dm-toggle');
   var isDark=localStorage.getItem('gef-dark')==='1';
   if(isDark)document.body.classList.add('dark');

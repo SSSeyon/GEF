@@ -2,13 +2,6 @@
   "fundName": "Gbago Endowment Fund",
   "publishedPeriods": [
     {
-      "id": "2026-01",
-      "label": "January 2026",
-      "year": 2026,
-      "month": 1,
-      "publishedAt": "2026-06-04T12:49:04.981Z"
-    },
-    {
       "id": "2026-02",
       "label": "February 2026",
       "year": 2026,
@@ -37,6 +30,6 @@
       "publishedAt": "2026-06-04T11:40:40.703Z"
     }
   ],
-  "lastUpdated": "2026-06-06T08:20:10.901Z",
+  "lastUpdated": "2026-06-11T13:44:26.652Z",
   "fundTarget": 5000000
 }

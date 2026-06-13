@@ -480,7 +480,7 @@ body.dark .erow{background:var(--bge)}
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.17.2';
+const APP_VERSION='V1.17.3';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -3081,6 +3081,30 @@ function loadPdfLibs(cb){
 
 // ---- GitHub-hosted PDF helpers (V1.17.0) ----
 // Returns the GitHub path for a pre-built PDF.
+// Returns true if a canvas slice is effectively blank (all white), so the
+// pagination loop can skip emitting an empty page. Operates on the raw slice
+// canvas before JPEG encoding, so the background is a clean #fff with no noise.
+function isBlankCanvas(cv){
+  try{
+    var w=cv.width,h=cv.height;
+    if(!w||!h)return true;
+    var data=cv.getContext('2d').getImageData(0,0,w,h).data;
+    var totalPx=w*h;
+    var step=Math.max(1,Math.floor(totalPx/150000)); // cap samples for speed
+    var sampled=0,nonWhite=0;
+    for(var i=0;i<totalPx;i+=step){
+      var p=i*4;sampled++;
+      // Near-white counts as blank; ignore faint anti-aliasing noise.
+      if(data[p]<250||data[p+1]<250||data[p+2]<250)nonWhite++;
+    }
+    // Blank only when there is essentially no visible content. A single line of
+    // text far exceeds this fraction, so real (even sparse) pages are kept.
+    return nonWhite<=Math.max(25,sampled*0.0004);
+  }catch(e){
+    return false; // on any error, keep the page rather than risk dropping content
+  }
+}
+
 // pdfMode: 'report' | 'dashboard'
 // dp: display period object (may be a merged YTD period)
 function pdfGhKey(pdfMode,dp){
@@ -3096,6 +3120,10 @@ function renderPdfBlob(pdfMode, forcePeriod, forceViewMode){
   return new Promise(function(resolve, reject){
     // Stash current state
     var prevTab=S.tab, prevViewMode=S.viewMode, prevPeriod=S.period, prevPreview=S.previewPeriod;
+    // Disable chart animation so canvases are fully drawn at capture time
+    // (otherwise donuts/Sankey are captured mid-sweep, leaving blank arcs/breaks).
+    var prevAnim=(window.Chart&&Chart.defaults)?Chart.defaults.animation:undefined;
+    if(window.Chart&&Chart.defaults)Chart.defaults.animation=false;
     // Apply state needed for this render
     S.previewPeriod=null;
     S.period=forcePeriod;
@@ -3122,6 +3150,7 @@ function renderPdfBlob(pdfMode, forcePeriod, forceViewMode){
     var pdfDelay=(forceViewMode==='ytd'?1100:600)+(needsWiden?900:0);
 
     function restoreState(){
+      if(window.Chart&&Chart.defaults)Chart.defaults.animation=prevAnim;
       if(needsWiden&&srcEl&&appMain){
         srcEl.setAttribute('style',savedSrc);
         appMain.setAttribute('style',savedMain);
@@ -3186,7 +3215,7 @@ function renderPdfBlob(pdfMode, forcePeriod, forceViewMode){
               }
               return candidate;
             }
-            var srcYpx=0,pageIndex=0,maxSliceHpx=Math.round(usableH*pxPerMm);
+            var srcYpx=0,pagesAdded=0,maxSliceHpx=Math.round(usableH*pxPerMm);
             while(srcYpx<canvas.height){
               var nextBrk=null;
               for(var bi=0;bi<brkCvs.length;bi++){if(brkCvs[bi]>srcYpx+5){nextBrk=brkCvs[bi];break;}}
@@ -3200,9 +3229,11 @@ function renderPdfBlob(pdfMode, forcePeriod, forceViewMode){
               var sc=document.createElement('canvas');sc.width=canvas.width;sc.height=sliceHpx;
               var ctx=sc.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,sc.width,sc.height);
               ctx.drawImage(canvas,0,srcYpx,canvas.width,sliceHpx,0,0,sc.width,sc.height);
-              if(pageIndex>0)doc.addPage();
+              srcYpx=sliceEnd;
+              if(isBlankCanvas(sc))continue; // skip empty pages
+              if(pagesAdded>0)doc.addPage();
               doc.addImage(sc.toDataURL('image/jpeg',0.95),'JPEG',margin,margin,imgW,sliceMm);
-              srcYpx=sliceEnd;pageIndex++;
+              pagesAdded++;
             }
             cleanup();
             resolve(doc.output('arraybuffer'));
@@ -3347,6 +3378,9 @@ function openPdfPreview(mode){
   var pdfMode=mode||'report';
   var dp=getDisplayPeriod();
   if(!dp){toast('No report to download','err');return;}
+  // Disable chart animation so canvases are fully drawn at capture time.
+  var prevAnim=(window.Chart&&Chart.defaults)?Chart.defaults.animation:undefined;
+  if(window.Chart&&Chart.defaults)Chart.defaults.animation=false;
   if(pdfMode==='dashboard'&&S.tab!=='dashboard')setTab('dashboard');
   else if(pdfMode==='report'&&S.tab!=='report')setTab('report');
 
@@ -3380,6 +3414,7 @@ function openPdfPreview(mode){
   toast('Preparing PDF\u2026','info');
 
   function restoreLiveLayout(){
+    if(window.Chart&&Chart.defaults)Chart.defaults.animation=prevAnim;
     if(!needsWiden||!srcEl||!appMain)return;
     srcEl.setAttribute('style',savedSrc);
     appMain.setAttribute('style',savedMain);
@@ -3539,9 +3574,10 @@ function openPdfPreview(mode){
             var ctx=sc.getContext('2d');
             ctx.fillStyle='#ffffff';ctx.fillRect(0,0,sc.width,sc.height);
             ctx.drawImage(canvas,0,srcYpx,canvas.width,sliceHpx,0,0,sc.width,sc.height);
+            srcYpx=sliceEnd;
+            if(isBlankCanvas(sc))continue;// skip empty pages
             if(pageIndex>0)doc.addPage();
             doc.addImage(sc.toDataURL('image/jpeg',0.95),'JPEG',margin,margin,imgW,sliceMm);
-            srcYpx=sliceEnd;
             pageIndex++;
           }
           doc.save(pdfName);

@@ -167,6 +167,26 @@ p{margin:0 0 .8em}a{color:var(--grn)}
 .muted{color:var(--inkm)}
 .empty-s{text-align:center;padding:40px 20px;color:var(--inkm)}
 .empty-s h3{font-family:var(--fs);margin-bottom:8px;color:var(--inks)}
+.empty-s svg{width:44px;height:44px;stroke:var(--lnk);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-bottom:8px}
+.hist-hd{margin-bottom:18px}
+.hist-hd h1{font-family:var(--fs);font-size:1.8rem;font-weight:600;color:var(--grnd);margin:0 0 4px}
+.hist-hd p{color:var(--inkm);font-size:.9rem;margin:0}
+.hist-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px}
+.hs-box{background:var(--bgc);border:1px solid var(--ln);border-radius:var(--r);padding:14px 16px}
+.hs-box .hs-k{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--inkm);margin-bottom:4px}
+.hs-box .hs-v{font-family:var(--fs);font-size:1.35rem;font-weight:500;color:var(--ink);line-height:1}
+.hist-list{display:flex;flex-direction:column;gap:12px}
+.hist-card{display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:var(--bgc);border:1px solid var(--ln);border-radius:var(--rl);padding:16px 20px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.hist-card:hover{border-color:var(--grn);box-shadow:var(--sh)}
+.hc-main{min-width:150px;flex:1 1 150px}
+.hc-title{font-family:var(--fs);font-size:1.1rem;font-weight:600;color:var(--grnd)}
+.hc-sub{font-size:.74rem;color:var(--inkm);margin-top:2px}
+.hc-figs{display:flex;gap:22px;flex:2 1 320px}
+.hc-fig{display:flex;flex-direction:column}
+.hc-fig .hc-k{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--inkm);margin-bottom:2px}
+.hc-fig .hc-val{font-size:1rem;font-weight:600;color:var(--ink)}
+.hc-actions{display:flex;gap:8px;flex:0 0 auto}
+@media(max-width:640px){.hc-figs{gap:16px;flex-basis:100%}.hc-actions{flex-basis:100%}.hc-actions .btn{flex:1}}
 .hidden{display:none!important}
 .ver{position:fixed;bottom:8px;right:12px;font-size:.65rem;color:var(--inkm);letter-spacing:.08em;z-index:50;pointer-events:none}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--grnd);color:#fff;padding:10px 20px;border-radius:999px;font-size:.88rem;box-shadow:var(--sh);z-index:200;opacity:0;transition:opacity .25s}
@@ -410,6 +430,10 @@ body.dark .erow{background:var(--bge)}
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
       Report
     </button>
+    <button class="tab-btn" data-tab="history">
+      <svg viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><polyline points="12 7 12 12 15 15"/></svg>
+      History
+    </button>
     <button class="tab-btn" data-tab="settings">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Settings
@@ -423,6 +447,7 @@ body.dark .erow{background:var(--bge)}
 <main class="app-main">
   <div id="tab-dashboard" class="tab-pane active"><div id="dash-content"></div></div>
   <div id="tab-report"    class="tab-pane"><div id="rpt-content"></div></div>
+  <div id="tab-history"   class="tab-pane"><div id="history-content"></div></div>
   <div id="tab-admin"     class="tab-pane"><div id="adm-content"></div></div>
   <div id="tab-settings"  class="tab-pane"><div id="cfg-content"></div></div>
 </main>
@@ -435,6 +460,10 @@ body.dark .erow{background:var(--bge)}
   <button class="bnav-btn" data-tab="report">
     <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
     Report
+  </button>
+  <button class="bnav-btn" data-tab="history">
+    <svg viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><polyline points="12 7 12 12 15 15"/></svg>
+    History
   </button>
   <button class="bnav-btn" data-tab="settings">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -476,13 +505,13 @@ body.dark .erow{background:var(--bge)}
     <div class="aprv-hint">Click any highlighted text to edit &middot; changes are saved to this draft</div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.18.0</div>
+<div class="ver" id="ver-badge">V1.19.0</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.18.0';
+const APP_VERSION='V1.19.0';
 const GEMINI_MODEL='gemini-2.5-flash';
 
 const GEF=(function(){
@@ -773,6 +802,7 @@ function setTab(t){
   });
   if(t==='dashboard')renderDash();
   else if(t==='report')renderReport();
+  else if(t==='history')renderHistory();
   else if(t==='admin')renderAdmin();
   else if(t==='settings')renderSettings();
 }
@@ -871,7 +901,12 @@ function calcCumulativeDonations(){
   var total=0;
   var seen=new Set();
   (S.pubIdx&&S.pubIdx.publishedPeriods||[]).forEach(function(pp){
-    if(!seen.has(pp.id)){seen.add(pp.id);var loaded=S.loadedPeriods[pp.id];if(loaded)total+=GEF.sum(loaded.donations||[],'amount');}
+    if(seen.has(pp.id))return;seen.add(pp.id);
+    var loaded=S.loadedPeriods[pp.id];
+    // Prefer exact figures from a loaded period; otherwise use the donations
+    // total stored in index.json at publish time (keeps prior years correct
+    // even though only the current year is prefetched).
+    total+=loaded?GEF.sum(loaded.donations||[],'amount'):(Number(pp.donations)||0);
   });
   Object.keys(S.drafts).forEach(function(id){if(!seen.has(id)){seen.add(id);total+=GEF.sum(S.drafts[id].donations||[],'amount');}});
   return total;
@@ -894,6 +929,7 @@ function buildToolbarHtml(includePdfShare){
   var toolbar='<div class="pg-toolbar">';
   if(includePdfShare){
     toolbar+='<button class="btn gh sm tb-share-btn"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg><span>Share</span></button>';
+    toolbar+='<button class="btn gh sm tb-wa-btn"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.2 0 4.27.86 5.82 2.42a8.2 8.2 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.25 8.24a8.23 8.23 0 0 1-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24zm-3.77 4.4c-.18 0-.47.07-.72.34-.24.27-.94.92-.94 2.24s.96 2.6 1.1 2.78c.13.18 1.88 2.87 4.57 3.92 2.24.88 2.69.7 3.18.66.49-.05 1.58-.65 1.8-1.27.22-.62.22-1.15.16-1.27-.07-.11-.24-.18-.5-.31-.27-.14-1.58-.78-1.82-.87-.25-.09-.43-.14-.61.14-.18.27-.7.86-.86 1.04-.16.18-.31.2-.58.07-.27-.14-1.13-.42-2.15-1.33-.8-.71-1.33-1.58-1.49-1.85-.16-.27-.02-.42.12-.55.12-.12.27-.31.4-.47.14-.16.18-.27.27-.45.09-.18.05-.34-.02-.48-.07-.14-.6-1.47-.85-2.01-.2-.43-.42-.44-.6-.45h-.5z"/></svg><span>WhatsApp</span></button>';
     toolbar+='<button class="btn gh sm tb-pdf-btn">Download PDF</button>';
   }
   if(optHtml){
@@ -907,6 +943,8 @@ function buildToolbarHtml(includePdfShare){
 function wireToolbar(el){
   var shareBtns=el.querySelectorAll('.tb-share-btn');
   shareBtns.forEach(function(b){b.addEventListener('click',copyShareLink);});
+  var waBtns=el.querySelectorAll('.tb-wa-btn');
+  waBtns.forEach(function(b){b.addEventListener('click',shareWhatsApp);});
   var pdfBtns=el.querySelectorAll('.tb-pdf-btn');
   pdfBtns.forEach(function(b){b.addEventListener('click',function(){downloadPdf(S.tab==='dashboard'?'dashboard':'report');});});
   var periodSels=el.querySelectorAll('.tb-period-sel');
@@ -931,6 +969,105 @@ function copyShareLink(){
   var url=window.location.href.split('#')[0]+'#'+pid+':'+mode;
   if(navigator.clipboard){navigator.clipboard.writeText(url).then(function(){toast('Link copied to clipboard','ok');}).catch(function(){toast('Could not copy link','err');});}
   else{var ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Link copied','ok');}
+}
+// ---- WhatsApp share ----
+// Opens WhatsApp with a pre-composed summary + deep link. The community shares
+// reports by WhatsApp, so this is the primary distribution route.
+function shareWhatsApp(){
+  var dp=getDisplayPeriod();
+  if(!dp){toast('Nothing to share yet','err');return;}
+  var b=GEF.bs(dp),r=GEF.pnl(dp);
+  var lbl=S.viewMode==='ytd'?('Year to Date '+dp.year):GEF.pLabel(dp);
+  var donors=(dp.donations||[]).length;
+  var url=window.location.href.split('#')[0]+'#'+(S.pid||dp.id)+':'+(S.viewMode||'month');
+  var lines=[
+    'Gbago Endowment Fund — '+lbl,
+    'Net assets: '+GEF.fmtM(b.netAssets),
+    'Donations: '+GEF.fmtM(r.donations)+(donors?(' from '+donors+' contributor'+(donors===1?'':'s')):''),
+    'Deployed: '+GEF.fmtM(r.totalUof),
+    '',
+    'Full report: '+url
+  ];
+  window.open('https://wa.me/?text='+encodeURIComponent(lines.join('\n')),'_blank');
+}
+
+// ---- History (public archive) ----
+function renderHistory(){
+  var el=document.getElementById('history-content');
+  if(!el)return;
+  var periods=((S.pubIdx&&S.pubIdx.publishedPeriods)||[]).slice().sort(function(a,b){return b.id.localeCompare(a.id);});
+  if(!periods.length){
+    el.innerHTML='<div class="empty-s"><svg viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><polyline points="12 7 12 12 15 15"/></svg><h3>No published reports yet</h3><p>Published periods will appear here as an archive.</p></div>';
+    return;
+  }
+  var cumDon=calcCumulativeDonations();
+  var latestNet=periods[0]&&periods[0].netAssets!=null?periods[0].netAssets:(S.loadedPeriods[periods[0].id]?GEF.bs(S.loadedPeriods[periods[0].id]).netAssets:null);
+  var html='';
+  html+='<div class="hist-hd"><h1>Report History</h1><p>Every published period. Tap a card to open the full report, or download its PDF.</p></div>';
+  html+='<div class="hist-summary">'
+    +'<div class="hs-box"><div class="hs-k">Periods published</div><div class="hs-v num">'+periods.length+'</div></div>'
+    +'<div class="hs-box"><div class="hs-k">Raised (all time)</div><div class="hs-v num">'+GEF.fmtM(cumDon)+'</div></div>'
+    +(latestNet!=null?'<div class="hs-box"><div class="hs-k">Current net assets</div><div class="hs-v num">'+GEF.fmtM(latestNet)+'</div></div>':'')
+    +'</div>';
+  html+='<div class="hist-list">';
+  periods.forEach(function(pp){
+    var loaded=S.loadedPeriods[pp.id];
+    var na=pp.netAssets,dn=pp.donations,dep=pp.deployed;
+    if(loaded){na=GEF.bs(loaded).netAssets;var rr=GEF.pnl(loaded);dn=rr.donations;dep=rr.totalUof;}
+    var lbl=pp.label||GEF.pLabel(pp);
+    var pub=pp.publishedAt?new Date(pp.publishedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
+    html+='<div class="hist-card" data-id="'+esc(pp.id)+'">'
+      +'<div class="hc-main"><div class="hc-title">'+esc(lbl)+'</div>'+(pub?'<div class="hc-sub">Published '+esc(pub)+'</div>':'')+'</div>'
+      +'<div class="hc-figs">'
+      +'<div class="hc-fig"><span class="hc-k">Net assets</span><span class="hc-val num" data-k="net">'+(na!=null?GEF.fmtM(na):'–')+'</span></div>'
+      +'<div class="hc-fig"><span class="hc-k">Donations</span><span class="hc-val num" data-k="don">'+(dn!=null?GEF.fmtM(dn):'–')+'</span></div>'
+      +'<div class="hc-fig"><span class="hc-k">Deployed</span><span class="hc-val num" data-k="dep">'+(dep!=null?GEF.fmtM(dep):'–')+'</span></div>'
+      +'</div>'
+      +'<div class="hc-actions">'
+      +'<button class="btn sm hc-view" data-id="'+esc(pp.id)+'">View</button>'
+      +'<button class="btn gh sm hc-pdf" data-id="'+esc(pp.id)+'">PDF</button>'
+      +'</div>'
+      +'</div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+  function openPeriod(id){S.previewPeriod=null;S.viewMode='month';loadAndRender(id);setTab('report');}
+  el.querySelectorAll('.hc-view').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();openPeriod(b.getAttribute('data-id'));});});
+  el.querySelectorAll('.hc-pdf').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();downloadHistoryPdf(b.getAttribute('data-id'));});});
+  el.querySelectorAll('.hist-card').forEach(function(c){c.addEventListener('click',function(){openPeriod(c.getAttribute('data-id'));});});
+  // Backfill figures for periods published before summaries were stored in the index.
+  periods.forEach(function(pp){
+    if(pp.netAssets!=null||S.loadedPeriods[pp.id])return;
+    fetchJSON('data/periods/'+pp.id+'.json').then(function(d){
+      S.loadedPeriods[pp.id]=d;
+      var card=el.querySelector('.hist-card[data-id="'+pp.id+'"]');
+      if(!card)return;
+      var b=GEF.bs(d),rr=GEF.pnl(d);
+      var nv=card.querySelector('[data-k="net"]');if(nv)nv.textContent=GEF.fmtM(b.netAssets);
+      var dv=card.querySelector('[data-k="don"]');if(dv)dv.textContent=GEF.fmtM(rr.donations);
+      var pv=card.querySelector('[data-k="dep"]');if(pv)pv.textContent=GEF.fmtM(rr.totalUof);
+    }).catch(function(){});
+  });
+}
+// Download a specific period's pre-built report PDF (used by the History cards).
+async function downloadHistoryPdf(id){
+  var ghPath='data/pdfs/GEF-Report-'+id+'.pdf';
+  var pdfName=ghPath.split('/').pop();
+  toast('Fetching report…','info');
+  try{
+    var resp=await fetch(ghPath+'?t='+Date.now(),{cache:'no-store'});
+    if(resp.ok){
+      var blob=await resp.blob();
+      if(blob&&blob.size>1000&&(blob.type||'').indexOf('html')===-1){triggerBlobDownload(blob,pdfName);toast('Report downloaded','ok');return;}
+    }
+  }catch(e){}
+  // No pre-built file — open the period and fall back to the standard generator.
+  toast('Preparing report…','info');
+  try{
+    if(!S.loadedPeriods[id]){var d=await fetchJSON('data/periods/'+id+'.json');S.loadedPeriods[id]=d;}
+    S.previewPeriod=null;S.viewMode='month';loadAndRender(id);setTab('report');
+    setTimeout(function(){downloadPdf('report');},400);
+  }catch(e){toast('Could not load report','err');}
 }
 
 // ---- Dashboard ----
@@ -1124,6 +1261,11 @@ function getTrendPeriods(year,uptoId){
 var DL_PLUGIN={id:'dataLabels',afterDatasetsDraw:function(chart){
   var ctx=chart.ctx;
   var type=chart.config.type;
+  // Value labels sit on the chart-area background, which is dark in dark mode.
+  // Use lighter ink there so they stay legible; PDF export forces light theme.
+  var dark=document.body.classList.contains('dark');
+  var posColor=dark?'#6FD3AC':'#004D37';
+  var negColor=dark?'#F0928A':'#A33A2E';
   chart.data.datasets.forEach(function(ds,di){
     var meta=chart.getDatasetMeta(di);
     if(meta.hidden||ds.label==='_b')return;
@@ -1149,7 +1291,7 @@ var DL_PLUGIN={id:'dataLabels',afterDatasetsDraw:function(chart){
         var val=ds.data[idx];
         if(val==null)return;
         var lbl='\u20A6'+(Math.abs(Number(val))/1000).toFixed(0)+'k';
-        ctx.save();ctx.fillStyle='#004D37';ctx.font='600 10px Geist,sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';
+        ctx.save();ctx.fillStyle=posColor;ctx.font='600 10px Geist,sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';
         ctx.fillText(lbl,pt.x,pt.y-6);ctx.restore();
       });
     } else {
@@ -1160,7 +1302,7 @@ var DL_PLUGIN={id:'dataLabels',afterDatasetsDraw:function(chart){
         var x=bar.x,y=bar.y;
         var isNeg=Number(val)<0;
         var lbl='\u20A6'+(Math.abs(Number(val))/1000).toFixed(0)+'k';
-        ctx.save();ctx.fillStyle=isNeg?'#A33A2E':'#004D37';ctx.font='600 10px Geist,sans-serif';ctx.textAlign='center';
+        ctx.save();ctx.fillStyle=isNeg?negColor:posColor;ctx.font='600 10px Geist,sans-serif';ctx.textAlign='center';
         ctx.fillText(lbl,x,isNeg?y+14:y-6);ctx.restore();
       });
     }
@@ -1505,7 +1647,7 @@ function buildRptCharts(r,b,c,p){
             if(val==null||val===0)return;
             var lbl=GEF.fmtM(val,true);
             var topY=Math.min(bar.y,bar.base);
-            ctx.save();ctx.fillStyle='#0D1F15';ctx.font='600 10px Geist,sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';
+            ctx.save();ctx.fillStyle=document.body.classList.contains('dark')?'#E8EEE9':'#0D1F15';ctx.font='600 10px Geist,sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';
             ctx.fillText(lbl,bar.x,topY-4);ctx.restore();
           });
         }}],
@@ -2701,6 +2843,15 @@ async function publish(){
   if(!narr.balanceSheet)checks.push({pass:null,msg:'Balance Sheet narration is empty'});
   if(!(p.nextSteps||[]).length)checks.push({pass:null,msg:'No priority cards (next steps) added'});
   if(!(p.keyActivities||[]).length)checks.push({pass:null,msg:'No key activities added'});
+  // Flag any dated entry that falls outside this period's month (p.id is YYYY-MM).
+  var oop=[];
+  function chkDate(d,label){if(d&&String(d).slice(0,7)!==p.id)oop.push(label+' ('+d+')');}
+  (p.donations||[]).forEach(function(x){chkDate(x.date,'Donation'+(x.donor?' '+x.donor:''));});
+  (p.otherIncome||[]).forEach(function(x){chkDate(x.date,'Other income');});
+  (p.useOfFunds||[]).forEach(function(x){chkDate(x.date,'Deployment'+(x.beneficiary?' '+x.beneficiary:''));});
+  (p.otherExpenses||[]).forEach(function(x){chkDate(x.date,'Other expense');});
+  [].concat(p.cashAccounts||[],p.moneyMarketAccounts||[],p.placements||[]).forEach(function(a){(a.transactions||[]).forEach(function(t){chkDate(t.date,(a.name||'Account')+' '+t.type);});});
+  if(oop.length){var oopShown=oop.slice(0,6).join(', ')+(oop.length>6?' +'+(oop.length-6)+' more':'');checks.push({pass:null,msg:oop.length+' entr'+(oop.length>1?'ies':'y')+' dated outside '+p.id+': '+oopShown});}
   var failures=checks.filter(function(c){return c.pass===false;});
   var warnings=checks.filter(function(c){return c.pass===null;});
   if(failures.length){
@@ -2723,12 +2874,26 @@ async function publish(){
     await ghPut(pp,JSON.stringify(toSave,null,2),'Publish '+p.id,existing&&existing.sha);
     var idx;try{idx=idxFile?JSON.parse(decodeURIComponent(escape(atob(idxFile.content.replace(/\n/g,''))))):S.pubIdx;}catch(e){idx=S.pubIdx;}
     idx.publishedPeriods=(idx.publishedPeriods||[]).filter(function(pp){return pp.id!==p.id;});
-    idx.publishedPeriods.push({id:p.id,label:p.label||GEF.pLabel(p),year:p.year,month:p.month,publishedAt:toSave.publishedAt});
+    // Store per-period summary figures so the History page and the all-time
+    // donations total can render without fetching every period file.
+    var b=GEF.bs(p);
+    idx.publishedPeriods.push({id:p.id,label:p.label||GEF.pLabel(p),year:p.year,month:p.month,publishedAt:toSave.publishedAt,netAssets:Math.round(b.netAssets),donations:Math.round(r.donations),deployed:Math.round(r.totalUof)});
     idx.publishedPeriods.sort(function(a,b){return a.id.localeCompare(b.id);});idx.lastUpdated=new Date().toISOString();
+    // Running all-time donations total (self-heals as older periods are re-published).
+    idx.cumulativeDonations=idx.publishedPeriods.reduce(function(s,pp){return s+(Number(pp.donations)||0);},0);
     await ghPut('data/index.json',JSON.stringify(idx,null,2),'Update index for '+p.id,idxFile&&idxFile.sha);
     delete S.drafts[p.id];saveDrafts();S.pubIdx=idx;
+    // Seed the just-published data so PDF generation uses it directly rather than
+    // waiting ~60s for GitHub Pages to serve the new file.
+    S.loadedPeriods[p.id]=JSON.parse(JSON.stringify(toSave));
     if(S.previewPeriod&&S.previewPeriod.id===p.id)S.previewPeriod=null;
-    toast('Published. GitHub Pages may take ~60s to update.','ok');renderAdmPeriodList();loadIndex();
+    renderAdmPeriodList();
+    // Regenerate and upload the pre-built PDFs so users never download a stale
+    // (especially YTD) report. Runs inline as part of publishing.
+    toast('Published. Generating report PDFs…','ok');
+    try{await generateAndUploadPdfs({id:p.id,year:p.year,month:p.month});}
+    catch(e){toast('Published, but PDF upload failed: '+e.message,'err');}
+    loadIndex();
   }catch(e){toast('Publish failed: '+e.message,'err');}
 }
 async function unpublish(id){
@@ -3060,6 +3225,160 @@ function loadPdfLibs(cb){
   done();
 }
 
+// ---- Shared PDF renderer (per-slide) ----
+// Takes a self-contained HTML string (from buildPdfHtml) and returns a jsPDF
+// document. Renders each section to its own canvas and flows them onto A4
+// landscape pages, so no single giant canvas is ever created (this is what
+// blanked out long reports on iOS Safari, which caps canvas area ~16.7M px).
+// Both the upload path (renderPdfBlob) and the on-device download path
+// (openPdfPreview) go through here, so the pagination logic lives in one place.
+function htmlToPdfDoc(html){
+  return new Promise(function(resolve,reject){
+    loadPdfLibs(function(err){
+      if(err){reject(err);return;}
+      var iframe=document.createElement('iframe');
+      iframe.style.cssText='position:absolute;left:-9999px;top:0;width:1280px;height:1px;border:none;visibility:hidden;pointer-events:none;';
+      document.body.appendChild(iframe);
+      function cleanup(){try{document.body.removeChild(iframe);}catch(e){}}
+      try{iframe.contentDocument.open();iframe.contentDocument.write(html);iframe.contentDocument.close();}
+      catch(e){cleanup();reject(e);return;}
+      var started=false;
+      function go(){
+        if(started)return;started=true;
+        pdfWaitReady(iframe).then(function(){
+          return buildPdfPages(iframe);
+        }).then(function(doc){cleanup();resolve(doc);})
+          .catch(function(e){cleanup();reject(e);});
+      }
+      iframe.onload=go;
+      // doc.write() may not always fire onload; fall back after a short beat.
+      setTimeout(go,300);
+    });
+  });
+}
+
+// Resolve once fonts and images inside the iframe are ready (deterministic,
+// replacing the old fixed 900ms/2500ms timeout guesses). Each wait is capped so
+// a slow or blocked resource can never hang the export.
+function pdfWaitReady(iframe){
+  return new Promise(function(resolve){
+    var done=false;
+    function fin(){if(done)return;done=true;resolve();}
+    var cap=setTimeout(fin,4000);
+    try{
+      var doc=iframe.contentDocument;
+      var fontsP=(doc.fonts&&doc.fonts.ready)?doc.fonts.ready:Promise.resolve();
+      fontsP.then(function(){return pdfWaitImages(doc);}).then(function(){clearTimeout(cap);fin();},function(){clearTimeout(cap);fin();});
+    }catch(e){clearTimeout(cap);fin();}
+  });
+}
+function pdfWaitImages(doc){
+  return new Promise(function(resolve){
+    var imgs=Array.prototype.slice.call(doc.images||[]);
+    var pending=imgs.filter(function(im){return !im.complete;});
+    if(!pending.length)return resolve();
+    var left=pending.length,done=false;
+    function one(){left--;if(left<=0&&!done){done=true;resolve();}}
+    var cap=setTimeout(function(){if(!done){done=true;resolve();}},3000);
+    pending.forEach(function(im){im.addEventListener('load',one);im.addEventListener('error',one);});
+  });
+}
+
+// Build the jsPDF document by capturing each render unit individually and
+// packing them onto pages. A "unit" is a full-page slide (cover / next-steps /
+// glossary) or a content block (report header, each section, dashboard block).
+async function buildPdfPages(iframe){
+  var renderDoc=iframe.contentDocument||iframe.contentWindow.document;
+  var root=renderDoc.documentElement;
+  // Give layout a tick to settle at full height.
+  root.scrollTop=0;
+  var JsPDF=window.jspdf?window.jspdf.jsPDF:(window.jsPDF);
+  var doc=new JsPDF({unit:'mm',format:'a4',orientation:'landscape'});
+  var pageW=doc.internal.pageSize.getWidth();
+  var pageH=doc.internal.pageSize.getHeight();
+  var margin=12,imgW=pageW-margin*2,usableH=pageH-margin*2,gap=5;
+  var REF=1280,mmPerPx=imgW/REF;
+
+  function absLeft(el){var l=0,n=el;while(n&&n!==root){l+=n.offsetLeft||0;n=n.offsetParent;}return l;}
+
+  // Collect units in document order.
+  var units=[];
+  function pushUnit(el,opts){opts=opts||{};if(!el.offsetHeight&&!opts.fullPage)return;units.push({el:el,breakBefore:!!opts.breakBefore,fullPage:!!opts.fullPage});}
+  Array.prototype.forEach.call(renderDoc.body.children,function(node){
+    var cls=node.classList;
+    if(cls.contains('cover-slide')){pushUnit(node,{fullPage:true});}
+    else if(cls.contains('final-slide')||cls.contains('glossary-slide')){pushUnit(node,{fullPage:true,breakBefore:true});}
+    else if(cls.contains('pdf-page-break')){/* handled by the slide that follows */}
+    else if(cls.contains('pdf-wrap')){
+      Array.prototype.forEach.call(node.children,function(ch){
+        if(ch.classList.contains('pdf-header')){pushUnit(ch,{});}
+        else if(ch.id==='rpt-content'||ch.id==='dash-content'){
+          Array.prototype.forEach.call(ch.children,function(sec){pushUnit(sec,{breakBefore:sec.hasAttribute('data-pdf-break')});});
+        }else{pushUnit(ch,{breakBefore:ch.hasAttribute&&ch.hasAttribute('data-pdf-break')});}
+      });
+    }
+    else{pushUnit(node,{breakBefore:node.hasAttribute&&node.hasAttribute('data-pdf-break')});}
+  });
+  // Keep the report header on the same page as the first section below it.
+  for(var i=0;i<units.length-1;i++){
+    if(units[i].el.classList.contains('pdf-header')){units[i+1].breakBefore=false;break;}
+  }
+
+  async function capture(el){
+    return await html2canvas(el,{scale:2,useCORS:true,allowTaint:false,logging:false,backgroundColor:'#ffffff',windowWidth:REF,scrollX:0,scrollY:0});
+  }
+
+  var cursorY=margin,pageEmpty=true,pendingBreak=false;
+  function newPage(){doc.addPage();cursorY=margin;pageEmpty=true;}
+
+  for(var u=0;u<units.length;u++){
+    var unit=units[u];
+    var canvas=await capture(unit.el);
+    if(!canvas||!canvas.width||!canvas.height)continue;
+    var cssW=canvas.width/2,cssH=canvas.height/2; // captured at scale:2
+    var wantBreak=unit.breakBefore||pendingBreak;
+    pendingBreak=false;
+
+    if(unit.fullPage){
+      if(!pageEmpty)newPage();
+      var fit=Math.min(imgW/cssW,usableH/cssH);
+      var fw=cssW*fit,fh=cssH*fit;
+      var fx=margin+(imgW-fw)/2,fy=margin+(usableH-fh)/2;
+      doc.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',fx,fy,fw,fh);
+      pageEmpty=false;pendingBreak=true; // next content starts on a fresh page
+      continue;
+    }
+
+    var xMm=margin+absLeft(unit.el)*mmPerPx;
+    var wMm=cssW*mmPerPx,hMm=cssH*mmPerPx;
+    if(wantBreak&&!pageEmpty)newPage();
+
+    if(hMm>usableH){
+      // Section taller than a page — slice this (bounded) canvas across pages.
+      if(!pageEmpty)newPage();
+      var pxPerMm=canvas.height/hMm;
+      var pageSlicePx=Math.floor(usableH*pxPerMm);
+      var y=0;
+      while(y<canvas.height){
+        var hpx=Math.min(pageSlicePx,canvas.height-y);
+        var sc=renderDoc.createElement('canvas');sc.width=canvas.width;sc.height=hpx;
+        var sctx=sc.getContext('2d');sctx.fillStyle='#ffffff';sctx.fillRect(0,0,sc.width,hpx);
+        sctx.drawImage(canvas,0,y,canvas.width,hpx,0,0,sc.width,hpx);
+        doc.addImage(sc.toDataURL('image/jpeg',0.95),'JPEG',xMm,margin,wMm,hpx/pxPerMm);
+        y+=hpx;
+        if(y<canvas.height)doc.addPage();
+      }
+      cursorY=margin;pageEmpty=false;pendingBreak=true;
+      continue;
+    }
+
+    if(!pageEmpty&&(cursorY-margin)+hMm>usableH)newPage();
+    doc.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',xMm,cursorY,wMm,hMm);
+    cursorY+=hMm+gap;pageEmpty=false;
+  }
+  return doc;
+}
+
 // ---- Admin PDF Proof Preview ----
 // Opens a full-screen overlay showing the PDF exactly as it will download,
 // with highlighted editable regions (exec summary + narrations) that admin
@@ -3220,30 +3539,6 @@ function loadPdfLibs(cb){
 
 // ---- GitHub-hosted PDF helpers (V1.17.0) ----
 // Returns the GitHub path for a pre-built PDF.
-// Returns true if a canvas slice is effectively blank (all white), so the
-// pagination loop can skip emitting an empty page. Operates on the raw slice
-// canvas before JPEG encoding, so the background is a clean #fff with no noise.
-function isBlankCanvas(cv){
-  try{
-    var w=cv.width,h=cv.height;
-    if(!w||!h)return true;
-    var data=cv.getContext('2d').getImageData(0,0,w,h).data;
-    var totalPx=w*h;
-    var step=Math.max(1,Math.floor(totalPx/150000)); // cap samples for speed
-    var sampled=0,nonWhite=0;
-    for(var i=0;i<totalPx;i+=step){
-      var p=i*4;sampled++;
-      // Near-white counts as blank; ignore faint anti-aliasing noise.
-      if(data[p]<250||data[p+1]<250||data[p+2]<250)nonWhite++;
-    }
-    // Blank only when there is essentially no visible content. A single line of
-    // text far exceeds this fraction, so real (even sparse) pages are kept.
-    return nonWhite<=Math.max(25,sampled*0.0004);
-  }catch(e){
-    return false; // on any error, keep the page rather than risk dropping content
-  }
-}
-
 // pdfMode: 'report' | 'dashboard'
 // dp: display period object (may be a merged YTD period)
 function pdfGhKey(pdfMode,dp){
@@ -3263,6 +3558,10 @@ function renderPdfBlob(pdfMode, forcePeriod, forceViewMode){
     // (otherwise donuts/Sankey are captured mid-sweep, leaving blank arcs/breaks).
     var prevAnim=(window.Chart&&Chart.defaults)?Chart.defaults.animation:undefined;
     if(window.Chart&&Chart.defaults)Chart.defaults.animation=false;
+    // Force light theme while capturing: the PDF stylesheet is light-only, so
+    // charts (drawn from the live DOM) must render with light-mode labels too.
+    var prevDark=document.body.classList.contains('dark');
+    if(prevDark)document.body.classList.remove('dark');
     // Apply state needed for this render
     S.previewPeriod=null;
     S.period=forcePeriod;
@@ -3290,6 +3589,7 @@ function renderPdfBlob(pdfMode, forcePeriod, forceViewMode){
 
     function restoreState(){
       if(window.Chart&&Chart.defaults)Chart.defaults.animation=prevAnim;
+      if(prevDark)document.body.classList.add('dark');
       if(needsWiden&&srcEl&&appMain){
         srcEl.setAttribute('style',savedSrc);
         appMain.setAttribute('style',savedMain);
@@ -3310,81 +3610,7 @@ function renderPdfBlob(pdfMode, forcePeriod, forceViewMode){
       var html=buildPdfHtml(pdfMode,dp);
       restoreState();
       if(!html){reject(new Error('buildPdfHtml returned null'));return;}
-
-      var hiddenIframe=document.createElement('iframe');
-      hiddenIframe.style.cssText='position:absolute;left:-9999px;top:0;width:1280px;height:1px;border:none;visibility:hidden;pointer-events:none;';
-      document.body.appendChild(hiddenIframe);
-      var fontsReady=false;
-      try{hiddenIframe.contentDocument.open();hiddenIframe.contentDocument.write(html);hiddenIframe.contentDocument.close();}catch(e){}
-      hiddenIframe.onload=function(){setTimeout(function(){try{var ch=hiddenIframe.contentDocument.documentElement.scrollHeight;if(ch>1)hiddenIframe.style.height=ch+'px';}catch(e){}fontsReady=true;},900);};
-
-      function cleanup(){try{document.body.removeChild(hiddenIframe);}catch(e){}}
-
-      function doRender(){
-        var renderDoc=hiddenIframe.contentDocument||hiddenIframe.contentWindow.document;
-        var renderEl=renderDoc.documentElement;
-        var fullH=renderEl.scrollHeight;
-        hiddenIframe.style.height=fullH+'px';
-
-        function absTop(el){var top=0,node=el;while(node&&node!==renderEl){top+=node.offsetTop||0;node=node.offsetParent;}return top;}
-        var explicitBreaks=[];
-        renderDoc.querySelectorAll('[data-pdf-break]').forEach(function(el){explicitBreaks.push(absTop(el));});
-        var atomicSel='.card,.hero,.metric-grid,.nxts,.narr,.exec-summary,.invest-perf,.ka-grid,.cover-slide,.final-slide,.glossary-slide,.chart-w,.itbl,.stmt,.sec-hd';
-        var forbidden=[];
-        renderDoc.querySelectorAll(atomicSel).forEach(function(el){var top=absTop(el);var h=el.offsetHeight||0;if(h>20)forbidden.push({from:Math.round(top),to:Math.round(top+h)});});
-
-        setTimeout(function(){
-          html2canvas(renderEl,{scale:2,useCORS:true,allowTaint:false,logging:false,windowWidth:1280,windowHeight:fullH,scrollX:0,scrollY:0,backgroundColor:'#ffffff'}).then(function(canvas){
-            var JsPDF=window.jspdf?window.jspdf.jsPDF:(window.jsPDF);
-            var doc=new JsPDF({unit:'mm',format:'a4',orientation:'landscape'});
-            var pageW=doc.internal.pageSize.getWidth();
-            var pageH=doc.internal.pageSize.getHeight();
-            var margin=12,imgW=pageW-(margin*2),usableH=pageH-(margin*2);
-            var pxPerMm=canvas.width/imgW;
-            var cssToCvs=canvas.width/1280;
-            var brkCvs=explicitBreaks.map(function(b){return Math.round(b*cssToCvs);}).filter(function(b){return b>10&&b<canvas.height-10;});
-            brkCvs.sort(function(a,b){return a-b;});
-            var forbCvs=forbidden.map(function(f){return{from:Math.round(f.from*cssToCvs),to:Math.round(f.to*cssToCvs)};});
-            function safeCutY(proposedY,minY){
-              var candidate=proposedY,maxIter=forbCvs.length+2;
-              for(var iter=0;iter<maxIter;iter++){
-                var moved=false;
-                for(var i=0;i<forbCvs.length;i++){var f=forbCvs[i];if(candidate>f.from+4&&candidate<f.to-4){var backed=f.from;if(backed<=minY+20)return proposedY;candidate=backed;moved=true;break;}}
-                if(!moved)return candidate;
-              }
-              return candidate;
-            }
-            var srcYpx=0,pagesAdded=0,maxSliceHpx=Math.round(usableH*pxPerMm);
-            while(srcYpx<canvas.height){
-              var nextBrk=null;
-              for(var bi=0;bi<brkCvs.length;bi++){if(brkCvs[bi]>srcYpx+5){nextBrk=brkCvs[bi];break;}}
-              var naturalEnd=srcYpx+maxSliceHpx;
-              var proposed=(nextBrk!==null&&nextBrk<=naturalEnd)?nextBrk:Math.min(naturalEnd,canvas.height);
-              var sliceEnd=safeCutY(proposed,srcYpx);
-              if(sliceEnd<=srcYpx)sliceEnd=proposed;
-              var sliceHpx=sliceEnd-srcYpx;
-              if(sliceHpx<=0)break;
-              var sliceMm=sliceHpx/pxPerMm;
-              var sc=document.createElement('canvas');sc.width=canvas.width;sc.height=sliceHpx;
-              var ctx=sc.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,sc.width,sc.height);
-              ctx.drawImage(canvas,0,srcYpx,canvas.width,sliceHpx,0,0,sc.width,sc.height);
-              srcYpx=sliceEnd;
-              if(isBlankCanvas(sc))continue; // skip empty pages
-              if(pagesAdded>0)doc.addPage();
-              doc.addImage(sc.toDataURL('image/jpeg',0.95),'JPEG',margin,margin,imgW,sliceMm);
-              pagesAdded++;
-            }
-            cleanup();
-            resolve(doc.output('arraybuffer'));
-          }).catch(function(e){cleanup();reject(e);});
-        },150);
-      }
-
-      loadPdfLibs(function(err){
-        if(err){cleanup();reject(err);return;}
-        if(fontsReady){doRender();}
-        else{var waited=0;var poll=setInterval(function(){waited+=100;if(fontsReady||waited>=2500){clearInterval(poll);doRender();}},100);}
-      });
+      htmlToPdfDoc(html).then(function(doc){resolve(doc.output('arraybuffer'));}).catch(reject);
     },pdfDelay);
   });
 }
@@ -3394,18 +3620,18 @@ function renderPdfBlob(pdfMode, forcePeriod, forceViewMode){
 async function generateAndUploadPdfs(meta, btn){
   if(!S.repo||!S.pat){toast('Configure GitHub settings first','err');return;}
   var id=meta.id;
-  // The admin list re-renders while PDFs generate (renderPdfBlob switches tabs
-  // and back), which detaches the original button — always re-resolve it by id
-  // so progress updates stay visible.
+  // btn is optional: the publish flow calls this with no button, so every update
+  // is guarded and re-resolves the live button by id (the admin list re-renders
+  // while PDFs generate, detaching the original element).
   var _origBtn=btn;
-  function liveBtn(){return document.getElementById('pdfup-'+id)||_origBtn;}
-  btn=liveBtn();
+  function liveBtn(){return document.getElementById('pdfup-'+id)||_origBtn||null;}
+  function setBtn(txt,dis){var b=liveBtn();if(b){if(txt!=null)b.textContent=txt;b.disabled=!!dis;}}
   // Load the period data if not already in drafts or loadedPeriods
   var p=S.drafts[id]||S.loadedPeriods[id];
   if(!p){
-    btn.textContent='Loading\u2026';btn.disabled=true;
+    setBtn('Loading\u2026',true);
     try{p=await fetchJSON('data/periods/'+id+'.json');}
-    catch(e){btn.textContent='\u2191 Upload PDFs';btn.disabled=false;toast('Could not load period: '+e.message,'err');return;}
+    catch(e){setBtn('\u2191 Upload PDFs',false);toast('Could not load period: '+e.message,'err');return;}
   }
 
   // Build list of variants to generate
@@ -3422,13 +3648,11 @@ async function generateAndUploadPdfs(meta, btn){
     variants.push({pdfMode:'dashboard',viewMode:'ytd',label:'YTD Dashboard'});
   }
 
-  btn.disabled=true;
+  setBtn(null,true);
   var total=variants.length;
   for(var vi=0;vi<total;vi++){
     var v=variants[vi];
-    btn=liveBtn();
-    btn.disabled=true;
-    btn.textContent='('+(vi+1)+'/'+total+') '+v.label+'\u2026';
+    setBtn('('+(vi+1)+'/'+total+') '+v.label+'\u2026',true);
     try{
       // For YTD render, we need loadedPeriods populated
       if(v.viewMode==='ytd'){
@@ -3448,14 +3672,11 @@ async function generateAndUploadPdfs(meta, btn){
       var existing=null;try{existing=await ghGet(ghPath);}catch(e){}
       await ghPut(ghPath,b64,'Upload PDF '+ghPath,existing&&existing.sha,true);
     }catch(e){
-      btn=liveBtn();
-      btn.textContent='\u2191 Upload PDFs';btn.disabled=false;
+      setBtn('\u2191 Upload PDFs',false);
       toast(v.label+' failed: '+e.message,'err');return;
     }
   }
-  btn=liveBtn();
-  btn.textContent='\u2713 PDFs uploaded';
-  btn.disabled=false;
+  setBtn('\u2713 PDFs uploaded',false);
   toast('All '+total+' PDF'+(total>1?'s':'')+' uploaded to GitHub','ok');
 }
 
@@ -3532,6 +3753,9 @@ function openPdfPreview(mode){
   if(window.Chart&&Chart.defaults)Chart.defaults.animation=false;
   if(pdfMode==='dashboard'&&S.tab!=='dashboard')setTab('dashboard');
   else if(pdfMode==='report'&&S.tab!=='report')setTab('report');
+  // Force light theme so captured charts use light-mode label colours.
+  var prevDark=document.body.classList.contains('dark');
+  if(prevDark){document.body.classList.remove('dark');if(pdfMode==='dashboard')renderDash();else renderReport();}
 
   // ── Mobile rendering fix ──
   // Chart.js draws canvases at their parent container's width. On mobile, that
@@ -3564,6 +3788,7 @@ function openPdfPreview(mode){
 
   function restoreLiveLayout(){
     if(window.Chart&&Chart.defaults)Chart.defaults.animation=prevAnim;
+    if(prevDark)document.body.classList.add('dark');
     if(!needsWiden||!srcEl||!appMain)return;
     srcEl.setAttribute('style',savedSrc);
     appMain.setAttribute('style',savedMain);
@@ -3584,169 +3809,10 @@ function openPdfPreview(mode){
 
     var pdfName='GEF-'+(pdfMode==='dashboard'?'Dashboard':'Report')+'-'+(S.viewMode==='ytd'?dp.year+'-YTD':dp.id)+'.pdf';
 
-    // Off-screen render iframe — absolute (not fixed) so mobile viewport cannot
-    // clip the 1280px width; fixed elements are constrained to the visual viewport.
-    var hiddenIframe=document.createElement('iframe');
-    hiddenIframe.style.cssText='position:absolute;left:-9999px;top:0;width:1280px;height:1px;border:none;visibility:hidden;pointer-events:none;';
-    document.body.appendChild(hiddenIframe);
-
-    var fontsReady=false;
-    try{
-      hiddenIframe.contentDocument.open();
-      hiddenIframe.contentDocument.write(html);
-      hiddenIframe.contentDocument.close();
-    }catch(e){}
-
-    hiddenIframe.onload=function(){
-      // Allow fonts ~900ms to load inside the iframe
-      setTimeout(function(){
-        try{
-          var ch=hiddenIframe.contentDocument.documentElement.scrollHeight;
-          if(ch>1)hiddenIframe.style.height=ch+'px';
-        }catch(e){}
-        fontsReady=true;
-      },900);
-    };
-
-    function cleanup(){
-      try{document.body.removeChild(hiddenIframe);}catch(e){}
-    }
-
-    function renderAndSave(){
-      var renderDoc=hiddenIframe.contentDocument||hiddenIframe.contentWindow.document;
-      var renderEl=renderDoc.documentElement;
-      var fullH=renderEl.scrollHeight;
-      hiddenIframe.style.height=fullH+'px';
-
-      // ── Helper: get element top relative to the iframe document root ──
-      // getBoundingClientRect() on a cross-origin or off-screen iframe returns coords
-      // relative to the OUTER viewport (at x=-9999px), not the iframe document.
-      // Walking offsetParent gives the correct document-relative top.
-      function absTop(el){
-        var top=0;
-        var node=el;
-        while(node&&node!==renderEl){top+=node.offsetTop||0;node=node.offsetParent;}
-        return top;
-      }
-
-      // ── Smart page-break: collect element boundaries so we never cut mid-element ──
-      // Explicit sentinel breaks (covers, final slide, glossary)
-      var explicitBreaks=[];
-      renderDoc.querySelectorAll('[data-pdf-break]').forEach(function(el){
-        explicitBreaks.push(absTop(el));
-      });
-      // Atomic blocks that must never be split.
-      // .sec-hd is the section title row — adding it prevents the heading being
-      // stranded alone at the bottom of a page with the card content on the next.
-      var atomicSel='.card,.hero,.metric-grid,.nxts,.narr,.exec-summary,.invest-perf,.ka-grid,.cover-slide,.final-slide,.glossary-slide,.chart-w,.itbl,.stmt,.sec-hd';
-      var atomicEls=renderDoc.querySelectorAll(atomicSel);
-      var forbidden=[];// [{from,to}] in CSS pixels
-      atomicEls.forEach(function(el){
-        var top=absTop(el);
-        var h=el.offsetHeight||0;
-        if(h>20)forbidden.push({from:Math.round(top),to:Math.round(top+h)});
-      });
-
-      setTimeout(function(){
-        html2canvas(renderEl,{
-          scale:2,useCORS:true,allowTaint:false,logging:false,
-          windowWidth:1280,windowHeight:fullH,
-          scrollX:0,scrollY:0,backgroundColor:'#ffffff'
-        }).then(function(canvas){
-          var JsPDF=window.jspdf?window.jspdf.jsPDF:(window.jsPDF);
-          var doc=new JsPDF({unit:'mm',format:'a4',orientation:'landscape'});
-          var pageW=doc.internal.pageSize.getWidth();
-          var pageH=doc.internal.pageSize.getHeight();
-          var margin=12;
-          var imgW=pageW-(margin*2);
-          var usableH=pageH-(margin*2);
-          var pxPerMm=canvas.width/imgW;
-          // Convert CSS pixel positions to canvas pixels (canvas renders at scale:2)
-          var cssToCvs=canvas.width/1280;
-          var brkCvs=explicitBreaks.map(function(b){return Math.round(b*cssToCvs);})
-            .filter(function(b){return b>10&&b<canvas.height-10;});
-          brkCvs.sort(function(a,b){return a-b;});
-          // Convert forbidden zones to canvas pixels
-          var forbCvs=forbidden.map(function(f){
-            return{from:Math.round(f.from*cssToCvs),to:Math.round(f.to*cssToCvs)};
-          });
-          // Given a proposed cut Y (canvas px), find the safest cut ≤ proposedY
-          // that doesn't bisect any atomic element.
-          // Iterates so that backing up from one forbidden zone doesn't land inside
-          // an adjacent one (e.g. a .sec-hd immediately above a .card).
-          function safeCutY(proposedY,minY){
-            var candidate=proposedY;
-            var maxIter=forbCvs.length+2;// guard against infinite loop
-            for(var iter=0;iter<maxIter;iter++){
-              var moved=false;
-              for(var i=0;i<forbCvs.length;i++){
-                var f=forbCvs[i];
-                if(candidate>f.from+4&&candidate<f.to-4){
-                  // Inside a forbidden zone — back up to its top edge
-                  var backed=f.from;
-                  if(backed<=minY+20){
-                    // Element spans more than a full page; no choice but to cut
-                    return proposedY;
-                  }
-                  candidate=backed;
-                  moved=true;
-                  break;// re-check all zones from new candidate
-                }
-              }
-              if(!moved)return candidate;// stable — no zone hit
-            }
-            return candidate;
-          }
-          var srcYpx=0,pageIndex=0;
-          var maxSliceHpx=Math.round(usableH*pxPerMm);
-          while(srcYpx<canvas.height){
-            // Check for an explicit break coming up within this page's range
-            var nextBrk=null;
-            for(var bi=0;bi<brkCvs.length;bi++){
-              if(brkCvs[bi]>srcYpx+5){nextBrk=brkCvs[bi];break;}
-            }
-            var naturalEnd=srcYpx+maxSliceHpx;
-            var proposed;
-            if(nextBrk!==null&&nextBrk<=naturalEnd){
-              proposed=nextBrk;// forced break before natural limit
-            }else{
-              proposed=Math.min(naturalEnd,canvas.height);
-            }
-            // Avoid cutting through atomic elements
-            var sliceEnd=safeCutY(proposed,srcYpx);
-            if(sliceEnd<=srcYpx)sliceEnd=proposed;// fallback
-            var sliceHpx=sliceEnd-srcYpx;
-            if(sliceHpx<=0)break;
-            var sliceMm=sliceHpx/pxPerMm;
-            var sc=document.createElement('canvas');
-            sc.width=canvas.width;sc.height=sliceHpx;
-            var ctx=sc.getContext('2d');
-            ctx.fillStyle='#ffffff';ctx.fillRect(0,0,sc.width,sc.height);
-            ctx.drawImage(canvas,0,srcYpx,canvas.width,sliceHpx,0,0,sc.width,sc.height);
-            srcYpx=sliceEnd;
-            if(isBlankCanvas(sc))continue;// skip empty pages
-            if(pageIndex>0)doc.addPage();
-            doc.addImage(sc.toDataURL('image/jpeg',0.95),'JPEG',margin,margin,imgW,sliceMm);
-            pageIndex++;
-          }
-          doc.save(pdfName);
-          toast('PDF downloaded','ok');
-          cleanup();
-        }).catch(function(e){toast('Render failed: '+e.message,'err');cleanup();});
-      },150);
-    }
-
-    loadPdfLibs(function(err){
-      if(err){toast(err.message,'err');cleanup();return;}
-      if(fontsReady){renderAndSave();}
-      else{
-        var waited=0;
-        var poll=setInterval(function(){
-          waited+=100;
-          if(fontsReady||waited>=2500){clearInterval(poll);renderAndSave();}
-        },100);
-      }
-    });
+    htmlToPdfDoc(html).then(function(doc){
+      doc.save(pdfName);
+      toast('PDF downloaded','ok');
+    }).catch(function(e){toast('Render failed: '+e.message,'err');});
   },pdfDelay);
 }
 

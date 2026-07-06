@@ -171,6 +171,8 @@ p{margin:0 0 .8em}a{color:var(--grn)}
 .ver{position:fixed;bottom:8px;right:12px;font-size:.65rem;color:var(--inkm);letter-spacing:.08em;z-index:50;pointer-events:none}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--grnd);color:#fff;padding:10px 20px;border-radius:999px;font-size:.88rem;box-shadow:var(--sh);z-index:200;opacity:0;transition:opacity .25s}
 .toast.show{opacity:1}
+.toast.err{background:var(--red)}
+.toast.warn{background:#8A6A14}
 
 .ptr-indicator{position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-60px);background:var(--grnd);color:#fff;padding:8px 18px;border-radius:0 0 999px 999px;font-size:.8rem;z-index:500;transition:transform .25s ease;display:flex;align-items:center;gap:8px}
 .ptr-indicator.visible{transform:translateX(-50%) translateY(0)}
@@ -474,13 +476,14 @@ body.dark .erow{background:var(--bge)}
     <div class="aprv-hint">Click any highlighted text to edit &middot; changes are saved to this draft</div>
   </div>
 </div>
-<div class="ver" id="ver-badge">V1.16.3</div>
+<div class="ver" id="ver-badge">V1.18.0</div>
 <div class="toast" id="toast"></div>
 <script>
 const ADMIN_PASSPHRASE='gbago-admin';
 const DEFAULT_REPO='';
 const DEFAULT_BRANCH='main';
-const APP_VERSION='V1.17.3';
+const APP_VERSION='V1.18.0';
+const GEMINI_MODEL='gemini-2.5-flash';
 
 const GEF=(function(){
   const UOF_CATS={jambForm:'JAMB Form',waecForm:'WAEC Form',lesson:'Lesson / Tuition',stipend:'Stipend',scholarship:'Scholarship',gift:'Gift / Donation',other:'Other'};
@@ -522,7 +525,7 @@ const GEF=(function(){
       });
     }
     return{id:base.id,label:base.label,year:base.year,month:base.month,
-      _isMerged:true,
+      _isMerged:true,_monthCount:periods.length,
       donations:[].concat.apply([],periods.map(function(p){return p.donations||[];})),
       otherIncome:[].concat.apply([],periods.map(function(p){return p.otherIncome||[];})),
       useOfFunds:[].concat.apply([],periods.map(function(p){return p.useOfFunds||[];})),
@@ -720,7 +723,7 @@ const GEF=(function(){
 
 (function(){
 'use strict';
-const LS={AUTH:'gef-auth',PAT:'gef-pat',REPO:'gef-repo',BR:'gef-br',DR:'gef-drafts',CUR:'gef-cur',FT:'gef-fund-target',BENCH:'gef-bench'};
+const LS={AUTH:'gef-auth',PAT:'gef-pat',REPO:'gef-repo',BR:'gef-br',DR:'gef-drafts',CUR:'gef-cur',FT:'gef-fund-target',BENCH:'gef-bench',GEM:'gef-gemini-key'};
 const CLR={grn:'#006145',grnD:'#004D37',gld:'#F8C01C',nvy:'#0F2F70',teal:'#007AA3',brn:'#AD7436',red:'#A33A2E',inks:'#3A5040',ln:'#D9E4DC'};
 let S={tab:'dashboard',fundTarget:Number(localStorage.getItem('gef-fund-target')||0),benchmarkRate:Number(localStorage.getItem('gef-bench')||0),periods:[],pid:null,period:null,authed:false,drafts:{},aperiod:null,atab:'donations',repo:localStorage.getItem(LS.REPO)||DEFAULT_REPO,branch:localStorage.getItem(LS.BR)||DEFAULT_BRANCH,pat:localStorage.getItem(LS.PAT)||'',pubIdx:null,charts:{},viewMode:'month',previewPeriod:null,loadedPeriods:{}};
 let toastT;
@@ -847,7 +850,7 @@ function calcYield(p){
   var inc=allInv.reduce(function(s,a){return s+GEF.acctIncome(a);},0);
   var avgBal=allInv.reduce(function(s,a){return s+Number(a.openingBalance||0)+GEF.acctBal(a);},0)/2;
   if(!avgBal)return null;
-  return(inc/avgBal)*12*100; // annualised %
+  return(inc/avgBal)*(p._isMerged?12/(p._monthCount||1):12)*100; // annualised %
 }
 // ---- Beneficiary count helper ----
 function countBeneficiaries(p){
@@ -862,13 +865,10 @@ function calcRunway(b,r){
 }
 // ---- Cumulative donations helper (all published periods) ----
 function calcCumulativeDonations(){
+  // Sum donations across all known periods, deduplicated by period id:
+  // published periods count once (from their loaded data), plus any drafts
+  // for periods that are not yet published.
   var total=0;
-  Object.values(S.loadedPeriods).forEach(function(p){total+=GEF.sum(p.donations||[],'amount');});
-  // Also include current draft period if previewing
-  if(S.previewPeriod){total+=GEF.sum(S.previewPeriod.donations||[],'amount');}
-  // Deduplicate: only sum from published loaded periods + drafts
-  // Reset and sum from all known periods
-  total=0;
   var seen=new Set();
   (S.pubIdx&&S.pubIdx.publishedPeriods||[]).forEach(function(pp){
     if(!seen.has(pp.id)){seen.add(pp.id);var loaded=S.loadedPeriods[pp.id];if(loaded)total+=GEF.sum(loaded.donations||[],'amount');}
@@ -994,7 +994,7 @@ function renderDash(){
   var execSum=(p.narrative&&p.narrative.executiveSummary)||'';
   if(!execSum)execSum=GEF.generateExecutiveSummary(p,S.loadedPeriods);
   if(execSum){
-    html+='<div class="exec-summary"><div class="exec-summary-hd">Executive Summary</div><p>'+esc(execSum)+'</p></div>';
+    html+='<div class="exec-summary"><div class="exec-summary-hd">Executive Summary</div><p data-narrkey="executiveSummary" data-edittext="'+esc(execSum)+'">'+esc(execSum)+'</p></div>';
   }
   // ── Metric cards with deltas ──
   var yd=calcYield(p);
@@ -1034,7 +1034,7 @@ function renderDash(){
   // ── Charts ──
   html+='<div class="grid2 sec"><div class="card"><h3 style="margin-bottom:8px;">Income breakdown</h3><div class="chart-w dn"><canvas id="c-inc"></canvas></div></div>'
     +'<div class="card"><h3 style="margin-bottom:8px;">Asset allocation</h3><div class="chart-w dn"><canvas id="c-alloc"></canvas></div></div></div>';
-  var trendPeriods=getTrendPeriods(p.year);
+  var trendPeriods=getTrendPeriods(p.year,p.id);
   if(trendPeriods.length>1){
     html+='<div class="sec"><div class="sec-hd"><h2>Trends</h2><div class="sec-meta">'+p.year+'</div></div>'
       +'<div class="grid2">'
@@ -1114,8 +1114,10 @@ function renderDash(){
   },60);});
 }
 
-function getTrendPeriods(year){
-  return Object.keys(S.loadedPeriods).filter(function(id){return S.loadedPeriods[id].year===year;}).sort().map(function(id){return S.loadedPeriods[id];});
+function getTrendPeriods(year,uptoId){
+  // Only periods up to and including the one being viewed — otherwise the
+  // trend charts leak later months into a historical period's dashboard.
+  return Object.keys(S.loadedPeriods).filter(function(id){return S.loadedPeriods[id].year===year&&(!uptoId||id<=uptoId);}).sort().map(function(id){return S.loadedPeriods[id];});
 }
 
 
@@ -1220,7 +1222,7 @@ function renderReport(){
   var execSum=(narr&&narr.executiveSummary)||'';
   if(!execSum)execSum=GEF.generateExecutiveSummary(p,S.loadedPeriods);
   if(execSum){
-    html+='<div class="exec-summary"><div class="exec-summary-hd">Executive Summary</div><p>'+esc(execSum)+'</p></div>';
+    html+='<div class="exec-summary"><div class="exec-summary-hd">Executive Summary</div><p data-narrkey="executiveSummary" data-edittext="'+esc(execSum)+'">'+esc(execSum)+'</p></div>';
   }
   if((p.keyActivities||[]).length){
     html+='<div class="sec"><div class="sec-hd"><h2>Key Activities</h2><div class="sec-meta">'+esc(modeLabel)+'</div></div><div class="ka-grid">';
@@ -1246,7 +1248,7 @@ function renderReport(){
   html+='</div>';
   // ── SLIDE: Narration (income statement) ──
   if(narr.incomeStatement){
-    html+='<div class="sec" data-pdf-break="1"><div class="narr narr-md">'+renderMd(narr.incomeStatement)+'</div></div>';
+    html+='<div class="sec" data-pdf-break="1"><div class="narr narr-md" data-narrkey="incomeStatement" data-edittext="'+esc(narr.incomeStatement)+'">'+renderMd(narr.incomeStatement)+'</div></div>';
   }
   // ── SLIDE: Net Income Bridge ──
   html+='<div class="sec" data-pdf-break="1"><div class="sec-hd"><h2>Net Income Bridge</h2><div class="sec-meta">Revenue \u2192 Expenses \u2192 Net</div></div><div class="card"><div class="chart-w lg"><canvas id="c-bridge"></canvas></div></div></div>';
@@ -1284,7 +1286,7 @@ function renderReport(){
     }
     html+='</div></div>';
   }
-  if(narr.balanceSheet)html+='<div class="spacer"></div><div class="narr g narr-md">'+renderMd(narr.balanceSheet)+'</div>';
+  if(narr.balanceSheet)html+='<div class="spacer"></div><div class="narr g narr-md" data-narrkey="balanceSheet" data-edittext="'+esc(narr.balanceSheet)+'">'+renderMd(narr.balanceSheet)+'</div>';
   html+='</div>';
   // ── SLIDE: Cash Flow Statement ──
   html+='<div class="sec" data-pdf-break="1"><div class="sec-hd"><h2>Cash Flow Statement</h2><div class="sec-meta">'+esc(modeLabel)+(prev?' vs '+esc(prevLabel):'')+'</div></div><div class="card">';
@@ -1306,7 +1308,7 @@ function renderReport(){
   ],p,!!prev);
   if(!c.ok)html+='<div class="banner warn" style="margin-top:12px;">Cash gap: computed '+GEF.fmtM(c.computed)+' vs booked '+GEF.fmtM(c.booked)+'</div>';
   html+='</div>';
-  if(narr.cashFlows)html+='<div class="spacer"></div><div class="narr narr-md">'+renderMd(narr.cashFlows)+'</div>';
+  if(narr.cashFlows)html+='<div class="spacer"></div><div class="narr narr-md" data-narrkey="cashFlows" data-edittext="'+esc(narr.cashFlows)+'">'+renderMd(narr.cashFlows)+'</div>';
   html+='</div>';
   // ── SLIDE: Fund Flow (Sankey) ──
   html+='<div class="sec" data-pdf-break="1"><div class="sec-hd"><h2>Fund Flow</h2><div class="sec-meta">Cash sources and uses for '+esc(modeLabel)+'</div></div><div class="card"><div class="chart-w xl"><canvas id="c-sankey"></canvas></div></div></div>';
@@ -1321,10 +1323,14 @@ function renderReport(){
   var hb=document.getElementById('rpt-hld');
   if(hb){
     var invAcctIds=new Set([].concat(p.moneyMarketAccounts||[],p.placements||[]).map(function(a){return a.id;}));
+    // Annualisation factor: a merged YTD period holds several months of income,
+    // so multiply by 12/monthCount, not a flat 12 (which overstated YTD yields).
+    var annFactor=p._isMerged?(12/(p._monthCount||1)):12;
     [].concat(p.cashAccounts||[],p.moneyMarketAccounts||[],p.placements||[]).forEach(function(a){
       var inc=invAcctIds.has(a.id)?GEF.acctIncome(a):0;
-      var avgBal=(Number(a.openingBalance||0)+GEF.acctBal(a))/2;
-      var yld=(inc&&avgBal)?(inc/avgBal*12*100).toFixed(1)+'%':'';
+      var openBal=Number((p._isMerged&&a._ytdOpeningBalance!=null?a._ytdOpeningBalance:a.openingBalance)||0);
+      var avgBal=(openBal+GEF.acctBal(a))/2;
+      var yld=(inc&&avgBal)?(inc/avgBal*annFactor*100).toFixed(1)+'%':'';
       var tr=document.createElement('tr');
       tr.innerHTML='<td>'+esc(a.name)+'</td><td>'+esc(a.platform)+'</td><td class="r">'+GEF.fmtM(GEF.acctBal(a))+'</td>';
       hb.appendChild(tr);
@@ -1667,7 +1673,7 @@ function renderAdmin(){
 function renderAdminLogin(el){
   el.innerHTML='<div class="login-shell"><div class="login-card"><div class="login-logo"><img src="icon-192.png" alt="GEF"/></div><h2>Admin sign-in</h2><p style="color:var(--inks);font-size:.88rem;margin-bottom:0;">Enter the admin passphrase.</p><div class="fld" style="margin:20px 0;text-align:left;"><label>Passphrase</label><input type="password" id="adm-pw" autocomplete="current-password"/></div><button class="btn" id="adm-login-btn" style="width:100%;">Continue</button><div class="etxt" id="adm-login-err"></div></div></div>';
   var btn=el.querySelector('#adm-login-btn'),pw=el.querySelector('#adm-pw'),err=el.querySelector('#adm-login-err');
-  function tryLogin(){var v=(pw.value||'').trim();if(v===ADMIN_PASSPHRASE){S.authed=true;sessionStorage.setItem(LS.AUTH,'1');renderAdmin();}else{err.textContent='Incorrect passphrase.';}}
+  function tryLogin(){var v=(pw.value||'').trim();if(v===ADMIN_PASSPHRASE){S.authed=true;localStorage.setItem(LS.AUTH,'1');renderAdmin();}else{err.textContent='Incorrect passphrase.';}}
   btn.addEventListener('click',tryLogin);pw.addEventListener('keydown',function(e){if(e.key==='Enter')tryLogin();});
   setTimeout(function(){pw.focus();},50);
 }
@@ -1676,7 +1682,8 @@ function renderAdminEditor(el){
   var allIds=Array.from(new Set(Object.keys(S.drafts).concat(pubIds))).sort().reverse();
   var pickerHtml='<div class="card" style="margin-bottom:20px;">'
     +'<div class="fbw" style="margin-bottom:12px;"><h2 style="color:var(--grnd);">Periods</h2>'
-    +'<div class="fb"><button class="btn gh sm" id="adm-import">Import JSON</button>'
+    +'<div class="fb"><button class="btn gh sm" id="adm-lock" title="Sign out of admin on this device">Lock</button>'
+    +'<button class="btn gh sm" id="adm-import">Import JSON</button>'
     +'<button class="btn sm" id="adm-preview-btn">Preview current</button>'
     +'<button class="btn sm" id="adm-pub-btn">Publish current</button></div></div>';
   pickerHtml+='<div id="adm-period-list"></div>';
@@ -1687,6 +1694,11 @@ function renderAdminEditor(el){
   el.innerHTML=pickerHtml+'<div id="adm-editor"></div>';
   renderAdmPeriodList();
   el.querySelector('#adm-new-period').addEventListener('click',newPeriod);
+  el.querySelector('#adm-lock').addEventListener('click',function(){
+    if(!confirm('Lock admin on this device? You will need the passphrase to sign back in.'))return;
+    S.authed=false;localStorage.removeItem(LS.AUTH);sessionStorage.removeItem(LS.AUTH);
+    toast('Admin locked','ok');renderAdmin();
+  });
   el.querySelector('#adm-pub-btn').addEventListener('click',publish);
   el.querySelector('#adm-import').addEventListener('click',importJSON);
   el.querySelector('#adm-preview-btn').addEventListener('click',function(){
@@ -1732,6 +1744,7 @@ function renderAdmPeriodList(){
     if(isPubF&&S.repo&&S.pat){
       var pdfUpBtn=document.createElement('button');
       pdfUpBtn.className='btn sm gh';
+      pdfUpBtn.id='pdfup-'+id;
       pdfUpBtn.textContent='\u2191 Upload PDFs';
       pdfUpBtn.title='Generate the PDF report(s) for this period on this device and upload to GitHub so all users download the same file.';
       pdfUpBtn.addEventListener('click',function(){generateAndUploadPdfs(meta,pdfUpBtn);});
@@ -2227,6 +2240,7 @@ function renderAdmNarration(el){
   var topBtns='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">';
   if(prevId)topBtns+='<button class="btn gh sm" id="copy-narr-btn">Copy narration from previous ('+prevId+')</button>';
   topBtns+='<button class="btn gh sm" id="draft-narr-btn">Auto-draft narration from data</button>';
+  topBtns+='<button class="btn gld sm" id="gemini-narr-btn" title="Write all narrations with Gemini AI using this period’s figures">✨ Generate with Gemini</button>';
   topBtns+='</div>';
   card.innerHTML=topBtns
     +'<h3 style="margin-bottom:14px;">Executive Summary</h3>'
@@ -2285,6 +2299,30 @@ function renderAdmNarration(el){
     cfParts.push('Cash and savings ended the period at '+GEF.fmtM(c.booked)+'.');
     narr.cashFlows=cfParts.join(' ');
     autoSave();renderAdmNarration(el);toast('Narrations auto-drafted','ok');
+  });
+  // Gemini AI narration
+  card.querySelector('#gemini-narr-btn').addEventListener('click',async function(){
+    var btn=card.querySelector('#gemini-narr-btn');
+    if(!(localStorage.getItem(LS.GEM)||'').trim()){
+      toast('Add your Gemini API key in Settings → Gemini AI first','err');return;
+    }
+    if(narr.executiveSummary||narr.incomeStatement||narr.balanceSheet||narr.cashFlows){
+      if(!confirm('Some narrations are already filled. Overwrite them with Gemini’s versions?'))return;
+    }
+    btn.disabled=true;btn.textContent='✨ Generating…';
+    try{
+      var out=await geminiGenerateNarrations(p);
+      narr.executiveSummary=out.executiveSummary;
+      narr.incomeStatement=out.incomeStatement;
+      narr.balanceSheet=out.balanceSheet;
+      narr.cashFlows=out.cashFlows;
+      if(out.nextStepsNarration)narr.nextSteps=out.nextStepsNarration;
+      autoSave();renderAdmNarration(el);
+      toast('Narrations written by Gemini — review before publishing','ok');
+    }catch(e){
+      btn.disabled=false;btn.textContent='✨ Generate with Gemini';
+      toast(e.message,'err');
+    }
   });
   // Executive summary controls
   card.querySelector('#use-auto-es').addEventListener('click',function(){
@@ -2409,6 +2447,15 @@ function renderSettings(){
       +'<button class="btn gh" id="cfg-test">Test connection</button>'
       +'<button class="btn dng" id="cfg-clear">Clear token</button>'
       +'</div></div>'
+      +'<div class="card" style="margin-bottom:20px;border-left:3px solid var(--teal);">'
+      +'<h3 style="margin-bottom:6px;color:var(--grnd);">Gemini AI</h3>'
+      +'<p class="muted" style="font-size:.82rem;margin-bottom:12px;">Powers the <strong>✨ Generate with Gemini</strong> button in Admin → Narration. The key is stored only in this browser and sent only to Google’s Gemini API. Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.</p>'
+      +'<div class="frow">'
+      +'<div class="fld"><label>Gemini API key</label><input type="password" id="cfg-gem" placeholder="AIza..." autocomplete="off" value="'+(localStorage.getItem(LS.GEM)?'••••••••':'')+'"/></div>'
+      +'</div><div class="fb" style="margin-top:12px;">'
+      +'<button class="btn sm" id="cfg-gem-save">Save key</button>'
+      +'<button class="btn sm dng" id="cfg-gem-clear">Clear key</button>'
+      +'</div></div>'
       +'<div class="card" style="margin-bottom:20px;border-left:3px solid var(--gld);">'
       +'<h3 style="margin-bottom:12px;color:var(--grnd);">Data</h3>'
       +'<div class="fb"><button class="btn gh" id="cfg-export">Export all drafts (JSON)</button></div></div>'
@@ -2480,6 +2527,16 @@ function renderSettings(){
     });
     el.querySelector('#cfg-test').addEventListener('click',testGH);
     el.querySelector('#cfg-clear').addEventListener('click',function(){if(!confirm('Clear stored GitHub token?'))return;S.pat='';localStorage.removeItem(LS.PAT);toast('Token cleared','ok');renderSettings();});
+    el.querySelector('#cfg-gem-save').addEventListener('click',function(){
+      var gk=(el.querySelector('#cfg-gem').value||'').trim();
+      if(!gk||gk.startsWith('•')){toast('Enter a Gemini API key first','err');return;}
+      localStorage.setItem(LS.GEM,gk);
+      toast('Gemini key saved','ok');renderSettings();
+    });
+    el.querySelector('#cfg-gem-clear').addEventListener('click',function(){
+      if(!confirm('Clear the stored Gemini API key?'))return;
+      localStorage.removeItem(LS.GEM);toast('Gemini key cleared','ok');renderSettings();
+    });
     el.querySelector('#cfg-export').addEventListener('click',function(){var blob=new Blob([JSON.stringify(S.drafts,null,2)],{type:'application/json'});var u=URL.createObjectURL(blob);var a=document.createElement('a');a.href=u;a.download='gef-drafts.json';a.click();URL.revokeObjectURL(u);});
     el.querySelector('#cfg-hard-refresh').addEventListener('click',async function(){
       if(!confirm('Hard refresh? This clears all caches and reloads the app. Drafts and login are kept.'))return;
@@ -2537,6 +2594,98 @@ function newPeriod(){
 async function ghGet(path){if(!S.repo||!S.pat)throw new Error('Configure repo and token first.');var r=await fetch('https://api.github.com/repos/'+S.repo+'/contents/'+path+'?ref='+encodeURIComponent(S.branch),{headers:{Accept:'application/vnd.github+json',Authorization:'token '+S.pat,'X-GitHub-Api-Version':'2022-11-28'}});if(r.status===404)return null;if(!r.ok)throw new Error('GitHub GET '+r.status);return r.json();}
 async function ghPut(path,content,msg,sha,alreadyEncoded){if(!S.repo||!S.pat)throw new Error('Configure repo and token first.');var b64=alreadyEncoded?content:btoa(unescape(encodeURIComponent(content)));var body={message:msg,content:b64,branch:S.branch};if(sha)body.sha=sha;var r=await fetch('https://api.github.com/repos/'+S.repo+'/contents/'+path,{method:'PUT',headers:{Accept:'application/vnd.github+json',Authorization:'token '+S.pat,'X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw new Error('GitHub PUT '+r.status+': '+await r.text());return r.json();}
 async function testGH(){toast('Testing connection\u2026','ok');try{var r=await fetch('https://api.github.com/repos/'+S.repo,{headers:{Accept:'application/vnd.github+json',Authorization:'token '+S.pat}});if(!r.ok)throw new Error(r.status);var d=await r.json();toast('Connected: '+d.full_name,'ok');}catch(e){toast('Test failed: '+e.message,'err');}}
+
+// ---- Gemini AI narration (admin) ----
+// Builds a compact fact sheet from the period's computed financials and asks
+// Gemini to write the report narrations. The API key lives only in this
+// browser's localStorage and is sent only to Google's API endpoint.
+function geminiFactSheet(p){
+  var r=GEF.pnl(p),b=GEF.bs(p),c=GEF.cf(p);
+  var pp=GEF.priorPeriodOf(p,S.loadedPeriods);
+  var facts={
+    fund:'Gbago Endowment Fund (GEF), a community endowment fund in Nigeria. Currency: Nigerian Naira (\u20a6).',
+    period:GEF.pLabel(p)+(p._isMerged?' (Year-to-Date, '+(p._monthCount||'several')+' months)':''),
+    incomeStatement:{
+      donations:r.donations,
+      donorCount:(p.donations||[]).length,
+      donors:(p.donations||[]).map(function(d){return{name:d.donor,amount:d.amount};}),
+      investmentIncome:r.investmentIncome,
+      otherIncome:r.otherIncome,
+      totalRevenue:r.totalRevenue,
+      deploymentsByCategory:Object.keys(GEF.UOF_CATS).filter(function(k){return r.uofByC[k]>0;}).map(function(k){return{category:GEF.UOF_CATS[k],amount:r.uofByC[k],entries:(p.useOfFunds||[]).filter(function(u){return u.category===k;}).length};}),
+      totalDeployed:r.totalUof,
+      beneficiaryCount:countBeneficiaries(p),
+      bankFees:r.fees,
+      otherExpenses:r.otherExpenses,
+      totalExpenses:r.totalExpenses,
+      netIncome:r.netIncome
+    },
+    balanceSheet:{
+      cash:b.cash,moneyMarket:b.moneyMarket,placements:b.placements,
+      netAssets:b.netAssets,
+      weightedAvgYieldPctPa:Number(GEF.weightedYield(p).toFixed(2)),
+      benchmarkRatePctPa:S.benchmarkRate||null,
+      holdings:[].concat(p.cashAccounts||[],p.moneyMarketAccounts||[],p.placements||[]).map(function(a){return{name:a.name,platform:a.platform,balance:GEF.acctBal(a)};})
+    },
+    cashFlows:{
+      netOperating:c.op.sub,netInvesting:c.inv.sub,movementInCash:c.cashChange,
+      openingCash:c.openCash,closingCash:c.booked,reconciles:c.ok
+    },
+    keyActivities:(p.keyActivities||[]).map(function(k){return k.title+(k.detail?' \u2014 '+k.detail:'');}),
+    prioritiesAhead:(p.nextSteps||[]).map(function(n){return n.title+(n.detail?' \u2014 '+n.detail:'');})
+  };
+  if(S.fundTarget>0)facts.fundraising={annualTargetNaira:S.fundTarget,raisedAllTime:calcCumulativeDonations()};
+  if(pp&&!p._isMerged){
+    var ppr=GEF.pnl(pp),ppb=GEF.bs(pp);
+    facts.priorPeriod={
+      label:GEF.pLabel(pp),
+      donations:ppr.donations,investmentIncome:ppr.investmentIncome,
+      totalRevenue:ppr.totalRevenue,totalDeployed:ppr.totalUof,
+      netIncome:ppr.netIncome,netAssets:ppb.netAssets
+    };
+  }
+  return facts;
+}
+async function geminiGenerateNarrations(p){
+  var key=(localStorage.getItem(LS.GEM)||'').trim();
+  if(!key)throw new Error('No Gemini API key. Add it in Settings \u2192 Gemini AI first.');
+  var prompt='You are the report writer for a small community endowment fund. Using ONLY the facts below, write the narration sections for the fund\u2019s '+(p._isMerged?'year-to-date':'monthly')+' investor report.\n\n'
+    +'Rules:\n'
+    +'- British English, professional but warm; the audience is community donors, not finance experts.\n'
+    +'- All money values are Nigerian Naira; format like \u20a6114,400 (no decimals).\n'
+    +'- 2 to 4 sentences per section. No headings inside the text. No invented numbers \u2014 use only the facts given.\n'
+    +'- You may use **bold** for key figures and "- " bullet lines where a list reads better.\n'
+    +'- executiveSummary: plain text only (no markdown), max 4 sentences, covering donations, deployments, net position and investments.\n'
+    +'- nextStepsNarration: one or two sentences introducing the priorities ahead (or an empty string if no priorities are listed).\n\n'
+    +'Return STRICT JSON with exactly these string keys: executiveSummary, incomeStatement, balanceSheet, cashFlows, nextStepsNarration.\n\n'
+    +'FACTS:\n'+JSON.stringify(geminiFactSheet(p),null,1);
+  var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODEL+':generateContent',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-goog-api-key':key},
+    body:JSON.stringify({
+      contents:[{parts:[{text:prompt}]}],
+      generationConfig:{temperature:0.4,responseMimeType:'application/json'}
+    })
+  });
+  if(!resp.ok){
+    var detail='';try{var ej=await resp.json();detail=(ej.error&&ej.error.message)||'';}catch(e){}
+    if(resp.status===400||resp.status===403)throw new Error('Gemini rejected the request ('+resp.status+'). Check your API key. '+detail);
+    if(resp.status===429)throw new Error('Gemini rate limit reached \u2014 try again in a minute.');
+    throw new Error('Gemini API error '+resp.status+'. '+detail);
+  }
+  var data=await resp.json();
+  var txt=data&&data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]&&data.candidates[0].content.parts[0].text;
+  if(!txt)throw new Error('Gemini returned an empty response.');
+  var out;
+  try{out=JSON.parse(txt);}catch(e){throw new Error('Could not parse Gemini\u2019s response as JSON.');}
+  return{
+    executiveSummary:String(out.executiveSummary||''),
+    incomeStatement:String(out.incomeStatement||''),
+    balanceSheet:String(out.balanceSheet||''),
+    cashFlows:String(out.cashFlows||''),
+    nextStepsNarration:String(out.nextStepsNarration||'')
+  };
+}
 async function publish(){
   if(!S.aperiod){toast('No period selected','err');return;}
   if(!S.repo||!S.pat){toast('Configure GitHub settings first','err');return;}
@@ -2919,6 +3068,24 @@ function loadPdfLibs(cb){
   var _currentField=null;// key into S.aperiod.narrative being edited
   var _iframeEl=null,_panelEl=null,_taEl=null;
 
+  // Scale the 1320px iframe down to fit the viewport and collapse the surplus
+  // reserved height. Defined at this scope so renderIframe can re-apply it
+  // after the content height is known.
+  function applyScale(){
+    var wrap=document.getElementById('aprv-frame-wrap');
+    if(!wrap||!_iframeEl)return;
+    var avail=wrap.clientWidth-40;
+    var s=Math.min(1,avail/1320);
+    _iframeEl.style.transform='scale('+s+')';
+    _iframeEl.style.transformOrigin='top center';
+    // After scale, the iframe occupies s*naturalHeight px vertically but still
+    // reserves naturalHeight px. We collapse the surplus with a negative margin.
+    try{
+      var natH=_iframeEl.contentDocument.documentElement.scrollHeight||600;
+      _iframeEl.style.marginBottom=(natH*(s-1))+'px';
+    }catch(e){_iframeEl.style.marginBottom='0';}
+  }
+
   function renderIframe(dp){
     // buildPdfHtml clones the live #rpt-content DOM, so we need the report tab
     // to be rendered with the draft period before calling it.
@@ -2954,27 +3121,12 @@ function loadPdfLibs(cb){
       +'});'
       +'});'
       +'})();<\/script>';
-    // Inject data-editkey attributes into the narr and exec-summary elements
-    // We do this in the HTML string before writing to the iframe.
-    // exec-summary <p>
-    html=html.replace(
-      /(<div class="exec-summary"><div class="exec-summary-hd">Executive Summary<\/div><p>)(.*?)(<\/p><\/div>)/s,
-      function(m,pre,txt,post){
-        return pre.replace('<p>','<p data-editkey="executiveSummary" data-edittext="'+txt.replace(/"/g,'&quot;')+'">')+txt+post;
-      }
-    );
-    // Income statement narr
-    html=html.replace(
-      /(<div class="narr narr-md"[^>]*data-editkey[^>]*>)/,'$1'  // skip already-tagged
-    );
-    // Tag narr elements by their position (exec, incomeStatement, balanceSheet, cashFlows)
-    var narrKeys=['incomeStatement','balanceSheet','cashFlows'];
-    var narrIdx=0;
-    html=html.replace(/<div class="narr([^"]*)">/g,function(m,cls){
-      var key=narrKeys[narrIdx]||null;narrIdx++;
-      if(!key)return m;
-      return '<div class="narr'+cls+'" data-editkey="'+key+'">';
-    });
+    // Arm the edit regions: the live report already tags each editable block
+    // with data-narrkey (and data-edittext holding the raw markdown source).
+    // Renaming to data-editkey activates them inside the preview only, and
+    // the key always matches the right narrative field even when some
+    // sections are empty (the old positional tagging got this wrong).
+    html=html.replace(/data-narrkey=/g,'data-editkey=');
     // Inject the edit CSS and bridge into <head>
     html=html.replace('</style>','</style><style>'+editCss+'</style>'+bridgeScript);
     // Set iframe height to full viewport minus toolbar
@@ -3034,19 +3186,6 @@ function loadPdfLibs(cb){
     modal.style.display='flex';
     document.body.style.overflow='hidden';
     // Scale iframe to fit viewport width (transform-origin is top center via CSS)
-    var wrap=document.getElementById('aprv-frame-wrap');
-    function applyScale(){
-      var avail=wrap.clientWidth-40;
-      var s=Math.min(1,avail/1320);
-      _iframeEl.style.transform='scale('+s+')';
-      _iframeEl.style.transformOrigin='top center';
-      // After scale, the iframe occupies s*naturalHeight px vertically but still
-      // reserves naturalHeight px. We collapse the surplus with a negative margin.
-      try{
-        var natH=_iframeEl.contentDocument.documentElement.scrollHeight||600;
-        _iframeEl.style.marginBottom=(natH*(s-1))+'px';
-      }catch(e){_iframeEl.style.marginBottom='0';}
-    }
     applyScale();
     // Render
     renderIframe(dp);
@@ -3255,6 +3394,12 @@ function renderPdfBlob(pdfMode, forcePeriod, forceViewMode){
 async function generateAndUploadPdfs(meta, btn){
   if(!S.repo||!S.pat){toast('Configure GitHub settings first','err');return;}
   var id=meta.id;
+  // The admin list re-renders while PDFs generate (renderPdfBlob switches tabs
+  // and back), which detaches the original button — always re-resolve it by id
+  // so progress updates stay visible.
+  var _origBtn=btn;
+  function liveBtn(){return document.getElementById('pdfup-'+id)||_origBtn;}
+  btn=liveBtn();
   // Load the period data if not already in drafts or loadedPeriods
   var p=S.drafts[id]||S.loadedPeriods[id];
   if(!p){
@@ -3281,6 +3426,8 @@ async function generateAndUploadPdfs(meta, btn){
   var total=variants.length;
   for(var vi=0;vi<total;vi++){
     var v=variants[vi];
+    btn=liveBtn();
+    btn.disabled=true;
     btn.textContent='('+(vi+1)+'/'+total+') '+v.label+'\u2026';
     try{
       // For YTD render, we need loadedPeriods populated
@@ -3301,10 +3448,12 @@ async function generateAndUploadPdfs(meta, btn){
       var existing=null;try{existing=await ghGet(ghPath);}catch(e){}
       await ghPut(ghPath,b64,'Upload PDF '+ghPath,existing&&existing.sha,true);
     }catch(e){
+      btn=liveBtn();
       btn.textContent='\u2191 Upload PDFs';btn.disabled=false;
       toast(v.label+' failed: '+e.message,'err');return;
     }
   }
+  btn=liveBtn();
   btn.textContent='\u2713 PDFs uploaded';
   btn.disabled=false;
   toast('All '+total+' PDF'+(total>1?'s':'')+' uploaded to GitHub','ok');
@@ -3683,7 +3832,9 @@ function openPdfPreview(mode){
     var base=window.location.origin+window.location.pathname;
     // Ensure it ends in index.html or /
     if(!base.endsWith('index.html')&&!base.endsWith('/')){base=base.substring(0,base.lastIndexOf('/')+1);}
-    var url=base.replace(/\/?$\/?/,'').replace(/index\.html$/,'')+'index.html';
+    var url=base.replace(/index\.html$/,'');
+    if(!url.endsWith('/'))url+='/';
+    url+='index.html';
     // Add a cache-bust so we always get the freshest copy
     url+='?_v='+Date.now();
     try{
@@ -3708,7 +3859,10 @@ function openPdfPreview(mode){
 // ---- Boot ----
 async function boot(){
   document.getElementById('ver-badge').textContent=APP_VERSION;
-  S.authed=!!sessionStorage.getItem(LS.AUTH);
+  // Admin unlock persists on this device (localStorage). Migrate any old
+  // session-only unlock so existing signed-in tabs stay signed in.
+  S.authed=localStorage.getItem(LS.AUTH)==='1'||!!sessionStorage.getItem(LS.AUTH);
+  if(S.authed){localStorage.setItem(LS.AUTH,'1');sessionStorage.removeItem(LS.AUTH);}
   if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(function(reg){
     reg.addEventListener('updatefound',function(){var nw=reg.installing;nw.addEventListener('statechange',function(){
       if(nw.state==='installed'&&navigator.serviceWorker.controller){
